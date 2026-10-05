@@ -137,19 +137,14 @@
             justify-content: center !important;
             padding: 0.25rem 0 !important;
         }
-        html.sidebar-collapsed #sidebarToggleBtn,
-        body.sidebar-collapsed #sidebarToggleBtn {
-            display: none !important;
-        }
         html.sidebar-collapsed .sidebar-logo,
         body.sidebar-collapsed .sidebar-logo {
-            justify-content: center !important;
-            padding: 0.25rem 0 !important;
-            margin: 0 !important;
-        }
-        html.sidebar-collapsed .sidebar-logo h2,
-        body.sidebar-collapsed .sidebar-logo h2 {
             display: none !important;
+        }
+        html.sidebar-collapsed #sidebarToggleBtn,
+        body.sidebar-collapsed #sidebarToggleBtn {
+            display: inline-flex !important;
+            margin: 0 auto !important;
         }
         html.sidebar-collapsed .sidebar-menu-header,
         body.sidebar-collapsed .sidebar-menu-header {
@@ -209,7 +204,7 @@
                     <h2>Celldus Admin</h2>
                 </div>
                 <button type="button" id="sidebarToggleBtn" class="sidebar-toggle-btn" title="Toggle Sidebar" aria-label="Toggle Sidebar">
-                    <i class="fa-solid fa-bars-staggered"></i>
+                    <i class="fa-solid fa-bars"></i>
                 </button>
             </div>
 
@@ -350,14 +345,9 @@
         <main class="main-content">
             <!-- Top Bar -->
             <header class="top-bar">
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    <button type="button" id="topbarSidebarToggle" class="sidebar-toggle-btn" title="Toggle Sidebar" aria-label="Toggle Sidebar">
-                        <i class="fa-solid fa-bars"></i>
-                    </button>
-                    <div class="top-bar-title">
-                        <h1>{% block page_title %}Overview{% endblock %}</h1>
-                        <p>{% block page_subtitle %}Welcome back, {{ user.username }}{% endblock %}</p>
-                    </div>
+                <div class="top-bar-title">
+                    <h1>{% block page_title %}Overview{% endblock %}</h1>
+                    <p>{% block page_subtitle %}Welcome back, {{ user.username }}{% endblock %}</p>
                 </div>
                 <div class="top-bar-actions" style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
                     {% block top_actions %}{% endblock %}

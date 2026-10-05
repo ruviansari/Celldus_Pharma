@@ -156,19 +156,6 @@
                         <span>ERP Executive Cockpit</span>
                     </a>
                 </li>
-                <li class="sidebar-menu-item">
-                    <a href="/api/docs/" target="_blank">
-                        <i class="fa-solid fa-code"></i>
-                        <span>Swagger REST APIs</span>
-                        <span style="background: #10b981; color: #fff; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; margin-left: auto;">v1.0</span>
-                    </a>
-                </li>
-                <li class="sidebar-menu-item">
-                    <a href="{% url 'home' %}" target="_blank">
-                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                        <span>Live Website</span>
-                    </a>
-                </li>
 
                 <li class="sidebar-menu-header">Master Data & Catalog</li>
                 <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_categories' %}active{% endif %}">
@@ -257,6 +244,19 @@
                     <a href="{% url 'dashboard_audit_trail' %}">
                         <i class="fa-solid fa-shield-halved"></i>
                         <span>21 CFR Part 11 Audit</span>
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="/api/docs/" target="_blank">
+                        <i class="fa-solid fa-code"></i>
+                        <span>Swagger REST APIs</span>
+                        <span style="background: #10b981; color: #fff; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; margin-left: auto;">v1.0</span>
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="{% url 'home' %}" target="_blank">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                        <span>Live Website</span>
                     </a>
                 </li>
             </ul>

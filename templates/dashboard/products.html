@@ -75,11 +75,17 @@
                                 title="Edit Product">
                                 <i class="fa-solid fa-pen-to-square"></i>
                             </button>
-                            <form action="{% url 'dashboard_product_delete' prod.id %}" method="POST"
-                                onsubmit="return confirm('Are you sure you want to delete this product?')"
-                                style="margin:0;">
+                            <form id="delProdForm_{{ prod.id }}" action="{% url 'dashboard_product_delete' prod.id %}" method="POST" style="margin:0;">
                                 {% csrf_token %}
-                                <button type="submit" class="action-btn delete" title="Delete Product">
+                                <button type="button" class="action-btn delete"
+                                    onclick="triggerGlobalDelete({
+                                        formId: 'delProdForm_{{ prod.id }}',
+                                        title: 'Delete Product?',
+                                        itemName: '{{ prod.name|escapejs }}',
+                                        itemType: 'product',
+                                        warning: 'This will permanently remove this medicine formulation from active catalog and inventory.'
+                                    });"
+                                    title="Delete Product">
                                     <i class="fa-solid fa-trash"></i>
                                 </button>
                             </form>

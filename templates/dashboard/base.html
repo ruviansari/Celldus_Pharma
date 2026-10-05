@@ -393,6 +393,37 @@
             }
         });
 
+        // Global Executive Premium Delete Modal Helper
+        window.triggerGlobalDelete = function(options) {
+            options = options || {};
+            const modal = document.getElementById('globalDeleteModal');
+            if (!modal) return;
+            
+            document.getElementById('globalDelModalTitle').innerText = options.title || 'Confirm Deletion';
+            document.getElementById('globalDelModalType').innerText = options.itemType || 'record';
+            document.getElementById('globalDelModalItem').innerText = options.itemName || 'Selected Item';
+            
+            const warnEl = document.getElementById('globalDelModalWarning');
+            if (options.warning) {
+                warnEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation" style="margin-right: 0.35rem; color: #ef4444;"></i> ' + options.warning;
+            } else {
+                warnEl.innerHTML = '<i class="fa-solid fa-shield-halved" style="margin-right: 0.35rem;"></i> This action cannot be reversed and will remove the item permanently.';
+            }
+            
+            const confirmBtn = document.getElementById('globalConfirmDeleteBtn');
+            confirmBtn.onclick = function() {
+                if (typeof options.onConfirm === 'function') {
+                    options.onConfirm();
+                } else if (options.formId) {
+                    const form = document.getElementById(options.formId);
+                    if (form) form.submit();
+                }
+                closeModal('globalDeleteModal');
+            };
+            
+            openModal('globalDeleteModal');
+        };
+
         // Sidebar Collapse/Expand Toggle on Logo / Icon Click
         (function () {
             function updateToggleTitles(isCollapsed) {
@@ -423,6 +454,51 @@
             updateToggleTitles(currentCollapsed);
         })();
     </script>
+
+    <!-- Global Executive Premium Delete Confirmation Modal -->
+    <div id="globalDeleteModal" class="modal-overlay global-del-modal">
+        <div class="modal-content" style="position: relative;">
+            <!-- Close button -->
+            <button type="button" onclick="closeModal('globalDeleteModal');" style="position: absolute; right: 1.25rem; top: 1.25rem; background: transparent; border: none; font-size: 1.25rem; color: var(--text-muted); cursor: pointer; padding: 0.25rem; transition: color 0.15s ease;" title="Cancel">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <!-- Danger Pulsing Icon Badge -->
+            <div class="del-modal-icon-badge">
+                <i class="fa-solid fa-trash-can"></i>
+            </div>
+
+            <h3 id="globalDelModalTitle" style="font-size: 1.3rem; font-weight: 800; margin: 0 0 0.45rem 0; color: var(--text-primary); letter-spacing: -0.01em;">
+                Confirm Deletion
+            </h3>
+            
+            <p style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5; margin: 0;">
+                Are you sure you want to permanently delete this <span id="globalDelModalType" style="font-weight: 600; color: var(--text-primary);">record</span>?
+            </p>
+
+            <!-- Target item preview box -->
+            <div class="del-modal-target-card">
+                <i class="fa-solid fa-triangle-exclamation" style="font-size: 0.95rem; flex-shrink: 0;"></i>
+                <span id="globalDelModalItem" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Item Name</span>
+            </div>
+
+            <p id="globalDelModalWarning" style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.45; margin: 0 0 1.6rem 0;">
+                <i class="fa-solid fa-shield-halved" style="margin-right: 0.3rem;"></i> This action cannot be reversed and will remove the item permanently.
+            </p>
+
+            <!-- Action Buttons -->
+            <div style="display: flex; gap: 0.75rem; align-items: center;">
+                <button type="button" class="btn btn-secondary del-modal-btn-cancel" onclick="closeModal('globalDeleteModal');">
+                    Cancel
+                </button>
+                <button type="button" id="globalConfirmDeleteBtn" class="btn del-modal-btn-confirm">
+                    <i class="fa-solid fa-trash-can"></i>
+                    <span>Yes, Delete</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     {% block extra_js %}{% endblock %}
 </body>
 

@@ -12,6 +12,8 @@ from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.core.mail import send_mail
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
 
 
 
@@ -109,53 +111,85 @@ def blog_details(request, id):
 
 def contact_page(request):
     if request.method == "POST":
+        name = (request.POST.get('name') or '').strip()
+        email = (request.POST.get('email') or '').strip()
+        phone = (request.POST.get('phone') or '').strip()
+        subject = (request.POST.get('subject') or '').strip()
+        message = (request.POST.get('message') or '').strip()
+
+        # Reject empty submissions or suspicious bot names
+        if not name or len(name) < 2:
+            return JsonResponse({"status": "error", "message": "Please provide a valid sender name."}, status=400)
+
+        if not email:
+            return JsonResponse({"status": "error", "message": "Please provide an email address."}, status=400)
+
+        try:
+            validate_email(email)
+        except ValidationError:
+            return JsonResponse({"status": "error", "message": "Please enter a valid email address."}, status=400)
+
+        if not message or len(message) < 5:
+            return JsonResponse({"status": "error", "message": "Please enter a valid message (minimum 5 characters)."}, status=400)
+
+        # Anti-bot and SQLi / LFI payload attack filter
+        bot_signatures = ['waitfor delay', 'sleep(', 'sysdate()', 'boot.ini', 'win.ini', '/etc/hosts', '<script', 'dbms_pipe', 'union select', 'select%20', 'bxss']
+        combined_payload = f"{name} {email} {subject} {message}".lower()
+        if any(sig in combined_payload for sig in bot_signatures):
+            return JsonResponse({"status": "error", "message": "Invalid characters or security violation detected."}, status=400)
+
         Contact.objects.create(
-            name=request.POST.get('name'),
-            email=request.POST.get('email'),
-            phone=request.POST.get('phone'),
-            subject=request.POST.get('subject'),
-            message=request.POST.get('message'),
+            name=name,
+            email=email,
+            phone=phone,
+            subject=subject or "General Inquiry",
+            message=message,
         )
-        return JsonResponse({"status": "success", "message": "Message sent successfully!"})
+        return JsonResponse({"status": "success", "message": "Your message has been sent successfully!"})
 
     return render(request, 'contact_us.html')
-    if request.method == "POST":
-        Contact.objects.create(
-            name=request.POST.get('name'),
-            email=request.POST.get('email'),
-            phone=request.POST.get('phone'),
-            subject=request.POST.get('subject'),
-            message=request.POST.get('message'),
-        )
 
-        messages.success(request, "Message sent successfully!")
-        return redirect('contact')
 
-    return render(request, 'contact_us.html')
 def subscribe(request):
     if request.method == "POST":
-        email = request.POST.get('email')
+        email = (request.POST.get('email') or '').strip()
 
         if not email:
             return JsonResponse({
                 "status": "error",
                 "message": "Email is required!"
-            })
+            }, status=400)
+
+        try:
+            validate_email(email)
+        except ValidationError:
+            return JsonResponse({
+                "status": "error",
+                "message": "Please enter a valid email address!"
+            }, status=400)
+
+        # Anti-bot probe filter
+        bot_signatures = ['<script', '${', 'waitfor', 'sleep(', 'select', 'bxss', 'boot.ini']
+        if any(sig in email.lower() for sig in bot_signatures):
+            return JsonResponse({
+                "status": "error",
+                "message": "Invalid email address format!"
+            }, status=400)
 
         if Subscriber.objects.filter(email=email).exists():
             return JsonResponse({
                 "status": "error",
-                "message": "Email already subscribed!"
+                "message": "This email is already subscribed!"
             })
 
         Subscriber.objects.create(email=email)
 
         return JsonResponse({
             "status": "success",
-            "message": "Subscribed successfully!"
+            "message": "Subscribed successfully to newsletter!"
         })
 
-    return JsonResponse({"status": "error", "message": "Invalid request"})
+    return JsonResponse({"status": "error", "message": "Invalid request method."}, status=400)
 
 
 # =======================

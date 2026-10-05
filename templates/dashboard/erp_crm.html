@@ -1,0 +1,1474 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Pharma CRM & Distribution Pipeline | Celldus Pharma{% endblock %}
+{% block page_title %}Pharma CRM & Distribution Pipeline{% endblock %}
+{% block page_subtitle %}Comprehensive management of pharmaceutical distributors, hospital networks, doctor clinics, field detailing follow-ups, and lead batches.{% endblock %}
+
+{% block top_actions %}
+<div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+    <button class="btn btn-primary" onclick="openModal('addLeadModal')" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+        <i class="fa-solid fa-user-plus"></i> Add New Lead
+    </button>
+    <button class="btn btn-secondary" onclick="openModal('addTaskModal')" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+        <i class="fa-solid fa-calendar-plus"></i> Schedule Task
+    </button>
+    <button class="btn btn-secondary" onclick="openModal('importLeadsModal')" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+        <i class="fa-solid fa-file-arrow-up"></i> Bulk Import CSV
+    </button>
+    <a href="{% url 'dashboard_crm_sample_csv' %}" class="btn btn-secondary" title="Download sample CSV template" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+        <i class="fa-solid fa-download"></i> Template
+    </a>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Tab Navigation Pills */
+    .crm-tabs {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 0.75rem;
+        overflow-x: auto;
+    }
+    .crm-tab-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.6rem 1.25rem;
+        border-radius: 9999px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border-color);
+        color: var(--text-secondary);
+        font-weight: 600;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: var(--transition);
+        text-decoration: none;
+        white-space: nowrap;
+    }
+    .crm-tab-btn:hover {
+        color: var(--text-primary);
+        border-color: var(--border-hover);
+        background: rgba(255, 255, 255, 0.06);
+    }
+    .crm-tab-btn.active {
+        background: var(--color-primary);
+        border-color: var(--color-primary);
+        color: #ffffff;
+        box-shadow: 0 4px 15px var(--color-primary-glow);
+    }
+
+    /* Pipeline Chips */
+    .funnel-bar {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1.25rem;
+        overflow-x: auto;
+        padding-bottom: 0.4rem;
+    }
+    .funnel-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.4rem 0.85rem;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 0.78rem;
+        color: var(--text-secondary);
+        text-decoration: none;
+        transition: var(--transition);
+        white-space: nowrap;
+    }
+    .funnel-chip:hover, .funnel-chip.active {
+        background: rgba(255, 255, 255, 0.09);
+        border-color: var(--border-hover);
+        color: #fff;
+    }
+    .funnel-chip .count {
+        background: rgba(255, 255, 255, 0.12);
+        padding: 2px 7px;
+        border-radius: 9999px;
+        font-weight: 700;
+        font-size: 0.72rem;
+    }
+
+    /* Kanban Board Styling */
+    .kanban-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1rem;
+        align-items: start;
+        margin-bottom: 2rem;
+    }
+    .kanban-col {
+        background: rgba(15, 23, 42, 0.65);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1rem;
+        min-height: 480px;
+        display: flex;
+        flex-direction: column;
+    }
+    .kanban-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 0.75rem;
+        margin-bottom: 0.75rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .kanban-title {
+        font-size: 0.88rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .kanban-badge {
+        padding: 2px 8px;
+        border-radius: 9999px;
+        font-size: 0.72rem;
+        font-weight: 700;
+    }
+    .kanban-cards {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        overflow-y: auto;
+        max-height: 650px;
+    }
+    .kanban-card {
+        background: rgba(30, 41, 59, 0.85);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 0.85rem;
+        transition: var(--transition);
+        position: relative;
+    }
+    .kanban-card:hover {
+        border-color: var(--border-hover);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+    }
+    .kanban-card-org {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 0.25rem;
+    }
+    .kanban-card-meta {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+        margin-bottom: 0.5rem;
+    }
+    .kanban-card-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 0.5rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    /* Modals & Layout */
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.75);
+        backdrop-filter: blur(5px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 1rem;
+        overflow-y: auto;
+    }
+    .modal-box {
+        background: #0f172a;
+        border: 1px solid var(--border-color);
+        border-radius: 14px;
+        width: 100%;
+        max-width: 650px;
+        max-height: 90vh;
+        overflow-y: auto;
+        padding: 1.75rem;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+    .modal-box.large {
+        max-width: 820px;
+    }
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.25rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .modal-header h3 {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .modal-close-btn {
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        font-size: 1.25rem;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+    .modal-close-btn:hover {
+        color: #fff;
+    }
+
+    .form-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    .form-grid-3 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 1rem;
+    }
+    @media (max-width: 640px) {
+        .form-grid-2, .form-grid-3 {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Dossier Info Card */
+    .dossier-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-bottom: 1.25rem;
+    }
+    .dossier-card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1rem;
+    }
+    .dossier-card-title {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--color-accent);
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+    .dossier-field {
+        margin-bottom: 0.5rem;
+    }
+    .dossier-label {
+        font-size: 0.72rem;
+        color: var(--text-muted);
+    }
+    .dossier-value {
+        font-size: 0.85rem;
+        color: #fff;
+        font-weight: 500;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- 1. Executive Pharma CRM Metrics -->
+<div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 1.5rem;">
+    <div class="stats-card">
+        <div class="stats-info">
+            <h3>Total Pipeline Leads</h3>
+            <div class="stats-number">{{ total_leads }}</div>
+            <span style="font-size: 0.75rem; color: var(--text-secondary);">Enterprise Database</span>
+        </div>
+        <div class="stats-icon-wrapper indigo"><i class="fa-solid fa-address-book"></i></div>
+    </div>
+    <div class="stats-card" style="border-left: 4px solid #38bdf8;">
+        <div class="stats-info">
+            <h3 style="color: #38bdf8;">Active In Negotiation</h3>
+            <div class="stats-number">{{ active_pipeline_count }}</div>
+            <span style="font-size: 0.75rem; color: var(--text-secondary);">New, In-Progress & Quotations</span>
+        </div>
+        <div class="stats-icon-wrapper cyan" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8;"><i class="fa-solid fa-handshake"></i></div>
+    </div>
+    <div class="stats-card" style="border-left: 4px solid #10b981;">
+        <div class="stats-info">
+            <h3 style="color: #10b981;">Converted Customers</h3>
+            <div class="stats-number">{{ converted_count }}</div>
+            <span style="font-size: 0.75rem; color: #10b981; font-weight: 600;">{{ conversion_rate }}% Win Rate</span>
+        </div>
+        <div class="stats-icon-wrapper emerald"><i class="fa-solid fa-user-check"></i></div>
+    </div>
+    <div class="stats-card" style="border-left: 4px solid {% if tasks_overdue > 0 %}#f43f5e{% else %}#f59e0b{% endif %};">
+        <div class="stats-info">
+            <h3 style="color: {% if tasks_overdue > 0 %}#f43f5e{% else %}#f59e0b{% endif %};">Tasks Due / Overdue</h3>
+            <div class="stats-number">{{ tasks_due_today }} <span style="font-size: 0.9rem; font-weight: 400; color: var(--text-muted);">today</span></div>
+            <span style="font-size: 0.75rem; color: {% if tasks_overdue > 0 %}#f43f5e; font-weight: 700;{% else %}var(--text-secondary);{% endif %}">
+                {% if tasks_overdue > 0 %}<i class="fa-solid fa-triangle-exclamation"></i> {{ tasks_overdue }} Overdue Tasks{% else %}All Follow-ups on schedule{% endif %}
+            </span>
+        </div>
+        <div class="stats-icon-wrapper amber" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;"><i class="fa-solid fa-bell"></i></div>
+    </div>
+</div>
+
+<!-- 2. CRM Navigation Tabs -->
+<div class="crm-tabs">
+    <a href="?tab=leads{% if search_query %}&q={{ search_query }}{% endif %}{% if stage_filter %}&stage={{ stage_filter }}{% endif %}" class="crm-tab-btn {% if active_tab == 'leads' %}active{% endif %}">
+        <i class="fa-solid fa-table-list"></i> Leads Directory ({{ leads|length }})
+    </a>
+    <a href="?tab=pipeline" class="crm-tab-btn {% if active_tab == 'pipeline' %}active{% endif %}">
+        <i class="fa-solid fa-chart-gantt"></i> Pipeline Kanban Board
+    </a>
+    <a href="?tab=tasks" class="crm-tab-btn {% if active_tab == 'tasks' %}active{% endif %}">
+        <i class="fa-solid fa-list-check"></i> Follow-up Tasks & Detailing ({{ tasks|length }})
+    </a>
+    <a href="?tab=batches" class="crm-tab-btn {% if active_tab == 'batches' %}active{% endif %}">
+        <i class="fa-solid fa-file-excel"></i> Bulk Import Batches ({{ import_batches|length }})
+    </a>
+</div>
+
+<!-- ============================================================== -->
+<!-- TAB 1: LEADS DIRECTORY TABLE                                   -->
+<!-- ============================================================== -->
+{% if active_tab == 'leads' %}
+
+<!-- Stage Funnel Filter Chips -->
+<div class="funnel-bar">
+    <a href="?tab=leads&stage=ALL" class="funnel-chip {% if not stage_filter or stage_filter == 'ALL' %}active{% endif %}">
+        <span>All Stages</span> <span class="count">{{ total_leads }}</span>
+    </a>
+    <a href="?tab=leads&stage=NEW" class="funnel-chip {% if stage_filter == 'NEW' %}active{% endif %}" style="border-left: 3px solid #3b82f6;">
+        <span>New</span> <span class="count">{{ stage_counts.NEW }}</span>
+    </a>
+    <a href="?tab=leads&stage=CONTACTED" class="funnel-chip {% if stage_filter == 'CONTACTED' %}active{% endif %}" style="border-left: 3px solid #8b5cf6;">
+        <span>Contacted</span> <span class="count">{{ stage_counts.CONTACTED }}</span>
+    </a>
+    <a href="?tab=leads&stage=FOLLOW_UP" class="funnel-chip {% if stage_filter == 'FOLLOW_UP' %}active{% endif %}" style="border-left: 3px solid #06b6d4;">
+        <span>Follow-Up</span> <span class="count">{{ stage_counts.FOLLOW_UP }}</span>
+    </a>
+    <a href="?tab=leads&stage=QUALIFIED" class="funnel-chip {% if stage_filter == 'QUALIFIED' %}active{% endif %}" style="border-left: 3px solid #f59e0b;">
+        <span>Qualified</span> <span class="count">{{ stage_counts.QUALIFIED }}</span>
+    </a>
+    <a href="?tab=leads&stage=QUOTATION" class="funnel-chip {% if stage_filter == 'QUOTATION' %}active{% endif %}" style="border-left: 3px solid #ec4899;">
+        <span>Quotation</span> <span class="count">{{ stage_counts.QUOTATION }}</span>
+    </a>
+    <a href="?tab=leads&stage=CONVERTED" class="funnel-chip {% if stage_filter == 'CONVERTED' %}active{% endif %}" style="border-left: 3px solid #10b981;">
+        <span>Converted</span> <span class="count">{{ stage_counts.CONVERTED }}</span>
+    </a>
+    <a href="?tab=leads&stage=LOST" class="funnel-chip {% if stage_filter == 'LOST' %}active{% endif %}" style="border-left: 3px solid #f43f5e;">
+        <span>Lost</span> <span class="count">{{ stage_counts.LOST }}</span>
+    </a>
+</div>
+
+<!-- Search & Filtering Bar -->
+<div class="panel" style="margin-bottom: 1.5rem; padding: 1rem 1.25rem;">
+    <form method="GET" action="{% url 'dashboard_crm' %}" style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; margin: 0;">
+        <input type="hidden" name="tab" value="leads">
+        
+        <div style="flex: 1; min-width: 220px; position: relative;">
+            <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.85rem;"></i>
+            <input type="text" name="q" value="{{ search_query }}" placeholder="Search organization, contact, phone, city..." class="form-control" style="padding-left: 2.25rem; font-size: 0.85rem;">
+        </div>
+
+        <select name="type" class="form-control" style="width: auto; min-width: 170px; font-size: 0.85rem;">
+            <option value="ALL">All Lead Types</option>
+            {% for code, label in lead_type_choices %}
+            <option value="{{ code }}" {% if type_filter == code %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+
+        <select name="owner" class="form-control" style="width: auto; min-width: 150px; font-size: 0.85rem;">
+            <option value="ALL">All Owners</option>
+            {% for u in staff_users %}
+            <option value="{{ u.id }}" {% if owner_filter == u.id|stringformat:"s" %}selected{% endif %}>{{ u.username }}</option>
+            {% endfor %}
+        </select>
+
+        <button type="submit" class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.85rem;">
+            <i class="fa-solid fa-filter"></i> Filter
+        </button>
+
+        {% if search_query or stage_filter or type_filter or owner_filter %}
+        <a href="?tab=leads" class="btn btn-secondary" style="padding: 0.5rem 0.85rem; font-size: 0.85rem;" title="Reset filters">
+            <i class="fa-solid fa-rotate-left"></i> Reset
+        </a>
+        {% endif %}
+    </form>
+</div>
+
+<!-- Leads Data Table -->
+<div class="panel">
+    <div class="panel-header">
+        <h2 class="panel-title">
+            <i class="fa-solid fa-address-book" style="color: #ec4899; margin-right: 0.5rem;"></i>
+            Pharmaceutical Leads Directory
+        </h2>
+        <span style="font-size: 0.8rem; color: var(--text-muted);">Showing {{ leads|length }} records</span>
+    </div>
+    <div class="table-container">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Lead ID</th>
+                    <th>Organization / Contact</th>
+                    <th>Lead Type</th>
+                    <th>Location / License</th>
+                    <th>Stage</th>
+                    <th>Owner / Next Action</th>
+                    <th style="text-align: right; width: 140px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for lead in leads %}
+                <tr>
+                    <td>
+                        <strong style="color: #60a5fa; font-family: monospace; font-size: 0.85rem;">{{ lead.lead_id }}</strong>
+                        <div style="font-size: 0.7rem; color: var(--text-muted);">{{ lead.source|default:"Direct" }}</div>
+                    </td>
+                    <td>
+                        <div style="font-weight: 700; color: #fff; font-size: 0.9rem;">{{ lead.organization_name }}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary);">
+                            <i class="fa-solid fa-user" style="font-size: 0.7rem; margin-right: 3px;"></i> {{ lead.contact_person }}
+                            {% if lead.phone %}
+                            &bull; <a href="tel:{{ lead.phone }}" style="color: #38bdf8; text-decoration: none;">{{ lead.phone }}</a>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        <span style="background: rgba(255, 255, 255, 0.08); padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; color: #e2e8f0; font-weight: 500;">
+                            {{ lead.get_lead_type_display }}
+                        </span>
+                    </td>
+                    <td>
+                        <div style="font-size: 0.8rem; color: #fff;">{{ lead.city }}, {{ lead.state }}</div>
+                        {% if lead.tax_or_drug_license %}
+                        <div style="font-size: 0.7rem; color: #10b981; font-family: monospace;">DL: {{ lead.tax_or_drug_license }}</div>
+                        {% else %}
+                        <div style="font-size: 0.7rem; color: var(--text-muted);">No DL registered</div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span style="padding: 3px 8px; border-radius: 6px; font-size: 0.72rem; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;
+                            {% if lead.stage == 'NEW' %}background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4);
+                            {% elif lead.stage == 'CONTACTED' %}background: rgba(139, 92, 246, 0.2); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.4);
+                            {% elif lead.stage == 'FOLLOW_UP' %}background: rgba(6, 182, 212, 0.2); color: #22d3ee; border: 1px solid rgba(6, 182, 212, 0.4);
+                            {% elif lead.stage == 'QUALIFIED' %}background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4);
+                            {% elif lead.stage == 'QUOTATION' %}background: rgba(236, 72, 153, 0.2); color: #f472b6; border: 1px solid rgba(236, 72, 153, 0.4);
+                            {% elif lead.stage == 'CONVERTED' %}background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4);
+                            {% else %}background: rgba(244, 63, 94, 0.2); color: #fb7185; border: 1px solid rgba(244, 63, 94, 0.4);{% endif %}">
+                            {{ lead.get_stage_display }}
+                        </span>
+                    </td>
+                    <td>
+                        <div style="font-size: 0.8rem; color: #fff;">
+                            <i class="fa-solid fa-user-shield" style="font-size: 0.7rem; color: var(--text-muted);"></i>
+                            {{ lead.owner.username|default:"Unassigned" }}
+                        </div>
+                        {% if lead.next_follow_up_date %}
+                        <div style="font-size: 0.75rem; color: {% if lead.next_follow_up_date < today %}#f43f5e{% elif lead.next_follow_up_date == today %}#f59e0b{% else %}#10b981{% endif %}; font-weight: 600;">
+                            <i class="fa-solid fa-calendar-check" style="font-size: 0.7rem;"></i> {{ lead.next_follow_up_date|date:"d M Y" }}
+                        </div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="action-btn-group" style="justify-content: flex-end;">
+                            <!-- View Dossier -->
+                            <button class="action-btn" title="View Lead Dossier" style="color: #38bdf8;"
+                                onclick="openLeadDossier('{{ lead.lead_id|escapejs }}', '{{ lead.organization_name|escapejs }}', '{{ lead.contact_person|escapejs }}', '{{ lead.lead_type|escapejs }}', '{{ lead.get_lead_type_display|escapejs }}', '{{ lead.phone|escapejs }}', '{{ lead.email|escapejs }}', '{{ lead.city|escapejs }}', '{{ lead.state|escapejs }}', '{{ lead.territory|escapejs }}', '{{ lead.tax_or_drug_license|escapejs }}', '{{ lead.source|escapejs }}', '{{ lead.stage|escapejs }}', '{{ lead.get_stage_display|escapejs }}', '{{ lead.owner.username|default:'Unassigned'|escapejs }}', '{{ lead.next_follow_up_date|date:'Y-m-d'|default:'' }}', '{{ lead.notes|escapejs }}', '{{ lead.lost_reason|escapejs }}', '{{ lead.id }}')">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+
+                            <!-- Quick Stage Change -->
+                            <button class="action-btn" title="Change Stage" style="color: #a78bfa;"
+                                onclick="openStageModal('{{ lead.id }}', '{{ lead.organization_name|escapejs }}', '{{ lead.stage }}')">
+                                <i class="fa-solid fa-arrow-right-arrow-left"></i>
+                            </button>
+
+                            <!-- Convert to Customer Master -->
+                            {% if lead.stage != 'CONVERTED' %}
+                            <form action="{% url 'dashboard_lead_convert' lead.id %}" method="POST" style="margin: 0;" onsubmit="return confirm('Convert this lead into an official Customer Master account in Celldus ERP?');">
+                                {% csrf_token %}
+                                <button type="submit" class="action-btn" title="Convert to Customer Master" style="color: #10b981;">
+                                    <i class="fa-solid fa-user-check"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+
+                            <!-- Edit Lead -->
+                            <button class="action-btn edit" title="Edit Lead Details"
+                                onclick="openEditLeadModal('{{ lead.id }}', '{{ lead.organization_name|escapejs }}', '{{ lead.contact_person|escapejs }}', '{{ lead.lead_type }}', '{{ lead.phone|escapejs }}', '{{ lead.email|escapejs }}', '{{ lead.city|escapejs }}', '{{ lead.state|escapejs }}', '{{ lead.territory|escapejs }}', '{{ lead.tax_or_drug_license|escapejs }}', '{{ lead.source|escapejs }}', '{{ lead.stage }}', '{{ lead.owner.id|default:'' }}', '{{ lead.next_follow_up_date|date:'Y-m-d'|default:'' }}', '{{ lead.notes|escapejs }}', '{{ lead.lost_reason|escapejs }}')">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+
+                            <!-- Delete Lead -->
+                            <form action="{% url 'dashboard_lead_delete' lead.id %}" method="POST" style="margin: 0;" onsubmit="return confirm('Are you sure you want to delete lead \'{{ lead.organization_name|escapejs }}\'? This will also log an audit event.');">
+                                {% csrf_token %}
+                                <button type="submit" class="action-btn delete" title="Delete Lead">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 3rem;">
+                        <i class="fa-solid fa-inbox" style="font-size: 2rem; margin-bottom: 0.5rem; display: block; opacity: 0.5;"></i>
+                        No leads matched the search criteria.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endif %}
+
+
+<!-- ============================================================== -->
+<!-- TAB 2: PIPELINE KANBAN BOARD                                   -->
+<!-- ============================================================== -->
+{% if active_tab == 'pipeline' %}
+<div class="kanban-grid">
+    {% for col in pipeline_columns %}
+    <div class="kanban-col">
+        <div class="kanban-header">
+            <div class="kanban-title" style="color: {{ col.badge_color }};">
+                <i class="fa-solid fa-circle" style="font-size: 0.6rem;"></i> {{ col.title }}
+            </div>
+            <span class="kanban-badge" style="background: rgba(255, 255, 255, 0.1); color: #fff;">{{ col.leads|length }}</span>
+        </div>
+
+        <div class="kanban-cards">
+            {% for lead in col.leads %}
+            <div class="kanban-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                    <span style="font-family: monospace; font-size: 0.72rem; color: #60a5fa; font-weight: 700;">{{ lead.lead_id }}</span>
+                    <span style="font-size: 0.68rem; background: rgba(255, 255, 255, 0.08); padding: 1px 6px; border-radius: 4px; color: var(--text-secondary);">
+                        {{ lead.get_lead_type_display }}
+                    </span>
+                </div>
+                <div class="kanban-card-org">{{ lead.organization_name }}</div>
+                
+                <div class="kanban-card-meta">
+                    <div><i class="fa-solid fa-user" style="font-size: 0.68rem;"></i> {{ lead.contact_person }}</div>
+                    <div><i class="fa-solid fa-phone" style="font-size: 0.68rem;"></i> {{ lead.phone }}</div>
+                    <div><i class="fa-solid fa-location-dot" style="font-size: 0.68rem;"></i> {{ lead.city }}, {{ lead.state }}</div>
+                    {% if lead.next_follow_up_date %}
+                    <div style="color: {% if lead.next_follow_up_date < today %}#f43f5e{% elif lead.next_follow_up_date == today %}#f59e0b{% else %}#10b981{% endif %}; font-weight: 600;">
+                        <i class="fa-solid fa-clock" style="font-size: 0.68rem;"></i> Due: {{ lead.next_follow_up_date|date:"d M" }}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="kanban-card-footer">
+                    <button class="btn btn-secondary" style="padding: 2px 8px; font-size: 0.72rem;"
+                        onclick="openLeadDossier('{{ lead.lead_id|escapejs }}', '{{ lead.organization_name|escapejs }}', '{{ lead.contact_person|escapejs }}', '{{ lead.lead_type|escapejs }}', '{{ lead.get_lead_type_display|escapejs }}', '{{ lead.phone|escapejs }}', '{{ lead.email|escapejs }}', '{{ lead.city|escapejs }}', '{{ lead.state|escapejs }}', '{{ lead.territory|escapejs }}', '{{ lead.tax_or_drug_license|escapejs }}', '{{ lead.source|escapejs }}', '{{ lead.stage|escapejs }}', '{{ lead.get_stage_display|escapejs }}', '{{ lead.owner.username|default:'Unassigned'|escapejs }}', '{{ lead.next_follow_up_date|date:'Y-m-d'|default:'' }}', '{{ lead.notes|escapejs }}', '{{ lead.lost_reason|escapejs }}', '{{ lead.id }}')">
+                        <i class="fa-solid fa-eye"></i> Details
+                    </button>
+                    <button class="btn btn-primary" style="padding: 2px 8px; font-size: 0.72rem;"
+                        onclick="openStageModal('{{ lead.id }}', '{{ lead.organization_name|escapejs }}', '{{ lead.stage }}')">
+                        Stage <i class="fa-solid fa-chevron-right" style="font-size: 0.6rem;"></i>
+                    </button>
+                </div>
+            </div>
+            {% empty %}
+            <div style="text-align: center; color: var(--text-muted); font-size: 0.78rem; padding: 2rem 0;">
+                No leads in {{ col.title }}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+
+<!-- ============================================================== -->
+<!-- TAB 3: FOLLOW-UP TASKS & DETAILING                             -->
+<!-- ============================================================== -->
+{% if active_tab == 'tasks' %}
+<div class="panel" style="margin-bottom: 1.5rem; padding: 0.85rem 1.25rem;">
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+        <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); margin-right: 0.5rem;">FILTER TASKS:</span>
+        <a href="?tab=tasks&task_status=ALL" class="funnel-chip {% if not task_filter or task_filter == 'ALL' %}active{% endif %}">All Tasks</a>
+        <a href="?tab=tasks&task_status=DUE_TODAY" class="funnel-chip {% if task_filter == 'DUE_TODAY' %}active{% endif %}" style="border-left: 3px solid #f59e0b;">Due Today ({{ tasks_due_today }})</a>
+        <a href="?tab=tasks&task_status=OVERDUE" class="funnel-chip {% if task_filter == 'OVERDUE' %}active{% endif %}" style="border-left: 3px solid #f43f5e;">Overdue ({{ tasks_overdue }})</a>
+        <a href="?tab=tasks&task_status=PENDING" class="funnel-chip {% if task_filter == 'PENDING' %}active{% endif %}">Pending</a>
+        <a href="?tab=tasks&task_status=COMPLETED" class="funnel-chip {% if task_filter == 'COMPLETED' %}active{% endif %}">Completed</a>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-header">
+        <h2 class="panel-title">
+            <i class="fa-solid fa-list-check" style="color: #06b6d4; margin-right: 0.5rem;"></i>
+            Scheduled Detailing & Follow-up Activities
+        </h2>
+        <button class="btn btn-primary" onclick="openModal('addTaskModal')" style="padding: 0.4rem 0.85rem; font-size: 0.8rem;">
+            <i class="fa-solid fa-plus"></i> New Task
+        </button>
+    </div>
+    <div class="table-container">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Activity Type</th>
+                    <th>Lead / Organization</th>
+                    <th>Purpose & Agenda</th>
+                    <th>Due Date</th>
+                    <th>Assigned To</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                    <th style="text-align: right;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for task in tasks %}
+                <tr>
+                    <td>
+                        <strong style="color: #fff; font-size: 0.85rem;">
+                            {% if task.activity_type == 'CALL' %}<i class="fa-solid fa-phone" style="color: #38bdf8; margin-right: 4px;"></i>
+                            {% elif task.activity_type == 'VISIT' %}<i class="fa-solid fa-user-doctor" style="color: #10b981; margin-right: 4px;"></i>
+                            {% elif task.activity_type == 'EMAIL' %}<i class="fa-solid fa-envelope" style="color: #f59e0b; margin-right: 4px;"></i>
+                            {% else %}<i class="fa-solid fa-handshake" style="color: #ec4899; margin-right: 4px;"></i>{% endif %}
+                            {{ task.get_activity_type_display }}
+                        </strong>
+                    </td>
+                    <td>
+                        <div style="font-weight: 700; color: #fff;">{{ task.lead.organization_name }}</div>
+                        <div style="font-size: 0.72rem; color: #60a5fa; font-family: monospace;">{{ task.lead.lead_id }}</div>
+                    </td>
+                    <td style="max-width: 250px;">
+                        <div style="font-size: 0.8rem; color: #e2e8f0;">{{ task.purpose }}</div>
+                        {% if task.outcome_notes %}
+                        <div style="font-size: 0.72rem; color: #10b981; margin-top: 2px;">
+                            <i class="fa-solid fa-comment-dots"></i> Outcome: {{ task.outcome_notes }}
+                        </div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span style="font-size: 0.8rem; font-weight: 700;
+                            {% if task.status == 'COMPLETED' %}color: var(--text-muted);
+                            {% elif task.due_date < today %}color: #f43f5e;
+                            {% elif task.due_date == today %}color: #f59e0b;
+                            {% else %}color: #10b981;{% endif %}">
+                            {{ task.due_date|date:"d M Y" }}
+                        </span>
+                        {% if task.status == 'PENDING' %}
+                            {% if task.due_date < today %}<div style="font-size: 0.68rem; color: #f43f5e; font-weight: 600;">Overdue</div>
+                            {% elif task.due_date == today %}<div style="font-size: 0.68rem; color: #f59e0b; font-weight: 600;">Due Today</div>{% endif %}
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div style="font-size: 0.8rem; color: #fff;">{{ task.assigned_to.username }}</div>
+                    </td>
+                    <td>
+                        <span style="padding: 2px 7px; border-radius: 4px; font-size: 0.7rem; font-weight: 700;
+                            {% if task.priority == 'HIGH' %}background: rgba(244, 63, 94, 0.2); color: #f43f5e;
+                            {% elif task.priority == 'MEDIUM' %}background: rgba(245, 158, 11, 0.2); color: #f59e0b;
+                            {% else %}background: rgba(16, 185, 129, 0.2); color: #10b981;{% endif %}">
+                            {{ task.priority }}
+                        </span>
+                    </td>
+                    <td>
+                        <span style="padding: 2px 7px; border-radius: 4px; font-size: 0.72rem; font-weight: 700;
+                            {% if task.status == 'COMPLETED' %}background: rgba(16, 185, 129, 0.2); color: #10b981;
+                            {% elif task.status == 'CANCELLED' %}background: rgba(244, 63, 94, 0.2); color: #f43f5e;
+                            {% elif task.status == 'RESCHEDULED' %}background: rgba(139, 92, 246, 0.2); color: #a78bfa;
+                            {% else %}background: rgba(255, 255, 255, 0.08); color: #cbd5e1;{% endif %}">
+                            {{ task.get_status_display }}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="action-btn-group" style="justify-content: flex-end;">
+                            <button class="action-btn" title="Update Status / Outcome" style="color: #10b981;"
+                                onclick="openTaskUpdateModal('{{ task.id }}', '{{ task.lead.organization_name|escapejs }}', '{{ task.purpose|escapejs }}', '{{ task.status }}', '{{ task.outcome_notes|escapejs }}')">
+                                <i class="fa-solid fa-check-to-slot"></i>
+                            </button>
+                            <form action="{% url 'dashboard_task_delete' task.id %}" method="POST" style="margin: 0;" onsubmit="return confirm('Delete this follow-up task?');">
+                                {% csrf_token %}
+                                <button type="submit" class="action-btn delete" title="Delete Task">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 3rem;">
+                        No follow-up tasks found for this filter.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+
+<!-- ============================================================== -->
+<!-- TAB 4: BULK IMPORT BATCHES                                     -->
+<!-- ============================================================== -->
+{% if active_tab == 'batches' %}
+<div class="panel">
+    <div class="panel-header">
+        <h2 class="panel-title">
+            <i class="fa-solid fa-file-excel" style="color: #10b981; margin-right: 0.5rem;"></i>
+            Bulk Lead Import Audit History
+        </h2>
+        <button class="btn btn-primary" onclick="openModal('importLeadsModal')" style="padding: 0.4rem 0.85rem; font-size: 0.8rem;">
+            <i class="fa-solid fa-upload"></i> Upload CSV
+        </button>
+    </div>
+    <div class="table-container">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Batch Number</th>
+                    <th>File Name</th>
+                    <th>Total Rows</th>
+                    <th>Valid (Imported)</th>
+                    <th>Duplicates (Skipped)</th>
+                    <th>Errors</th>
+                    <th>Status</th>
+                    <th>Imported By / Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for batch in import_batches %}
+                <tr>
+                    <td>
+                        <strong style="color: #60a5fa; font-family: monospace;">{{ batch.batch_no }}</strong>
+                    </td>
+                    <td>
+                        <strong style="color: #fff;"><i class="fa-solid fa-file-csv" style="color: #10b981; margin-right: 4px;"></i> {{ batch.file_name }}</strong>
+                    </td>
+                    <td><span style="font-weight: 700; color: #fff;">{{ batch.total_rows }}</span></td>
+                    <td><span style="color: #10b981; font-weight: 700;">{{ batch.valid_rows }}</span></td>
+                    <td><span style="color: #f59e0b; font-weight: 700;">{{ batch.duplicate_rows }}</span></td>
+                    <td><span style="color: #f43f5e; font-weight: 700;">{{ batch.error_rows }}</span></td>
+                    <td>
+                        <span style="padding: 2px 7px; border-radius: 4px; font-size: 0.72rem; font-weight: 700; background: rgba(16, 185, 129, 0.2); color: #10b981;">
+                            Committed
+                        </span>
+                    </td>
+                    <td>
+                        <div style="font-size: 0.8rem; color: #fff;">{{ batch.created_by.username|default:"System" }}</div>
+                        <div style="font-size: 0.7rem; color: var(--text-muted);">{{ batch.created_at|date:"d M Y, H:i" }}</div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 3rem;">
+                        No bulk import batches processed yet.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+
+<!-- ============================================================== -->
+<!-- MODAL 1: ADD NEW LEAD (All Details from Super Admin)           -->
+<!-- ============================================================== -->
+<div id="addLeadModal" class="modal-overlay">
+    <div class="modal-box large">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-user-plus" style="color: #4f46e5;"></i> Add New Lead to CRM</h3>
+            <button type="button" class="modal-close-btn" onclick="closeModal('addLeadModal')">&times;</button>
+        </div>
+
+        <form action="{% url 'dashboard_lead_create' %}" method="POST">
+            {% csrf_token %}
+
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label class="form-label">Organization / Hospital / Firm Name *</label>
+                    <input type="text" name="organization_name" class="form-control" required placeholder="e.g. MedPlus Wholesalers Pvt Ltd">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Contact Person Name *</label>
+                    <input type="text" name="contact_person" class="form-control" required placeholder="e.g. Dr. Rajesh Sharma">
+                </div>
+            </div>
+
+            <div class="form-grid-3">
+                <div class="form-group">
+                    <label class="form-label">Lead Type *</label>
+                    <select name="lead_type" class="form-control" required>
+                        {% for code, label in lead_type_choices %}
+                        <option value="{{ code }}" {% if code == 'DISTRIBUTOR' %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Phone Number *</label>
+                    <input type="tel" name="phone" class="form-control" required placeholder="10-digit number e.g. 9811234567">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" name="email" class="form-control" placeholder="sales@organization.com">
+                </div>
+            </div>
+
+            <div class="form-grid-3">
+                <div class="form-group">
+                    <label class="form-label">City *</label>
+                    <input type="text" name="city" class="form-control" required placeholder="e.g. Mumbai">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">State *</label>
+                    <input type="text" name="state" class="form-control" required placeholder="e.g. Maharashtra">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Territory / Region</label>
+                    <input type="text" name="territory" class="form-control" placeholder="e.g. West Region Zone-A">
+                </div>
+            </div>
+
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label class="form-label">Tax / Drug License (Form 20-B / 21-B / GSTIN)</label>
+                    <input type="text" name="tax_or_drug_license" class="form-control" placeholder="e.g. DL-MH-12345 or GSTIN">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Lead Source</label>
+                    <input type="text" name="source" class="form-control" value="Field Inquiry" placeholder="e.g. Website, Medical Expo, Field Call">
+                </div>
+            </div>
+
+            <div class="form-grid-3">
+                <div class="form-group">
+                    <label class="form-label">Initial Stage</label>
+                    <select name="stage" class="form-control">
+                        {% for code, label in stage_choices %}
+                        <option value="{{ code }}" {% if code == 'NEW' %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Assigned Owner (Staff)</label>
+                    <select name="owner" class="form-control">
+                        <option value="">-- Assign to Staff --</option>
+                        {% for u in staff_users %}
+                        <option value="{{ u.id }}" {% if u == request.user %}selected{% endif %}>{{ u.username }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Next Follow-Up Date</label>
+                    <input type="date" name="next_follow_up_date" class="form-control">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Internal Notes / Requirements</label>
+                <textarea name="notes" class="form-control" rows="2" placeholder="Therapeutic interests, quotation requested, drug license notes..."></textarea>
+            </div>
+
+            <!-- Optional Initial Task -->
+            <div style="background: rgba(255, 255, 255, 0.03); border: 1px dashed var(--border-color); border-radius: 8px; padding: 0.85rem; margin-bottom: 1.25rem;">
+                <div style="font-size: 0.8rem; font-weight: 700; color: #38bdf8; margin-bottom: 0.5rem;">
+                    <i class="fa-solid fa-calendar-plus"></i> Optional: Schedule First Follow-Up Task Immediately
+                </div>
+                <div class="form-grid-3">
+                    <div>
+                        <select name="initial_task_activity" class="form-control" style="font-size: 0.8rem;">
+                            <option value="">-- Select Activity Type --</option>
+                            {% for code, label in activity_choices %}
+                            <option value="{{ code }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <input type="date" name="initial_task_due" class="form-control" style="font-size: 0.8rem;">
+                    </div>
+                    <div>
+                        <input type="text" name="initial_task_purpose" placeholder="Purpose (e.g. Send Product Catalog)" class="form-control" style="font-size: 0.8rem;">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('addLeadModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> Create Lead</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<!-- ============================================================== -->
+<!-- MODAL 2: EDIT LEAD MODAL                                       -->
+<!-- ============================================================== -->
+<div id="editLeadModal" class="modal-overlay">
+    <div class="modal-box large">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-pen-to-square" style="color: #f59e0b;"></i> Edit CRM Lead</h3>
+            <button type="button" class="modal-close-btn" onclick="closeModal('editLeadModal')">&times;</button>
+        </div>
+
+        <form id="editLeadForm" action="" method="POST">
+            {% csrf_token %}
+
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label class="form-label">Organization Name *</label>
+                    <input type="text" id="edit_org_name" name="organization_name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Contact Person Name *</label>
+                    <input type="text" id="edit_contact_person" name="contact_person" class="form-control" required>
+                </div>
+            </div>
+
+            <div class="form-grid-3">
+                <div class="form-group">
+                    <label class="form-label">Lead Type *</label>
+                    <select id="edit_lead_type" name="lead_type" class="form-control" required>
+                        {% for code, label in lead_type_choices %}
+                        <option value="{{ code }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Phone Number *</label>
+                    <input type="tel" id="edit_phone" name="phone" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" id="edit_email" name="email" class="form-control">
+                </div>
+            </div>
+
+            <div class="form-grid-3">
+                <div class="form-group">
+                    <label class="form-label">City *</label>
+                    <input type="text" id="edit_city" name="city" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">State *</label>
+                    <input type="text" id="edit_state" name="state" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Territory</label>
+                    <input type="text" id="edit_territory" name="territory" class="form-control">
+                </div>
+            </div>
+
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label class="form-label">Tax / Drug License</label>
+                    <input type="text" id="edit_license" name="tax_or_drug_license" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Source</label>
+                    <input type="text" id="edit_source" name="source" class="form-control">
+                </div>
+            </div>
+
+            <div class="form-grid-3">
+                <div class="form-group">
+                    <label class="form-label">Stage</label>
+                    <select id="edit_stage" name="stage" class="form-control" onchange="toggleLostReasonEdit(this.value)">
+                        {% for code, label in stage_choices %}
+                        <option value="{{ code }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Assigned Owner</label>
+                    <select id="edit_owner" name="owner" class="form-control">
+                        <option value="">-- Unassigned --</option>
+                        {% for u in staff_users %}
+                        <option value="{{ u.id }}">{{ u.username }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Next Follow-Up Date</label>
+                    <input type="date" id="edit_next_follow_up" name="next_follow_up_date" class="form-control">
+                </div>
+            </div>
+
+            <div id="edit_lost_reason_box" class="form-group" style="display: none;">
+                <label class="form-label" style="color: #f43f5e;">Mandatory Reason for marking LOST *</label>
+                <textarea id="edit_lost_reason" name="lost_reason" class="form-control" rows="2" placeholder="Why was this lead lost? (e.g. competitor pricing, drug license expired)"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Notes & Requirements</label>
+                <textarea id="edit_notes" name="notes" class="form-control" rows="3"></textarea>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('editLeadModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-save"></i> Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<!-- ============================================================== -->
+<!-- MODAL 3: LEAD DOSSIER (COMPLETE SUPER ADMIN DETAILS VIEW)      -->
+<!-- ============================================================== -->
+<div id="viewLeadModal" class="modal-overlay">
+    <div class="modal-box large">
+        <div class="modal-header">
+            <div>
+                <span id="dossier_lead_id" style="font-family: monospace; font-size: 0.85rem; color: #60a5fa; font-weight: 700;"></span>
+                <h3 id="dossier_org_name" style="margin-top: 0.2rem;"></h3>
+            </div>
+            <button type="button" class="modal-close-btn" onclick="closeModal('viewLeadModal')">&times;</button>
+        </div>
+
+        <div class="dossier-grid">
+            <!-- Card 1: Contact Details -->
+            <div class="dossier-card">
+                <div class="dossier-card-title"><i class="fa-solid fa-address-card"></i> Contact Information</div>
+                <div class="dossier-field">
+                    <div class="dossier-label">Primary Contact Person</div>
+                    <div class="dossier-value" id="dossier_contact"></div>
+                </div>
+                <div class="dossier-field">
+                    <div class="dossier-label">Phone Number</div>
+                    <div class="dossier-value"><a id="dossier_phone" href="" style="color: #38bdf8;"></a></div>
+                </div>
+                <div class="dossier-field">
+                    <div class="dossier-label">Email Address</div>
+                    <div class="dossier-value" id="dossier_email"></div>
+                </div>
+                <div class="dossier-field">
+                    <div class="dossier-label">Lead Classification</div>
+                    <div class="dossier-value" id="dossier_type"></div>
+                </div>
+            </div>
+
+            <!-- Card 2: Regulatory & Location -->
+            <div class="dossier-card">
+                <div class="dossier-card-title"><i class="fa-solid fa-file-shield"></i> Pharma Licensing & Geo</div>
+                <div class="dossier-field">
+                    <div class="dossier-label">Drug License / Tax Registration</div>
+                    <div class="dossier-value" id="dossier_license" style="font-family: monospace; color: #10b981;"></div>
+                </div>
+                <div class="dossier-field">
+                    <div class="dossier-label">City, State</div>
+                    <div class="dossier-value" id="dossier_location"></div>
+                </div>
+                <div class="dossier-field">
+                    <div class="dossier-label">Assigned Territory</div>
+                    <div class="dossier-value" id="dossier_territory"></div>
+                </div>
+                <div class="dossier-field">
+                    <div class="dossier-label">Lead Acquisition Source</div>
+                    <div class="dossier-value" id="dossier_source"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dossier-grid">
+            <!-- Card 3: Commercial Pipeline Status -->
+            <div class="dossier-card">
+                <div class="dossier-card-title"><i class="fa-solid fa-chart-line"></i> Pipeline Stage & Owner</div>
+                <div class="dossier-field">
+                    <div class="dossier-label">Current Stage</div>
+                    <div class="dossier-value" id="dossier_stage"></div>
+                </div>
+                <div class="dossier-field">
+                    <div class="dossier-label">Assigned Staff Account</div>
+                    <div class="dossier-value" id="dossier_owner"></div>
+                </div>
+                <div class="dossier-field">
+                    <div class="dossier-label">Next Scheduled Follow-Up</div>
+                    <div class="dossier-value" id="dossier_follow_up"></div>
+                </div>
+            </div>
+
+            <!-- Card 4: Clinical / Commercial Notes -->
+            <div class="dossier-card">
+                <div class="dossier-card-title"><i class="fa-solid fa-notes-medical"></i> Internal Notes & Reasons</div>
+                <div class="dossier-field">
+                    <div class="dossier-label">Notes & Requirements</div>
+                    <div class="dossier-value" id="dossier_notes" style="font-size: 0.8rem; white-space: pre-wrap;"></div>
+                </div>
+                <div class="dossier-field" id="dossier_lost_box" style="display: none;">
+                    <div class="dossier-label" style="color: #f43f5e;">Reason for Lost Lead</div>
+                    <div class="dossier-value" id="dossier_lost_reason" style="color: #fb7185;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions" style="justify-content: space-between;">
+            <div style="display: flex; gap: 0.5rem;">
+                <form id="dossier_convert_form" action="" method="POST" style="margin: 0;" onsubmit="return confirm('Convert this lead to a Customer Master record?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary" style="background: #10b981; border-color: #10b981;">
+                        <i class="fa-solid fa-user-check"></i> Convert to Customer
+                    </button>
+                </form>
+                <button type="button" class="btn btn-secondary" onclick="openTaskFromLead()">
+                    <i class="fa-solid fa-calendar-plus"></i> Schedule Task
+                </button>
+            </div>
+            <button type="button" class="btn btn-secondary" onclick="closeModal('viewLeadModal')">Close</button>
+        </div>
+    </div>
+</div>
+
+
+<!-- ============================================================== -->
+<!-- MODAL 4: QUICK STAGE CHANGE MODAL                              -->
+<!-- ============================================================== -->
+<div id="stageUpdateModal" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-arrow-right-arrow-left" style="color: #a78bfa;"></i> Update Lead Stage</h3>
+            <button type="button" class="modal-close-btn" onclick="closeModal('stageUpdateModal')">&times;</button>
+        </div>
+
+        <form id="stageUpdateForm" action="" method="POST">
+            {% csrf_token %}
+
+            <div style="font-size: 0.9rem; font-weight: 700; color: #fff; margin-bottom: 1rem;">
+                Lead: <span id="stage_update_org_name" style="color: #60a5fa;"></span>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">New Pipeline Stage *</label>
+                <select id="stage_select" name="stage" class="form-control" onchange="toggleStageLostReason(this.value)" required>
+                    {% for code, label in stage_choices %}
+                    <option value="{{ code }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div id="stage_lost_reason_box" class="form-group" style="display: none;">
+                <label class="form-label" style="color: #f43f5e;">Mandatory Reason when Lead is LOST *</label>
+                <textarea id="stage_lost_reason" name="lost_reason" class="form-control" rows="2" placeholder="e.g. Quoted pricing rejected, stockist credit policy mismatch..."></textarea>
+            </div>
+
+            <div id="stage_convert_box" class="form-group" style="display: none; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 0.75rem;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: #34d399; cursor: pointer; margin: 0;">
+                    <input type="checkbox" name="convert_customer" value="1" checked>
+                    <span>Also create official <strong>CustomerMaster</strong> record with Drug License & Billing info</span>
+                </label>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('stageUpdateModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> Update Stage</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<!-- ============================================================== -->
+<!-- MODAL 5: SCHEDULE FOLLOW-UP TASK                               -->
+<!-- ============================================================== -->
+<div id="addTaskModal" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-calendar-plus" style="color: #06b6d4;"></i> Schedule CRM Detailing Task</h3>
+            <button type="button" class="modal-close-btn" onclick="closeModal('addTaskModal')">&times;</button>
+        </div>
+
+        <form action="{% url 'dashboard_task_create' %}" method="POST">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label class="form-label">Select Target Lead *</label>
+                <select id="task_lead_select" name="lead_id" class="form-control" required>
+                    <option value="">-- Choose Lead --</option>
+                    {% for l in all_leads_dropdown %}
+                    <option value="{{ l.id }}">{{ l.organization_name }} ({{ l.lead_id }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label class="form-label">Activity Type *</label>
+                    <select name="activity_type" class="form-control" required>
+                        {% for code, label in activity_choices %}
+                        <option value="{{ code }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Priority</label>
+                    <select name="priority" class="form-control">
+                        {% for code, label in task_priority_choices %}
+                        <option value="{{ code }}" {% if code == 'MEDIUM' %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label class="form-label">Due Date *</label>
+                    <input type="date" name="due_date" class="form-control" required value="{{ today|date:'Y-m-d' }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Assigned Staff User</label>
+                    <select name="assigned_to" class="form-control">
+                        {% for u in staff_users %}
+                        <option value="{{ u.id }}" {% if u == request.user %}selected{% endif %}>{{ u.username }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Purpose & Detailing Agenda *</label>
+                <textarea name="purpose" class="form-control" rows="3" required placeholder="e.g. In-person detailing with chief procurement doctor for antibiotic injectable tender..."></textarea>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('addTaskModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> Schedule Task</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<!-- ============================================================== -->
+<!-- MODAL 6: UPDATE TASK / LOG OUTCOME                             -->
+<!-- ============================================================== -->
+<div id="updateTaskModal" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-check-to-slot" style="color: #10b981;"></i> Update Task & Log Outcome</h3>
+            <button type="button" class="modal-close-btn" onclick="closeModal('updateTaskModal')">&times;</button>
+        </div>
+
+        <form id="updateTaskForm" action="" method="POST">
+            {% csrf_token %}
+
+            <div style="margin-bottom: 1rem;">
+                <div style="font-size: 0.8rem; color: var(--text-secondary);">Lead Organization:</div>
+                <div id="task_modal_lead_name" style="font-size: 0.95rem; font-weight: 700; color: #fff;"></div>
+                <div id="task_modal_purpose" style="font-size: 0.8rem; color: #94a3b8; margin-top: 0.25rem;"></div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Task Status *</label>
+                <select id="task_modal_status" name="status" class="form-control" required>
+                    {% for code, label in task_status_choices %}
+                    <option value="{{ code }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Detailing / Call Outcome Notes</label>
+                <textarea id="task_modal_outcome" name="outcome_notes" class="form-control" rows="3" placeholder="e.g. Doctor agreed to trial 200 vials, requested commercial terms by Thursday..."></textarea>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('updateTaskModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-save"></i> Save Outcome</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<!-- ============================================================== -->
+<!-- MODAL 7: BULK CSV IMPORT MODAL                                 -->
+<!-- ============================================================== -->
+<div id="importLeadsModal" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-file-arrow-up" style="color: #10b981;"></i> Bulk Import Leads from CSV</h3>
+            <button type="button" class="modal-close-btn" onclick="closeModal('importLeadsModal')">&times;</button>
+        </div>
+
+        <form action="{% url 'dashboard_crm_bulk_import' %}" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem; margin-bottom: 1.25rem; font-size: 0.8rem; color: var(--text-secondary);">
+                <div style="font-weight: 700; color: #fff; margin-bottom: 0.25rem;">Expected CSV Columns:</div>
+                <div style="font-family: monospace; color: #38bdf8; word-break: break-all;">
+                    organization_name, contact_person, lead_type, phone, email, city, state, territory, source, notes
+                </div>
+                <div style="margin-top: 0.5rem;">
+                    Duplicate phone numbers & emails are automatically flagged and verified.
+                </div>
+                <div style="margin-top: 0.5rem;">
+                    <a href="{% url 'dashboard_crm_sample_csv' %}" style="color: #10b981; font-weight: 600; text-decoration: none;">
+                        <i class="fa-solid fa-download"></i> Download sample template (.csv)
+                    </a>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Select .CSV File *</label>
+                <input type="file" name="csv_file" class="form-control" accept=".csv" required>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('importLeadsModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-cloud-arrow-up"></i> Upload & Import</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+    // Lead Dossier Modal Population
+    let currentDossierLeadId = '';
+    function openLeadDossier(leadId, org, contact, leadType, leadTypeDisplay, phone, email, city, state, territory, license, source, stage, stageDisplay, owner, nextFollowUp, notes, lostReason, pk) {
+        currentDossierLeadId = pk;
+        document.getElementById('dossier_lead_id').textContent = leadId;
+        document.getElementById('dossier_org_name').textContent = org;
+        document.getElementById('dossier_contact').textContent = contact || 'N/A';
+        
+        const phoneElem = document.getElementById('dossier_phone');
+        if (phone) {
+            phoneElem.textContent = phone;
+            phoneElem.href = 'tel:' + phone;
+        } else {
+            phoneElem.textContent = 'None';
+            phoneElem.removeAttribute('href');
+        }
+
+        document.getElementById('dossier_email').textContent = email || 'N/A';
+        document.getElementById('dossier_type').textContent = leadTypeDisplay || leadType;
+        document.getElementById('dossier_license').textContent = license || 'None Registered';
+        document.getElementById('dossier_location').textContent = (city ? city : '') + (state ? (', ' + state) : '');
+        document.getElementById('dossier_territory').textContent = territory || 'N/A';
+        document.getElementById('dossier_source').textContent = source || 'Field Inquiry';
+        document.getElementById('dossier_stage').textContent = stageDisplay || stage;
+        document.getElementById('dossier_owner').textContent = owner || 'Unassigned';
+        document.getElementById('dossier_follow_up').textContent = nextFollowUp || 'No date scheduled';
+        document.getElementById('dossier_notes').textContent = notes || 'No internal notes logged.';
+
+        const lostBox = document.getElementById('dossier_lost_box');
+        if (stage === 'LOST' && lostReason) {
+            lostBox.style.display = 'block';
+            document.getElementById('dossier_lost_reason').textContent = lostReason;
+        } else {
+            lostBox.style.display = 'none';
+        }
+
+        // Setup convert button form action
+        document.getElementById('dossier_convert_form').action = `/dashboard/crm/lead/convert/${pk}/`;
+
+        openModal('viewLeadModal');
+    }
+
+    function openTaskFromLead() {
+        closeModal('viewLeadModal');
+        if (currentDossierLeadId) {
+            document.getElementById('task_lead_select').value = currentDossierLeadId;
+        }
+        openModal('addTaskModal');
+    }
+
+    // Edit Lead Modal Population
+    function openEditLeadModal(id, org, contact, type, phone, email, city, state, territory, license, source, stage, ownerId, nextFollowUp, notes, lostReason) {
+        const form = document.getElementById('editLeadForm');
+        form.action = `/dashboard/crm/lead/edit/${id}/`;
+
+        document.getElementById('edit_org_name').value = org;
+        document.getElementById('edit_contact_person').value = contact;
+        document.getElementById('edit_lead_type').value = type;
+        document.getElementById('edit_phone').value = phone;
+        document.getElementById('edit_email').value = email;
+        document.getElementById('edit_city').value = city;
+        document.getElementById('edit_state').value = state;
+        document.getElementById('edit_territory').value = territory;
+        document.getElementById('edit_license').value = license;
+        document.getElementById('edit_source').value = source;
+        document.getElementById('edit_stage').value = stage;
+        document.getElementById('edit_owner').value = ownerId;
+        document.getElementById('edit_next_follow_up').value = nextFollowUp;
+        document.getElementById('edit_notes').value = notes;
+        document.getElementById('edit_lost_reason').value = lostReason;
+
+        toggleLostReasonEdit(stage);
+        openModal('editLeadModal');
+    }
+
+    function toggleLostReasonEdit(stage) {
+        const box = document.getElementById('edit_lost_reason_box');
+        if (stage === 'LOST') {
+            box.style.display = 'block';
+            document.getElementById('edit_lost_reason').setAttribute('required', 'required');
+        } else {
+            box.style.display = 'none';
+            document.getElementById('edit_lost_reason').removeAttribute('required');
+        }
+    }
+
+    // Stage Update Modal
+    function openStageModal(leadId, orgName, currentStage) {
+        const form = document.getElementById('stageUpdateForm');
+        form.action = `/dashboard/crm/lead/stage/${leadId}/`;
+        document.getElementById('stage_update_org_name').textContent = orgName;
+        document.getElementById('stage_select').value = currentStage;
+        toggleStageLostReason(currentStage);
+        openModal('stageUpdateModal');
+    }
+
+    function toggleStageLostReason(stage) {
+        const lostBox = document.getElementById('stage_lost_reason_box');
+        const convertBox = document.getElementById('stage_convert_box');
+
+        if (stage === 'LOST') {
+            lostBox.style.display = 'block';
+            document.getElementById('stage_lost_reason').setAttribute('required', 'required');
+        } else {
+            lostBox.style.display = 'none';
+            document.getElementById('stage_lost_reason').removeAttribute('required');
+        }
+
+        if (stage === 'CONVERTED') {
+            convertBox.style.display = 'block';
+        } else {
+            convertBox.style.display = 'none';
+        }
+    }
+
+    // Task Update Modal
+    function openTaskUpdateModal(taskId, leadName, purpose, currentStatus, outcomeNotes) {
+        const form = document.getElementById('updateTaskForm');
+        form.action = `/dashboard/crm/task/update/${taskId}/`;
+        document.getElementById('task_modal_lead_name').textContent = leadName;
+        document.getElementById('task_modal_purpose').textContent = purpose;
+        document.getElementById('task_modal_status').value = currentStatus;
+        document.getElementById('task_modal_outcome').value = outcomeNotes || '';
+        openModal('updateTaskModal');
+    }
+</script>
+{% endblock %}

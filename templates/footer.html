@@ -1,0 +1,288 @@
+{% load static %}
+<footer class="footer widget-footer clearfix">
+
+    <div class="first-footer ttm-bgcolor-skincolor">
+        <div class="container">
+            <div class="row">
+                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-6 widget-area">
+                    <div class="featured-icon-box icon-align-before-content style1">
+                        <div class="featured-icon">
+                            <div
+                                class="ttm-icon ttm-icon_element-onlytxt ttm-icon_element-color-skincolor ttm-icon_element-size-lg">
+                                <i class="flaticon-mail"></i>
+                            </div>
+                        </div>
+
+                        <div class="featured-content">
+                            <div class="featured-title">
+                                <h5>Subscribe To Our Newsletter</h5>
+                            </div>
+                            <div class="featured-desc">
+                                <p>Stay in touch with us to get latest news and discount coupons</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-6 widget-area">
+                    <form id="subscribe-form" method="POST" action="{% url 'subscribe' %}">
+                        {% csrf_token %}
+
+                        <div class="mailchimp-inputbox clearfix" id="subscribe-content">
+
+                            <p>
+                                <input type="email" name="email" placeholder="Enter Your Email Address..." required>
+                            </p>
+
+                            <p>
+                                <button
+                                    class="submit ttm-btn ttm-btn-size-md ttm-btn-shape-rounded ttm-btn-style-fill ttm-btn-color-black"
+                                    type="submit">
+                                    Subscribe Now!
+                                </button>
+                            </p>
+
+                        </div>
+
+                        <!-- SUCCESS / ERROR MESSAGE -->
+                        <div id="subscribe-msg">
+                            {% if messages %}
+                            {% for message in messages %}
+                            <p style="color:green;">{{ message }}</p>
+                            {% endfor %}
+                            {% endif %}
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="second-footer">
+        <div class="container">
+            <div class="row">
+                <div class="widget-area col-xs-12 col-sm-12 col-md-5 col-lg-5">
+                    <aside class="widget widget-text">
+                        <!--featured-icon-box-->
+                        <div class="featured-icon-box icon-align-before-content">
+                            <div class="featured-icon">
+                                <div class="ttm-icon ttm-icon_element-onlytxt  ttm-icon_element-size-sm">
+                                    <i class="flaticon-placeholder"></i>
+                                </div>
+                            </div>
+                            <div class="featured-content">
+                                <div class="featured-title">
+                                    <h5>Address</h5>
+                                </div>
+                                <div class="featured-desc">
+                                    <p>H1A/20, SECTOR-63, GAUTAM BUDDHA NAGAR, NOIDA, UTTAR PRADESH, INDIA, 201301
+                                    </p>
+                                </div>
+                            </div>
+                        </div><!-- featured-icon-box end-->
+                    </aside>
+                </div>
+                <div class="widget-area col-xs-12 col-sm-12 col-md-3 col-lg-3">
+                    <aside class="widget widget-text">
+                        <!--featured-icon-box-->
+                        <div class="featured-icon-box icon-align-before-content">
+                            <div class="featured-icon">
+                                <div class="ttm-icon ttm-icon_element-onlytxt  ttm-icon_element-size-sm">
+                                    <i class="fa fa-phone"></i>
+                                </div>
+                            </div>
+                            <div class="featured-content">
+                                <div class="featured-title">
+                                    <h5>Call Us On</h5>
+                                </div>
+                                <div class="featured-desc">
+                                    <p><a href="tel:+919217499771">+91 9217499771</a></p>
+                                </div>
+                            </div>
+                        </div><!-- featured-icon-box end-->
+                    </aside>
+                </div>
+                <div class="widget-area col-xs-12 col-sm-12 col-md-3 col-lg-4">
+                    <aside class="widget widget-text">
+                        <!--featured-icon-box-->
+                        <div class="featured-icon-box icon-align-before-content">
+                            <div class="featured-icon">
+                                <div class="ttm-icon ttm-icon_element-onlytxt  ttm-icon_element-size-sm">
+                                    <i class="flaticon-email"></i>
+                                </div>
+                            </div>
+                            <div class="featured-content">
+                                <div class="featured-title">
+                                    <h5>Email Us</h5>
+                                </div>
+                                <div class="featured-desc">
+                                    <p><a href="mailto:info@cellduspharma.com">info@cellduspharma.com</a></p>
+                                </div>
+                            </div>
+                        </div><!-- featured-icon-box end-->
+                    </aside>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="third-footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-5 widget-area">
+                    <div class="widget widget_text clearfix">
+                        <div class="footer-logo">
+                            <img id="footer-logo-img" class="img-center" src="{% static 'images/footer-logo.png' %}"
+                                alt="">
+                        </div>
+                        <div class="textwidget widget-text">
+                            <p class="mb-0">Celldus Pharma is a trusted pharmaceutical marketing company dedicated to
+                                delivering high-quality healthcare products. We focus on innovation, reliability, and
+                                improving lives through effective medical solutions.
+                            </p>
+                            <!-- <a class="ttm-btn ttm-btn-size-sm ttm-btn-shape-rounded ttm-btn-style-border ttm-btn-color-skincolor"
+                                href="" title="">Read More!</a> -->
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xs-12 col-sm-12 col-md-6 col-lg-3 widget-area">
+                    <div class="widget widget_nav_menu clearfix">
+                        <h3 class="widget-title">Usefull Links</h3>
+                        <div class="row">
+                            <div class="col-6">
+                                <ul>
+                                    <li><a href="{% url 'home' %}">Home</a></li>
+                                    <li><a href="{% url 'about_us' %}">About Us</a></li>
+                                    <li><a href="{% url 'product' %}">Product Portfolio</a></li>
+                                    <li><a href="{% url 'our_blog' %}">Our Blog</a></li>
+                                    <li><a href="{% url 'contact' %}">Contact Us</a></li>
+                                    <li><a href="{% url 'faq' %}">FAQ</a></li>
+                                </ul>
+                            </div>
+
+
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xs-12 col-sm-12 col-md-6 col-lg-4 widget-area">
+                    <div class="widget style2 widget-out-link clearfix">
+                        <h3 class="widget-title">Recent Posts</h3>
+                        <ul class="widget-post ttm-recent-post-list pr-5">
+                            {% for blog in footer_blogs %}
+                            <li>
+                                <a href="{% url 'blog_details' blog.id %}">
+                                    <img src="{% static blog.image %}" alt="{{ blog.title }}">
+                                </a>
+                                <span class="post-date"><i class="fa fa-calendar"></i>{{ blog.date }}</span>
+                                <a href="{% url 'blog_details' blog.id %}">{{ blog.title }}</a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <div class="bottom-footer-text">
+        <div class="container">
+            <div class="row copyright">
+                <div class="col-sm-9">
+                    <span>Copyright © 2026 <b>Celldus Pharma</b>, Developed by <a
+                            href="https://rakle.in/"><b>Rakle</b></a></span>
+                </div>
+                <div class="col-sm-3">
+                    <div class="d-flex flex-row align-items-center justify-content-end social-icons">
+                        <ul class="social-icons list-inline">
+                            <li>
+                                <a target="_blank" href="https://www.facebook.com/preyantechnosys19">
+                                    <i class="fa-brands fa-facebook-f"></i>
+                                </a>
+                            </li>
+
+                            <li>
+                                <a target="_blank" href="https://twitter.com/PreyanTechnosys">
+                                    <i class="fa-brands fa-twitter"></i>
+                                </a>
+                            </li>
+
+                            <li>
+                                <a target="_blank" href="#">
+                                    <i class="fa-brands fa-flickr"></i>
+                                </a>
+                            </li>
+
+                            <li>
+                                <a target="_blank" href="https://www.linkedin.com/in/preyan-technosys-pvt-ltd/">
+                                    <i class="fa-brands fa-linkedin-in"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+<a id="totop" href="#top">
+    <i class="fa fa-angle-up"></i>
+</a>
+
+<!-- Call Button (Right Side) -->
+<div class="call-floating">
+    <a href="tel:+919217499771" class="call-btn">
+        <i class="fa fa-phone"></i>
+    </a>
+</div>
+
+<!-- WhatsApp Button (Left Side) -->
+<div class="whatsapp-floating">
+    <a href="https://wa.me/919217499771" target="_blank" class="whatsapp-btn">
+        <i class="fa-brands fa-whatsapp"></i>
+    </a>
+</div>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const subscribeForm = document.getElementById("subscribe-form");
+
+    if (subscribeForm) {
+        subscribeForm.addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            const formData = new FormData(subscribeForm);
+
+            fetch(subscribeForm.action, {
+                method: "POST",
+                body: formData,
+                headers: {
+                    "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                showPopup(data.message, data.status);
+                if (data.status === "success") {
+                    subscribeForm.reset();
+                }
+            })
+            .catch(() => {
+                showPopup("Something went wrong!", "error");
+            });
+        });
+    }
+
+    function showPopup(message, type) {
+        const popup = document.getElementById("popup-message");
+
+        popup.innerText = message;
+        popup.style.background = type === "error" ? "#dc3545" : "#28a745";
+        popup.style.display = "block";
+
+        setTimeout(() => {
+            popup.style.display = "none";
+        }, 3000);
+    }
+
+});
+</script>
+</div>

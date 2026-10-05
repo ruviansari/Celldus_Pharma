@@ -1,0 +1,172 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Tax Invoices & Billing System | Celldus Pharma{% endblock %}
+{% block page_title %}Pharmaceutical GST Tax Invoices & Billing System{% endblock %}
+{% block page_subtitle %}Central repository for all commercial dispatch invoices, Form 20-B/21-B drug license billing, transporter LR dockets, and government E-Way bills.{% endblock %}
+
+{% block top_actions %}
+<a href="{% url 'dashboard_sales' %}" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none;">
+    <i class="fa-solid fa-cart-plus"></i> Create Sales Order & Generate Invoice
+</a>
+{% endblock %}
+
+{% block content %}
+<!-- KPI Stats Row -->
+<div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-bottom: 2rem;">
+    <div class="stat-card" style="background: #0f172a; border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem; position: relative; overflow: hidden;">
+        <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
+            Total Revenue Invoiced
+        </div>
+        <div style="font-size: 1.6rem; font-weight: 800; color: #10b981; font-family: monospace;">
+            ₹{{ total_invoiced_value|floatformat:2 }}
+        </div>
+        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.35rem;">
+            Commercial dispatches cleared
+        </div>
+    </div>
+
+    <div class="stat-card" style="background: #0f172a; border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem;">
+        <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
+            Tax Invoices Generated
+        </div>
+        <div style="font-size: 1.6rem; font-weight: 800; color: #3b82f6;">
+            {{ total_invoices_count }}
+        </div>
+        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.35rem;">
+            Sequential GST invoices
+        </div>
+    </div>
+
+    <div class="stat-card" style="background: #0f172a; border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem;">
+        <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
+            Government E-Way Bills
+        </div>
+        <div style="font-size: 1.6rem; font-weight: 800; color: #06b6d4;">
+            {{ active_eway_count }}
+        </div>
+        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.35rem;">
+            Active transit passes
+        </div>
+    </div>
+
+    <div class="stat-card" style="background: #0f172a; border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem;">
+        <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
+            System Compliance
+        </div>
+        <div style="font-size: 1.3rem; font-weight: 800; color: #a855f7;">
+            21 CFR Part 11
+        </div>
+        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.35rem;">
+            Audit trail verified
+        </div>
+    </div>
+</div>
+
+<!-- Search and Filter Bar -->
+<div class="panel" style="margin-bottom: 1.5rem; padding: 1rem 1.25rem;">
+    <form method="GET" action="{% url 'dashboard_invoices' %}" style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
+        <div style="flex: 1; min-width: 250px; position: relative;">
+            <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
+            <input type="text" name="q" value="{{ search_query }}" class="form-control" placeholder="Search by Invoice No, Customer, Transporter, E-Way Bill..." style="padding-left: 2.5rem;">
+        </div>
+        <button type="submit" class="btn btn-primary" style="padding: 0.5rem 1.25rem;">
+            <i class="fa-solid fa-filter"></i> Filter Invoices
+        </button>
+        {% if search_query %}
+        <a href="{% url 'dashboard_invoices' %}" class="btn btn-secondary" style="padding: 0.5rem 1rem; text-decoration: none;">
+            <i class="fa-solid fa-xmark"></i> Clear
+        </a>
+        {% endif %}
+    </form>
+</div>
+
+<!-- Invoices Main Table Panel -->
+<div class="panel">
+    <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <h2 class="panel-title" style="display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fa-solid fa-receipt" style="color: #10b981;"></i>
+            Official GST Tax Invoices & Delivery Challans
+        </h2>
+        <span style="font-size: 0.8rem; color: var(--text-secondary);">
+            Showing {{ invoices|length }} invoice records
+        </span>
+    </div>
+
+    <div class="table-container">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Invoice Number</th>
+                    <th>Sales Order Ref</th>
+                    <th>Customer / Consignee</th>
+                    <th>Transporter & LR Docket</th>
+                    <th>Govt E-Way Bill</th>
+                    <th>Invoice Total</th>
+                    <th style="text-align: right; width: 140px;">Print / Export</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for inv in invoices %}
+                <tr>
+                    <td>
+                        <strong style="color: #10b981; font-family: monospace; font-size: 0.95rem;">{{ inv.document_no }}</strong>
+                        <div style="font-size: 0.72rem; color: var(--text-muted);">
+                            <i class="fa-regular fa-calendar"></i> {{ inv.invoice_date|date:"d M Y" }}
+                        </div>
+                    </td>
+                    <td>
+                        <strong style="color: #60a5fa; font-family: monospace; font-size: 0.85rem;">{{ inv.order.document_no }}</strong>
+                        <div style="font-size: 0.7rem; color: var(--text-muted);">{{ inv.branch.name|default:"Central Site" }}</div>
+                    </td>
+                    <td>
+                        <strong style="color: #fff; font-size: 0.9rem;">{{ inv.customer.name }}</strong>
+                        <div style="font-size: 0.72rem; color: var(--text-secondary);">
+                            DL: {{ inv.customer.drug_license_20b|default:"Verified" }} | GST: {{ inv.customer.gstin|default:"Unregistered" }}
+                        </div>
+                    </td>
+                    <td>
+                        <div style="color: #e2e8f0; font-size: 0.82rem; font-weight: 500;">
+                            <i class="fa-solid fa-truck" style="color: #06b6d4; font-size: 0.75rem;"></i> {{ inv.transporter_name }}
+                        </div>
+                        <div style="font-size: 0.72rem; color: var(--text-muted); font-family: monospace;">
+                            Docket / LR: {{ inv.docket_no|default:"Direct Handover" }}
+                        </div>
+                    </td>
+                    <td>
+                        {% if inv.eway_bill_no %}
+                        <span style="font-family: monospace; color: #10b981; font-size: 0.8rem; background: rgba(16, 185, 129, 0.15); padding: 3px 8px; border-radius: 4px; display: inline-block;">
+                            <i class="fa-solid fa-barcode"></i> {{ inv.eway_bill_no }}
+                        </span>
+                        {% else %}
+                        <span style="color: #f59e0b; font-size: 0.75rem;">Pending</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <strong style="color: #10b981; font-size: 1rem; font-family: monospace;">₹{{ inv.total_amount }}</strong>
+                    </td>
+                    <td style="text-align: right;">
+                        <a href="{% url 'dashboard_invoice_view' inv.id %}" target="_blank" class="btn btn-primary" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; background: #3b82f6; border-color: #3b82f6; display: inline-flex; align-items: center; gap: 0.35rem;" title="View & Print Official GST Tax Invoice">
+                            <i class="fa-solid fa-print"></i> Tax Invoice
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 4rem 1rem;">
+                        <i class="fa-solid fa-file-invoice" style="font-size: 2.5rem; color: var(--text-muted); margin-bottom: 0.75rem; display: block;"></i>
+                        <p style="font-size: 1rem; font-weight: 600; color: #e2e8f0; margin-bottom: 0.25rem;">No Tax Invoices Found</p>
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+                            Dispatch a Sales Order from the Sales & Dispatches module to generate your first GST Tax Invoice.
+                        </p>
+                        <a href="{% url 'dashboard_sales' %}" class="btn btn-primary" style="font-size: 0.85rem; padding: 0.5rem 1.25rem; text-decoration: none;">
+                            <i class="fa-solid fa-cart-plus"></i> Go to Sales & Dispatches
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

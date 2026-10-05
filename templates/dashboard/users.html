@@ -1,0 +1,187 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}User Management | Celldus Pharma{% endblock %}
+{% block page_title %}User Management{% endblock %}
+{% block page_subtitle %}Manage administrative and staff accounts.{% endblock %}
+
+{% block top_actions %}
+<button class="btn btn-primary" onclick="openModal('addUserModal')">
+    <i class="fa-solid fa-user-plus"></i> Add Staff User
+</button>
+{% endblock %}
+
+{% block content %}
+<div class="panel">
+    <div class="panel-header">
+        <h2 class="panel-title">All Administrative & Staff Users</h2>
+    </div>
+
+    <div class="table-container">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Email Address</th>
+                    <th>Staff Status</th>
+                    <th>Superuser Status</th>
+                    <th>Date Joined</th>
+                    <th style="width: 150px; text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users %}
+                <tr>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <div class="sidebar-avatar" style="width: 32px; height: 32px; font-size: 0.85rem;">
+                                {{ u.username|slice:":1"|upper }}
+                            </div>
+                            <div>
+                                <strong style="color: #fff;">{{ u.username }}</strong>
+                                {% if u == user %}
+                                <span
+                                    style="font-size: 0.7rem; background: rgba(79, 70, 229, 0.2); color: #818cf8; padding: 1px 6px; border-radius: 4px; margin-left: 0.25rem;">You</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </td>
+                    <td>{{ u.email|default:"N/A" }}</td>
+                    <td>
+                        {% if u.is_staff %}
+                        <span class="badge badge-success"><i class="fa-solid fa-circle-check"
+                                style="margin-right: 0.25rem;"></i>Active Staff</span>
+                        {% else %}
+                        <span class="badge badge-danger"><i class="fa-solid fa-circle-xmark"
+                                style="margin-right: 0.25rem;"></i>No Access</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if u.is_superuser %}
+                        <span class="badge badge-primary"><i class="fa-solid fa-shield-halved"
+                                style="margin-right: 0.25rem;"></i>Super Admin</span>
+                        {% else %}
+                        <span class="badge badge-secondary">Standard Staff</span>
+                        {% endif %}
+                    </td>
+                    <td style="color: var(--text-muted); font-size: 0.85rem;">{{ u.date_joined|date:"M d, Y" }}</td>
+                    <td>
+                        <div class="action-btn-group" style="justify-content: flex-end;">
+                            <!-- Change Password -->
+                            <button class="action-btn edit"
+                                onclick="prepareChangePassword('{{ u.id }}', '{{ u.username|escapejs }}')"
+                                title="Change Password">
+                                <i class="fa-solid fa-key"></i>
+                            </button>
+                            <!-- Toggle Access -->
+                            {% if u != user %}
+                            <form action="{% url 'dashboard_user_toggle' u.id %}" method="POST" style="margin:0;">
+                                {% csrf_token %}
+                                <button type="submit" class="action-btn"
+                                    style="background: rgba(245, 158, 11, 0.1); color: var(--color-warning); border-color: rgba(245, 158, 11, 0.2);"
+                                    title="Toggle Staff Access">
+                                    <i class="fa-solid fa-toggle-on"></i>
+                                </button>
+                            </form>
+                            <!-- Delete User -->
+                            <form action="{% url 'dashboard_user_delete' u.id %}" method="POST"
+                                onsubmit="return confirm('Are you sure you want to delete this user account?')"
+                                style="margin:0;">
+                                {% csrf_token %}
+                                <button type="submit" class="action-btn delete" title="Delete User">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 3rem;">
+                        No users found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add User Modal -->
+<div id="addUserModal" class="modal-overlay">
+    <div class="modal-content">
+        <h3 class="modal-title">Create Staff Account</h3>
+        <form action="{% url 'dashboard_user_add' %}" method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label" for="add_username">Username</label>
+                <input type="text" id="add_username" name="username" class="form-control" placeholder="e.g. johndoe"
+                    required>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="add_email">Email Address</label>
+                <input type="email" id="add_email" name="email" class="form-control" placeholder="e.g. john@example.com"
+                    required>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="add_password">Password</label>
+                <input type="password" id="add_password" name="password" class="form-control" minlength="6"
+                    placeholder="••••••••" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="add_confirm_password">Confirm Password</label>
+                <input type="password" id="add_confirm_password" name="confirm_password" class="form-control"
+                    minlength="6" placeholder="••••••••" required>
+            </div>
+            <div class="form-group" style="display: flex; gap: 0.5rem; align-items: center; margin-top: 1rem;">
+                <input type="checkbox" id="add_is_superuser" name="is_superuser"
+                    style="cursor: pointer; width: 16px; height: 16px;">
+                <label for="add_is_superuser"
+                    style="cursor: pointer; font-size: 0.9rem; color: var(--text-primary);">Grant Superuser Status (Full
+                    Control)</label>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('addUserModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Create User</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Change Password Modal -->
+<div id="changePasswordModal" class="modal-overlay">
+    <div class="modal-content">
+        <h3 class="modal-title">Reset Password for <span id="pwd_username" style="color: var(--color-accent);"></span>
+        </h3>
+        <form id="changePasswordForm" action="" method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label" for="new_password">New Password</label>
+                <input type="password" id="new_password" name="password" class="form-control" minlength="6"
+                    placeholder="••••••••" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="confirm_new_password">Confirm New Password</label>
+                <input type="password" id="confirm_new_password" name="confirm_password" class="form-control"
+                    minlength="6" placeholder="••••••••" required>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary"
+                    onclick="closeModal('changePasswordModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Update Password</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function prepareChangePassword(id, username) {
+        const form = document.getElementById('changePasswordForm');
+        form.action = `/dashboard/users/change-password/${id}/`;
+        document.getElementById('pwd_username').innerText = username;
+        openModal('changePasswordModal');
+    }
+</script>
+{% endblock %}

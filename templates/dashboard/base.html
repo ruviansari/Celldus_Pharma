@@ -1,0 +1,299 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin Dashboard | Celldus Pharma{% endblock %}</title>
+    <!-- Immediate Theme Setup (Zero-FOUC) -->
+    <script>
+        (function () {
+            try {
+                const savedTheme = localStorage.getItem('celldus_theme') || 'dark';
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            } catch (e) {}
+        })();
+    </script>
+    <!-- Google Fonts & Font Awesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Dashboard CSS with Cache-Bust -->
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v={% now 'U' %}">
+    <style>
+        html, body {
+            overflow-x: hidden;
+            max-width: 100%;
+        }
+        .dashboard-wrapper {
+            display: block !important;
+            width: 100% !important;
+            min-height: 100vh !important;
+            position: relative !important;
+        }
+        .sidebar {
+            width: 275px !important;
+            position: fixed !important;
+            left: 0 !important;
+            top: 0 !important;
+            height: 100vh !important;
+            z-index: 100 !important;
+            box-sizing: border-box !important;
+        }
+        .main-content {
+            margin-left: 275px !important;
+            box-sizing: border-box !important;
+            min-width: 0 !important;
+            width: auto !important;
+            max-width: none !important;
+            padding: 2rem 2.5rem !important;
+        }
+        .stats-grid {
+            width: 100% !important;
+            box-sizing: border-box !important;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+
+    <!-- Django Messages Popups -->
+    {% if messages %}
+    <div class="messages-container">
+        {% for message in messages %}
+        <div class="alert-popup"
+            style="background-color: {% if message.tags == 'error' %}var(--color-danger){% elif message.tags == 'warning' %}var(--color-warning){% else %}var(--color-success){% endif %};">
+            <i
+                class="fa-solid {% if message.tags == 'error' %}fa-circle-exclamation{% elif message.tags == 'warning' %}fa-triangle-exclamation{% else %}fa-circle-check{% endif %}"></i>
+            <span>{{ message }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="dashboard-wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <i class="fa-solid fa-flask-vial"></i>
+                <h2>Celldus Admin</h2>
+            </div>
+
+            <ul class="sidebar-menu">
+                <li class="sidebar-menu-header">Overview & Operations</li>
+                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_index' %}active{% endif %}">
+                    <a href="{% url 'dashboard_index' %}">
+                        <i class="fa-solid fa-chart-pie"></i>
+                        <span>ERP Executive Cockpit</span>
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="/api/docs/" target="_blank">
+                        <i class="fa-solid fa-code"></i>
+                        <span>Swagger REST APIs</span>
+                        <span style="background: #10b981; color: #fff; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; margin-left: auto;">v1.0</span>
+                    </a>
+                </li>
+
+                <li class="sidebar-menu-header">Master Data & Catalog</li>
+                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_products' %}active{% endif %}">
+                    <a href="{% url 'dashboard_products' %}">
+                        <i class="fa-solid fa-pills"></i>
+                        <span>Products & Formulations</span>
+                    </a>
+                </li>
+                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_categories' %}active{% endif %}">
+                    <a href="{% url 'dashboard_categories' %}">
+                        <i class="fa-solid fa-tags"></i>
+                        <span>Therapeutic Categories</span>
+                    </a>
+                </li>
+                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_masters' %}active{% endif %}">
+                    <a href="{% url 'dashboard_masters' %}">
+                        <i class="fa-solid fa-layer-group"></i>
+                        <span>Master Data Admin Control</span>
+                    </a>
+                </li>
+
+                <li class="sidebar-menu-header">Pharma Supply & Quality</li>
+                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_inventory_lots' %}active{% endif %}">
+                    <a href="{% url 'dashboard_inventory_lots' %}">
+                        <i class="fa-solid fa-boxes-stacked"></i>
+                        <span>Inventory Lots (FEFO)</span>
+                    </a>
+                </li>
+                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_procurement' or request.resolver_match.url_name == 'dashboard_po_view' %}active{% endif %}">
+                    <a href="{% url 'dashboard_procurement' %}">
+                        <i class="fa-solid fa-file-invoice-dollar"></i>
+                        <span>Purchase Orders (PO & GRN)</span>
+                    </a>
+                </li>
+                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_quality' %}active{% endif %}">
+                    <a href="{% url 'dashboard_quality' %}">
+                        <i class="fa-solid fa-microscope"></i>
+                        <span>QC & QA Dispositions</span>
+                    </a>
+                </li>
+                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_production' %}active{% endif %}">
+                    <a href="{% url 'dashboard_production' %}">
+                        <i class="fa-solid fa-industry"></i>
+                        <span>BMR Production Orders</span>
+                    </a>
+                </li>
+
+                <li class="sidebar-menu-header">Commercial & Users</li>
+                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_sales' %}active{% endif %}">
+                    <a href="{% url 'dashboard_sales' %}">
+                        <i class="fa-solid fa-truck-fast"></i>
+                        <span>Sales Orders & FEFO</span>
+                    </a>
+                </li>
+                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_invoices' or request.resolver_match.url_name == 'dashboard_invoice_view' %}active{% endif %}">
+                    <a href="{% url 'dashboard_invoices' %}">
+                        <i class="fa-solid fa-receipt"></i>
+                        <span>Tax Invoices System</span>
+                    </a>
+                </li>
+                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_crm' %}active{% endif %}">
+                    <a href="{% url 'dashboard_crm' %}">
+                        <i class="fa-solid fa-address-book"></i>
+                        <span>CRM Leads & Pipeline</span>
+                    </a>
+                </li>
+                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_customers' %}active{% endif %}">
+                    <a href="{% url 'dashboard_customers' %}">
+                        <i class="fa-solid fa-users-viewfinder"></i>
+                        <span>Website Inquiries</span>
+                    </a>
+                </li>
+                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_users' %}active{% endif %}">
+                    <a href="{% url 'dashboard_users' %}">
+                        <i class="fa-solid fa-user-shield"></i>
+                        <span>10 Enterprise Roles</span>
+                    </a>
+                </li>
+                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_audit_trail' %}active{% endif %}">
+                    <a href="{% url 'dashboard_audit_trail' %}">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <span>21 CFR Part 11 Audit</span>
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="{% url 'home' %}" target="_blank">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                        <span>Live Website</span>
+                    </a>
+                </li>
+            </ul>
+
+            <div class="sidebar-footer">
+                <div class="sidebar-profile">
+                    <div class="sidebar-avatar">
+                        {{ user.username|slice:":1"|upper }}
+                    </div>
+                    <div class="sidebar-user-info">
+                        <div class="sidebar-user-name">{{ user.username }}</div>
+                        <div class="sidebar-user-role">{% if user.is_superuser %}Super Admin{% else %}Staff{% endif %}
+                        </div>
+                    </div>
+                    <form action="{% url 'dashboard_logout' %}" method="POST" style="margin: 0;">
+                        {% csrf_token %}
+                        <button type="submit" class="logout-btn" title="Log Out">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <header class="top-bar">
+                <div class="top-bar-title">
+                    <h1>{% block page_title %}Overview{% endblock %}</h1>
+                    <p>{% block page_subtitle %}Welcome back, {{ user.username }}{% endblock %}</p>
+                </div>
+                <div class="top-bar-actions" style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                    {% block top_actions %}{% endblock %}
+                    <button id="themeToggleBtn" class="theme-toggle-btn" type="button" title="Switch Theme (Dark / Light)" aria-label="Toggle theme">
+                        <i id="themeToggleIcon" class="fa-solid fa-sun"></i>
+                        <span id="themeToggleText">Light Mode</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Main block -->
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <!-- Main JS functions -->
+    <script>
+        // Theme Switcher Logic
+        (function () {
+            const toggleBtn = document.getElementById('themeToggleBtn');
+            const toggleIcon = document.getElementById('themeToggleIcon');
+            const toggleText = document.getElementById('themeToggleText');
+
+            function applyTheme(theme) {
+                document.documentElement.setAttribute('data-theme', theme);
+                try {
+                    localStorage.setItem('celldus_theme', theme);
+                } catch (e) {}
+
+                if (theme === 'light') {
+                    if (toggleIcon) toggleIcon.className = 'fa-solid fa-moon';
+                    if (toggleText) toggleText.textContent = 'Dark Mode';
+                    if (toggleBtn) toggleBtn.setAttribute('title', 'Switch to Dark Mode');
+                } else {
+                    if (toggleIcon) toggleIcon.className = 'fa-solid fa-sun';
+                    if (toggleText) toggleText.textContent = 'Light Mode';
+                    if (toggleBtn) toggleBtn.setAttribute('title', 'Switch to Light Mode');
+                }
+            }
+
+            // Sync on load
+            const initialTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+            applyTheme(initialTheme);
+
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', function () {
+                    const current = document.documentElement.getAttribute('data-theme') || 'dark';
+                    const target = current === 'dark' ? 'light' : 'dark';
+                    applyTheme(target);
+                });
+            }
+        })();
+
+        // Dismiss alerts after 3.5 seconds
+        document.addEventListener("DOMContentLoaded", function () {
+            const alerts = document.querySelectorAll(".alert-popup");
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    alert.style.transition = "opacity 0.5s ease-out, transform 0.5s ease-out";
+                    alert.style.opacity = "0";
+                    alert.style.transform = "translateX(50px)";
+                    setTimeout(() => alert.remove(), 500);
+                }, 3500);
+            });
+        });
+
+        // Common modal helper functions
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
+        }
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+        window.onclick = function (event) {
+            if (event.target.classList.contains('modal-overlay')) {
+                event.target.style.display = 'none';
+            }
+        }
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

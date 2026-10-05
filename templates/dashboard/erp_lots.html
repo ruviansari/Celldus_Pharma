@@ -1,0 +1,193 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Pharma Inventory & FEFO Lots | Celldus Pharma{% endblock %}
+{% block page_title %}Inventory & FEFO Batch Monitor{% endblock %}
+{% block page_subtitle %}Real-time batch quantities, expiry dates, FEFO allocations, and controlled quality statuses.{% endblock %}
+
+{% block content %}
+<!-- Quick KPI Cards -->
+<div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 1.5rem;">
+    <!-- Total Physical Lots -->
+    <a href="{% url 'dashboard_inventory_lots' %}" style="text-decoration: none; color: inherit; display: block;" title="View All Physical Lots">
+        <div class="stats-card" style="cursor: pointer; {% if not status_filter %}border-color: rgba(99, 102, 241, 0.4); box-shadow: 0 4px 15px rgba(99, 102, 241, 0.15);{% endif %}">
+            <div class="stats-info">
+                <h3>Total Physical Lots</h3>
+                <div class="stats-number">{{ total_lots }}</div>
+                <div style="font-size: 0.72rem; color: var(--text-secondary); margin-top: 4px;">All batches &rarr;</div>
+            </div>
+            <div class="stats-icon-wrapper indigo"><i class="fa-solid fa-boxes-stacked"></i></div>
+        </div>
+    </a>
+
+    <!-- Quarantine Lots -->
+    <a href="{% url 'dashboard_inventory_lots' %}?status=QUARANTINE" style="text-decoration: none; color: inherit; display: block;" title="Filter by Quarantine (QC Pending)">
+        <div class="stats-card" style="border-left: 4px solid #f59e0b; cursor: pointer; {% if status_filter == 'QUARANTINE' %}border-color: #f59e0b; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.2);{% endif %}">
+            <div class="stats-info">
+                <h3 style="color: #f59e0b;">Quarantine (QC Pending)</h3>
+                <div class="stats-number">{{ quarantine_count }}</div>
+                <div style="font-size: 0.72rem; color: var(--text-secondary); margin-top: 4px;">Awaiting release &rarr;</div>
+            </div>
+            <div class="stats-icon-wrapper amber" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;"><i class="fa-solid fa-hourglass-half"></i></div>
+        </div>
+    </a>
+
+    <!-- Available Lots -->
+    <a href="{% url 'dashboard_inventory_lots' %}?status=AVAILABLE" style="text-decoration: none; color: inherit; display: block;" title="Filter by Available (FEFO Ready)">
+        <div class="stats-card" style="border-left: 4px solid #10b981; cursor: pointer; {% if status_filter == 'AVAILABLE' %}border-color: #10b981; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);{% endif %}">
+            <div class="stats-info">
+                <h3 style="color: #10b981;">Available (FEFO Ready)</h3>
+                <div class="stats-number">{{ available_count }}</div>
+                <div style="font-size: 0.72rem; color: var(--text-secondary); margin-top: 4px;">Ready for use &rarr;</div>
+            </div>
+            <div class="stats-icon-wrapper emerald"><i class="fa-solid fa-circle-check"></i></div>
+        </div>
+    </a>
+
+    <!-- Blocked Lots -->
+    <a href="{% url 'dashboard_inventory_lots' %}?status=BLOCKED" style="text-decoration: none; color: inherit; display: block;" title="Filter by Blocked / Held">
+        <div class="stats-card" style="border-left: 4px solid #f43f5e; cursor: pointer; {% if status_filter == 'BLOCKED' %}border-color: #f43f5e; box-shadow: 0 4px 15px rgba(244, 63, 94, 0.2);{% endif %}">
+            <div class="stats-info">
+                <h3 style="color: #f43f5e;">Blocked / Held</h3>
+                <div class="stats-number">{{ blocked_count }}</div>
+                <div style="font-size: 0.72rem; color: var(--text-secondary); margin-top: 4px;">On QA hold &rarr;</div>
+            </div>
+            <div class="stats-icon-wrapper rose"><i class="fa-solid fa-ban"></i></div>
+        </div>
+    </a>
+</div>
+
+<!-- Controls Bar -->
+<div class="panel" style="margin-bottom: 1.5rem; padding: 1.25rem 1.5rem;">
+    <form method="GET" style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 250px;">
+            <input type="text" name="q" value="{{ search_query }}" placeholder="Search by Lot No, Batch No, or Item Name..." 
+                   style="width: 100%; padding: 0.6rem 1rem; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); border-radius: 8px; color: #fff;">
+        </div>
+        <div style="width: 200px;">
+            <select name="status" style="width: 100%; padding: 0.6rem 1rem; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); border-radius: 8px; color: #fff;">
+                <option value="">All Statuses</option>
+                <option value="AVAILABLE" {% if status_filter == 'AVAILABLE' %}selected{% endif %}>AVAILABLE</option>
+                <option value="QUARANTINE" {% if status_filter == 'QUARANTINE' %}selected{% endif %}>QUARANTINE</option>
+                <option value="BLOCKED" {% if status_filter == 'BLOCKED' %}selected{% endif %}>BLOCKED</option>
+                <option value="REJECTED" {% if status_filter == 'REJECTED' %}selected{% endif %}>REJECTED</option>
+                <option value="EXPIRED" {% if status_filter == 'EXPIRED' %}selected{% endif %}>EXPIRED</option>
+                <option value="RECALLED" {% if status_filter == 'RECALLED' %}selected{% endif %}>RECALLED</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary" style="padding: 0.6rem 1.2rem;"><i class="fa-solid fa-filter"></i> Filter</button>
+        {% if status_filter or search_query %}
+        <a href="{% url 'dashboard_inventory_lots' %}" class="btn btn-secondary" style="padding: 0.6rem 1rem;">Reset</a>
+        {% endif %}
+    </form>
+</div>
+
+<!-- Inventory Lots Table -->
+<div class="panel">
+    <div class="panel-header">
+        <h2 class="panel-title"><i class="fa-solid fa-list-check" style="color: var(--color-accent); margin-right: 0.5rem;"></i>Active Inventory Lots (Sorted by Expiry Date / FEFO)</h2>
+        <span style="font-size: 0.8rem; color: var(--text-secondary);">Showing {{ lots|length }} records</span>
+    </div>
+    <div class="table-container">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Lot Number</th>
+                    <th>Material / Formulation</th>
+                    <th>Batch No</th>
+                    <th>Warehouse & Bin</th>
+                    <th>Stock On Hand</th>
+                    <th>Reserved</th>
+                    <th>Expiry Date</th>
+                    <th>Status</th>
+                    <th>Regulatory Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for lot in lots %}
+                <tr>
+                    <td>
+                        <strong style="color: #60a5fa; font-family: monospace; font-size: 0.85rem;">{{ lot.lot_number }}</strong>
+                        <div style="font-size: 0.7rem; color: var(--text-muted);">{{ lot.created_at|date:"M d, Y" }}</div>
+                    </td>
+                    <td>
+                        <strong style="color: #fff;">{{ lot.item.name }}</strong>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary);">Code: {{ lot.item.item_code }} | Type: {{ lot.item.get_item_type_display }}</div>
+                    </td>
+                    <td>
+                        <span style="background: rgba(255, 255, 255, 0.05); padding: 2px 8px; border-radius: 4px; font-family: monospace; color: #e2e8f0; font-size: 0.8rem;">
+                            {{ lot.batch_no }}
+                        </span>
+                    </td>
+                    <td>
+                        <div style="color: #e2e8f0; font-size: 0.8rem;">{{ lot.warehouse.code }}</div>
+                        <div style="color: var(--text-muted); font-size: 0.7rem;">{{ lot.bin.bin_code|default:"General Bay" }}</div>
+                    </td>
+                    <td>
+                        <strong style="color: #10b981; font-size: 0.95rem;">{{ lot.quantity_on_hand }}</strong>
+                        <span style="font-size: 0.75rem; color: var(--text-secondary);">{{ lot.uom.code }}</span>
+                    </td>
+                    <td>
+                        <span style="color: {% if lot.quantity_reserved > 0 %}#f59e0b{% else %}var(--text-muted){% endif %}; font-size: 0.85rem;">
+                            {{ lot.quantity_reserved }} {{ lot.uom.code }}
+                        </span>
+                    </td>
+                    <td>
+                        <span style="color: #e2e8f0; font-size: 0.85rem; font-weight: 500;">{{ lot.expiry_date|date:"d M Y" }}</span>
+                    </td>
+                    <td>
+                        <span style="padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700;
+                            {% if lot.status == 'AVAILABLE' %}background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4);
+                            {% elif lot.status == 'QUARANTINE' %}background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4);
+                            {% elif lot.status == 'BLOCKED' or lot.status == 'REJECTED' %}background: rgba(244, 63, 94, 0.2); color: #f43f5e; border: 1px solid rgba(244, 63, 94, 0.4);
+                            {% else %}background: rgba(148, 163, 184, 0.2); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.4);{% endif %}">
+                            {{ lot.status }}
+                        </span>
+                    </td>
+                    <td>
+                        <div style="display: flex; gap: 0.5rem;">
+                            {% if lot.status == 'AVAILABLE' %}
+                            <form method="POST" action="{% url 'dashboard_lot_action' lot.id %}" style="display: inline;" onsubmit="return promptForReason(this, 'BLOCK');">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="BLOCK">
+                                <input type="hidden" name="reason" value="">
+                                <button type="submit" class="btn btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; color: #f43f5e; border-color: rgba(244, 63, 94, 0.3);" title="Put on Quarantine Hold">
+                                    <i class="fa-solid fa-lock"></i> Hold
+                                </button>
+                            </form>
+                            {% elif lot.status == 'BLOCKED' %}
+                            <form method="POST" action="{% url 'dashboard_lot_action' lot.id %}" style="display: inline;" onsubmit="return promptForReason(this, 'UNBLOCK');">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="UNBLOCK">
+                                <input type="hidden" name="reason" value="">
+                                <button type="submit" class="btn btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; color: #10b981; border-color: rgba(16, 185, 129, 0.3);" title="Release Hold">
+                                    <i class="fa-solid fa-lock-open"></i> Release
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 3rem;">
+                        No inventory lots found matching the filter criteria.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+function promptForReason(form, action) {
+    var reason = prompt("Enter mandatory 21 CFR Part 11 Regulatory Reason for " + action + " (min 5 characters):");
+    if (!reason || reason.trim().length < 5) {
+        alert("Action aborted: A meaningful regulatory rationale (at least 5 characters) is mandatory under 21 CFR Part 11.");
+        return false;
+    }
+    form.querySelector('input[name="reason"]').value = reason.trim();
+    return true;
+}
+</script>
+{% endblock %}

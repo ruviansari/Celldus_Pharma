@@ -1,0 +1,243 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<!-- page-title -->
+<div class="ttm-page-title-row">
+    <div class="ttm-page-title-row-inner">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-12">
+                    <div class="page-title-heading">
+                        <h2 class="title">Blog Details</h2>
+                    </div>
+                    <div class="breadcrumb-wrapper">
+                        <span>
+                            <a title="Homepage" href="{% url 'home' %}">Home</a>
+                        </span>
+                        <span>Blog Details</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div><!-- page-title end-->
+
+<!--site-main start-->
+<div class="site-main">
+    <div class="ttm-row sidebar ttm-sidebar-right clearfix">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 content-area">
+                    <article class="post ttm-blog-single clearfix">
+                        <!-- post-featured-wrapper -->
+                        <div class="ttm-post-featured-wrapper ttm-featured-wrapper">
+                            <div class="ttm-post-featured">
+                                <img class="img-fluid" src="{% static blog.image %}" alt="{{ blog.title }}">
+                            </div>
+                        </div><!-- post-featured-wrapper end -->
+
+                        <!-- ttm-blog-classic-content -->
+                        <div class="ttm-blog-single-content">
+                            <div class="ttm-post-entry-header">
+                                <div class="post-meta">
+                                    <span class="ttm-meta-line byline">
+                                        <i class="fa fa-user"></i>By {{ blog.author }}
+                                    </span>
+                                    <span class="ttm-meta-line entry-date">
+                                        <i class="fa fa-calendar"></i>
+                                        <time class="entry-date published">{{ blog.date }}</time>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="entry-content">
+                                <div class="ttm-box-desc-text">
+                                    <h4>{{ blog.title }}</h4>
+                                    <p><em>{{ blog.desc }}</em></p>
+
+                                    <!-- Dynamic content paragraphs -->
+                                    {% for paragraph in blog.content %}
+                                        <p>{{ paragraph }}</p>
+                                    {% endfor %}
+
+                                    <!-- Gallery images -->
+                                    <div class="row pb-15 pt-15">
+                                        <div class="col-sm-4">
+                                            <div class="pb-15">
+                                                <div class="single-gallery-image-wrap">
+                                                    <div class="ttm-box-view-overlay">
+                                                        <a class="ttm_prettyphoto single-gallery-block" title=""
+                                                            data-rel="prettyPhoto"
+                                                            href="{% static 'images/blog/blog-four-740x504.jpg' %}">
+                                                            <i class="fa fa-expand"></i>
+                                                        </a>
+                                                        <img src="{% static 'images/blog/blog-four-740x504.jpg' %}"
+                                                            class="img-fluid" alt="">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-4">
+                                            <div class="pb-15">
+                                                <div class="single-gallery-image-wrap">
+                                                    <div class="ttm-box-view-overlay">
+                                                        <a class="ttm_prettyphoto single-gallery-block" title=""
+                                                            data-rel="prettyPhoto"
+                                                            href="{% static 'images/blog/blog-one-740x504.jpg' %}">
+                                                            <i class="fa fa-expand"></i>
+                                                        </a>
+                                                        <img src="{% static 'images/blog/blog-one-740x504.jpg' %}"
+                                                            class="img-fluid" alt="">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-4">
+                                            <div class="pb-15">
+                                                <div class="single-gallery-image-wrap">
+                                                    <div class="ttm-box-view-overlay">
+                                                        <a class="ttm_prettyphoto single-gallery-block" title=""
+                                                            data-rel="prettyPhoto"
+                                                            href="{% static 'images/blog/blog-five-740x504.jpg' %}">
+                                                            <i class="fa fa-expand"></i>
+                                                        </a>
+                                                        <img src="{% static 'images/blog/blog-five-740x504.jpg' %}"
+                                                            class="img-fluid" alt="">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Key Points section -->
+                                    {% if blog.points %}
+                                    <h4>Key Highlights</h4>
+                                    <ul class="ttm-list ttm-list-style-icon mb-15">
+                                        {% for point in blog.points %}
+                                        <li>
+                                            <i class="fa fa-minus"></i>
+                                            <div class="ttm-list-li-content">{{ point }}</div>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                    {% endif %}
+
+                                    <!-- Share & Tags Footer -->
+                                    <div class="ttm-blogbox-desc-footer">
+                                        <div class="ttm-social-share-wrapper">
+                                            <div class="ttm-social-share-title">Share This Post :</div>
+                                            <ul class="social-icons circle">
+                                                <li>
+                                                    <a href="https://www.facebook.com/preyantechnosys19" target="_blank">
+                                                        <i class="fa-brands fa-facebook-f"></i>
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a href="https://twitter.com/PreyanTechnosys" target="_blank">
+                                                        <i class="fa-brands fa-twitter"></i>
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a href="https://www.linkedin.com/in/preyan-technosys-pvt-ltd/" target="_blank">
+                                                        <i class="fa-brands fa-linkedin"></i>
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                        <div class="ttm-blogbox-footer-readmore">
+                                            <div class="ttm-blogbox-footer-right">
+                                                <a class="ttm-btn ttm-btn-size-sm ttm-btn-shape-rounded ttm-btn-style-fill ttm-btn-color-grey mr-2" href="#">Pharma</a>
+                                                <a class="ttm-btn ttm-btn-size-sm ttm-btn-shape-rounded ttm-btn-style-fill ttm-btn-color-grey" href="#">Healthcare</a>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Comments Section -->
+                                    <div class="ttm-blog-classic-box-comment clearfix">
+                                        <div id="comments" class="comments-area">
+                                            <h2 class="comments-title">Leave a comment on "{{ blog.title }}"</h2>
+                                            <div class="comment-respond">
+                                                <h3 class="comment-reply-title">Leave a Reply</h3>
+                                                <form action="#" method="post" id="commentform" class="comment-form">
+                                                    {% csrf_token %}
+                                                    <p class="comment-notes">Your email address will not be published.</p>
+                                                    <p class="comment-form-comment">
+                                                        <textarea id="comment" placeholder="Comment" name="comment"
+                                                            cols="45" rows="4" aria-required="true"></textarea>
+                                                    </p>
+                                                    <p class="comment-form-author">
+                                                        <input id="author" placeholder="Name (required)" name="author"
+                                                            type="text" value="" size="30" aria-required="true">
+                                                    </p>
+                                                    <p class="comment-form-email">
+                                                        <input id="email" placeholder="Email (required)" name="email"
+                                                            type="text" value="" size="30" aria-required="true">
+                                                    </p>
+                                                    <p class="comment-form-url">
+                                                        <input id="url" placeholder="Website" name="url" type="text"
+                                                            value="" size="30">
+                                                    </p>
+                                                    <p class="form-submit mt-40">
+                                                        <button
+                                                            class="submit ttm-btn ttm-btn-size-md ttm-btn-shape-rounded ttm-btn-style-fill ttm-btn-color-skincolor"
+                                                            type="submit">Post Comment</button>
+                                                    </p>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div><!-- ttm-blog-classic-content end -->
+                    </article><!-- post end -->
+                </div>
+
+                <!-- Sidebar -->
+                <div class="col-lg-4 widget-area sidebar-right">
+                    <aside class="widget widget-search">
+                        <form role="search" method="get" class="search-form" action="#">
+                            <label>
+                                <span class="screen-reader-text">Search for:</span>
+                                <input type="search" class="input-text" placeholder="Enter Your Keyboard...." value="" name="s">
+                            </label>
+                            <button class="btn" type="submit" value="Search">
+                                <i class="fa fa-search" aria-hidden="true"></i>
+                            </button>
+                        </form>
+                    </aside>
+                    <aside class="widget widget-Categories with-title">
+                        <h3 class="widget-title">Categories</h3>
+                        <ul>
+                            {% for cat in categories %}
+                            <li>
+                                <a href="{% url 'product' %}?category={{ cat.id }}">{{ cat.name }}</a>
+                                <span>{{ cat.products.count }}</span>
+                            </li>
+                            {% empty %}
+                            <li><span>No categories found</span></li>
+                            {% endfor %}
+                        </ul>
+                    </aside>
+                    <aside class="widget widget-recent-post with-title">
+                        <h3 class="widget-title">Recent Posts</h3>
+                        <ul class="widget-post ttm-recent-post-list">
+                            {% for r_blog in recent_blogs %}
+                            <li>
+                                <a href="{% url 'blog_details' r_blog.id %}">
+                                    <img class="img-fluid" src="{% static r_blog.image %}" alt="{{ r_blog.title }}">
+                                </a>
+                                <span class="post-date">{{ r_blog.date }}</span>
+                                <a href="{% url 'blog_details' r_blog.id %}">{{ r_blog.title }}</a>
+                            </li>
+                            {% empty %}
+                            <li><span>No other posts</span></li>
+                            {% endfor %}
+                        </ul>
+                    </aside>
+                </div>
+            </div><!-- row end -->
+        </div>
+    </div>
+</div><!--site-main end-->
+{% endblock %}

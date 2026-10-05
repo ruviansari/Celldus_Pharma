@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="ttm-page-title-row">
+    <div class="ttm-page-title-row-inner">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-12">
+                    <div class="page-title-heading">
+                        <h2 class="title">Contact Us</h2>
+                    </div>
+                    <div class="breadcrumb-wrapper">
+                        <span>
+                            <a title="Homepage" href="{% url 'home' %}">Home</a>
+                        </span>
+                        <span>Contact Us</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div><!-- page-title end-->
+
+
+<!--site-main start-->
+<div class="site-main">
+
+
+    <section class="ttm-row pt-0 pb-50 clearfix">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4">
+                    <!-- testimonial-box -->
+                    <div class="pt-45 res-991-pt-0 res-991-pb-30">
+                        <div class="mb-30">
+                            <h4>Our Office Inforamtion</h4>
+                        </div>
+                        <!--featured-icon-box-->
+                        <div class="featured-icon-box icon-align-before-content icon-ver_align-top">
+                            <div class="featured-icon">
+                                <div
+                                    class="ttm-icon ttm-icon_element-onlytxt ttm-icon_element-color-skincolor ttm-icon_element-size-md">
+                                    <i class="flaticon-placeholder"></i>
+                                </div>
+                            </div>
+                            <div class="featured-content">
+                                <div class="featured-title">
+                                    <h5>Location</h5>
+                                </div>
+                                <div class="featured-desc">
+                                    <p>H1A/20, SECTOR-63, GAUTAM BUDDHA NAGAR, NOIDA, UTTAR PRADESH, INDIA, 201301
+                                    </p>
+                                </div>
+                            </div>
+                        </div><!-- featured-icon-box end-->
+                        <div class="sep_holder_box width-100 mt-20 mb-20">
+                            <span class="sep_holder"><span class="sep_line"></span></span>
+                        </div>
+                        <!--featured-icon-box-->
+                        <div class="featured-icon-box icon-align-before-content icon-ver_align-top">
+                            <div class="featured-icon">
+                                <div
+                                    class="ttm-icon ttm-icon_element-onlytxt ttm-icon_element-color-skincolor ttm-icon_element-size-md">
+                                    <i class="flaticon-call"></i>
+                                </div>
+                            </div>
+                            <div class="featured-content">
+                                <div class="featured-title">
+                                    <h5>Call Us</h5>
+                                </div>
+                                <div class="featured-desc">
+                                    <a href="tel:+919217499770">+91 9217499770</a><br>
+                                    <a href="tel:+919217499771">+91 9217499771</a>
+                                </div>
+                            </div>
+                        </div><!-- featured-icon-box end-->
+                        <div class="sep_holder_box width-100 mt-20 mb-20">
+                            <span class="sep_holder"><span class="sep_line"></span></span>
+                        </div>
+                        <!--featured-icon-box-->
+                        <div class="featured-icon-box icon-align-before-content icon-ver_align-top">
+                            <div class="featured-icon">
+                                <div
+                                    class="ttm-icon ttm-icon_element-onlytxt ttm-icon_element-color-skincolor ttm-icon_element-size-md">
+                                    <i class="flaticon-email"></i>
+                                </div>
+                            </div>
+                            <div class="featured-content">
+                                <div class="featured-title">
+                                    <h5>Email</h5>
+                                </div>
+                                <div class="featured-desc">
+                                    <a href="mailto:info@cellduspharma.com">info@cellduspharma.com</a><br>
+                                    <a href="mailto:sales@cellduspharma.com">sales@cellduspharma.com</a>
+                                </div>
+                            </div>
+                        </div><!-- featured-icon-box end-->
+                        <ul class="social-icons">
+                            <li class="social-facebook">
+                                <a target="_blank" href="https://www.facebook.com/preyantechnosys19">
+                                    <i class="fa-brands fa-facebook-f"></i>
+                                </a>
+                            </li>
+
+                            <li class="social-linkedin">
+                                <a target="_blank" href="https://www.linkedin.com/in/preyan-technosys-pvt-ltd/">
+                                    <i class="fa-brands fa-linkedin-in"></i>
+                                </a>
+                            </li>
+
+                            <li class="social-pinterest">
+                                <a target="_blank" href="https://in.pinterest.com/preyan_technosys/">
+                                    <i class="fa-brands fa-pinterest-p"></i>
+                                </a>
+                            </li>
+
+                            <li class="social-twitter">
+                                <a target="_blank" href="https://twitter.com/PreyanTechnosys">
+                                    <i class="fa-brands fa-twitter"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-lg-8">
+                    <div class="ttm-col-bgcolor-yes ttm-bg ttm-bgcolor-white z-index-2 spacing-5 box-shadow">
+                        <div class="ttm-col-wrapper-bg-layer ttm-bg-layer"></div>
+                        <!-- section title -->
+                        <div class="section-title with-desc clearfix">
+                            <div class="title-header">
+                                <h5>GET IN TOUCH</h5>
+                                <h2 class="title">Do not Use This Form To Communicate Personal Data.</h2>
+                            </div>
+                        </div><!-- section title end -->
+                        {% if success %}
+                        <div style="color:green; margin-bottom:10px;">
+                            Message sent successfully ✅
+                        </div>
+                        {% endif %}
+
+                        <form id="contact-form" class="ttm-contactform-2 wrap-form clearfix" method="POST"
+                            action="{% url 'contact' %}">
+
+                            {% csrf_token %}
+
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <label>
+                                        <span class="text-input">
+                                            <input name="name" type="text" placeholder="Your Name" required>
+                                        </span>
+                                    </label>
+                                </div>
+
+                                <div class="col-lg-6">
+                                    <label>
+                                        <span class="text-input">
+                                            <input name="email" type="email" placeholder="Your Email" required>
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <label>
+                                        <span class="text-input">
+                                            <input name="phone" type="text" placeholder="Phone Number" required>
+                                        </span>
+                                    </label>
+                                </div>
+
+                                <div class="col-lg-6">
+                                    <label>
+                                        <span class="text-input">
+                                            <input name="subject" type="text" placeholder="Subject" value="{{ request.GET.subject|default:'' }}" required>
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <label>
+                                <span class="text-input">
+                                    <textarea name="message" rows="3" placeholder="Message" required></textarea>
+                                </span>
+                            </label>
+
+                            <button
+                                class="submit ttm-btn ttm-btn-size-md ttm-btn-shape-rounded ttm-btn-style-fill ttm-btn-color-skincolor"
+                                type="submit">
+                                Send Message
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div><!-- row end -->
+        </div>
+    </section>
+
+
+    <div style="width:100%; height:400px;">
+        <iframe src="https://www.google.com/maps?q=H1A/20, Sector 63, Noida, Uttar Pradesh, India 201301&output=embed"
+            width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy">
+        </iframe>
+    </div>
+
+
+</div><!--site-main end-->
+{% endblock %}

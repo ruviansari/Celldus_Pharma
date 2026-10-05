@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="ttm-page-title-row">
+    <div class="ttm-page-title-row-inner">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-12">
+                    <div class="page-title-heading">
+                        <h2 class="title">Faq</h2>
+                    </div>
+                    <div class="breadcrumb-wrapper">
+                        <span>
+                            <a title="Homepage" href="{% url 'home_page' %}">Home</a>
+                        </span>
+                        <span>Faq</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div><!-- page-title end-->
+
+
+<!--site-main start-->
+<div class="site-main">
+
+
+    <section class="ttm-row">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="mb-30">
+                        <!-- section title -->
+                        <div class="section-title">
+                            <div class="title-header">
+                                <h2 class="title">Frequently Asked Questions</h2>
+                            </div>
+                            <div class="title-desc">Below you’ll find answers to common questions about Celldus Pharma,
+                                our products, distribution network, and healthcare services. For more details, feel free
+                                to contact us at <a href="#">info@cellduspharma.com</a> <a href="#">info@example.com</a>
+                            </div>
+                        </div><!-- section title end -->
+                    </div>
+                    <div class="accordion">
+                        <!-- toggle -->
+                        <div class="toggle ttm-style-classic ttm-toggle-title-bgcolor-grey ttm-control-right-true">
+                            <div class="toggle-title"><a href="#">What products does Celldus Pharma offer?</a></div>
+                            <div class="toggle-content">
+                                <p>Celldus Pharma offers a wide range of WHO-GMP certified medicines across multiple
+                                    therapeutic segments, ensuring high quality and safety.</p>
+                            </div>
+                        </div><!-- toggle end -->
+                        <!-- toggle -->
+                        <div class="toggle ttm-style-classic ttm-toggle-title-bgcolor-grey ttm-control-right-true">
+                            <div class="toggle-title"><a href="#">Are your medicines WHO-GMP certified?</a></div>
+                            <div class="toggle-content">
+                                <p>Yes, all our medicines are manufactured under WHO-GMP guidelines to ensure the
+                                    highest standards of quality and safety.</p>
+                            </div>
+                        </div><!-- toggle end -->
+                        <!-- toggle -->
+                        <div class="toggle ttm-style-classic ttm-toggle-title-bgcolor-grey ttm-control-right-true">
+                            <div class="toggle-title"><a href="#" class="active">How does your distribution network
+                                    work?</a></div>
+                            <div class="toggle-content">
+                                <p>We have a strong pan-India distribution network that ensures timely delivery of
+                                    medicines through authorized distributors and stockists.</p>
+
+                            </div>
+                        </div><!-- toggle end -->
+                        <!-- toggle -->
+                        <div class="toggle ttm-style-classic ttm-toggle-title-bgcolor-grey ttm-control-right-true">
+                            <div class="toggle-title"><a href="#">Do you collaborate with doctors and healthcare
+                                    professionals?</a></div>
+                            <div class="toggle-content">
+                                <p>Yes, we actively collaborate with doctors, clinics, and healthcare professionals to
+                                    promote effective and ethical healthcare solutions.</p>
+
+                            </div>
+                        </div><!-- toggle end -->
+                        <!-- toggle -->
+                        <div class="toggle ttm-style-classic ttm-toggle-title-bgcolor-grey ttm-control-right-true">
+                            <div class="toggle-title"><a href="#">How can I partner with Celldus Pharma?</a></div>
+                            <div class="toggle-content">
+                                <p>You can contact us through our website or email to explore partnership opportunities
+                                    as a distributor, stockist, or healthcare associate.</p>
+
+                            </div>
+                        </div><!-- toggle end -->
+                        <!-- toggle -->
+                        <div class="toggle ttm-style-classic ttm-toggle-title-bgcolor-grey ttm-control-right-true">
+                            <div class="toggle-title"><a href="#">Do you provide affordable medicines?</a></div>
+                            <div class="toggle-content">
+                                <p>Yes, we are committed to making quality medicines accessible and affordable to all patients across different regions.</p>
+                            </div>
+                        </div><!-- toggle end -->
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-5">
+                    <div class="ttm-bgcolor-grey ttm-bg pt-25 pr-30 pb-30 pl-30 res-991-mt-30">
+                        <div class="ttm-col-wrapper-bg-layer ttm-bg-layer"></div>
+                        <div class="layer-content">
+                            <!-- section title -->
+                            <div class="section-title">
+                                <div class="title-header">
+                                    <h2 class="title">Submit Question</h2>
+                                </div>
+                                <div class="title-desc">Fill all information details to consult with our best Attorneys
+                                </div>
+                            </div><!-- section title end -->
+                            <form id="ttm-contactform" class="ttm-contactform wrap-form clearfix" method="post"
+                                action="#">
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <label>
+                                            <span class="text-input"><input name="your-name" type="text" value=""
+                                                    placeholder="Your Name" required="required"></span>
+                                        </label>
+                                        <label>
+                                            <span class="text-input"><input name="email" type="email" value=""
+                                                    placeholder="Email" required="required"></span>
+                                        </label>
+                                        <label>
+                                            <span class="text-input"><input name="phone" type="text" value=""
+                                                    placeholder="Phone Number" required="required"></span>
+                                        </label>
+                                        <label>
+                                            <span class="text-input"><textarea name="message" rows="4" cols="40"
+                                                    placeholder="Message" required="required"></textarea></span>
+                                        </label>
+                                        <label>
+                                            <button
+                                                class="submit ttm-btn ttm-btn-size-md ttm-btn-shape-rounded ttm-btn-style-fill ttm-btn-color-skincolor"
+                                                type="submit">Submit</button>
+                                        </label>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+</div><!--site-main end-->
+{% endblock %}

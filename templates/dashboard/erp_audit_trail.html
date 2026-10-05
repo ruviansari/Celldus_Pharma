@@ -1,0 +1,96 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}21 CFR Part 11 Audit Trail Inspector | Celldus Pharma{% endblock %}
+{% block page_title %}21 CFR Part 11 Attributable Audit Trail{% endblock %}
+{% block page_subtitle %}Immutable, chronologically ordered record of all master edits, batch dispositions, approvals, and physical stock movements.{% endblock %}
+
+{% block content %}
+<!-- Filter Controls -->
+<div class="panel" style="margin-bottom: 1.5rem; padding: 1.25rem 1.5rem;">
+    <form method="GET" style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 250px;">
+            <input type="text" name="q" value="{{ search_query }}" placeholder="Search by Document No, User, Reason..." 
+                   style="width: 100%; padding: 0.6rem 1rem; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); border-radius: 8px; color: #fff;">
+        </div>
+        <div style="width: 200px;">
+            <select name="action" style="width: 100%; padding: 0.6rem 1rem; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); border-radius: 8px; color: #fff;">
+                <option value="">All Actions</option>
+                <option value="APPROVE" {% if action_filter == 'APPROVE' %}selected{% endif %}>APPROVE</option>
+                <option value="QA_RELEASE" {% if action_filter == 'QA_RELEASE' %}selected{% endif %}>QA_RELEASE</option>
+                <option value="QA_REJECT" {% if action_filter == 'QA_REJECT' %}selected{% endif %}>QA_REJECT</option>
+                <option value="POST" {% if action_filter == 'POST' %}selected{% endif %}>POST</option>
+                <option value="DISPATCH" {% if action_filter == 'DISPATCH' %}selected{% endif %}>DISPATCH</option>
+                <option value="RECALL" {% if action_filter == 'RECALL' %}selected{% endif %}>RECALL</option>
+                <option value="CREATE" {% if action_filter == 'CREATE' %}selected{% endif %}>CREATE</option>
+                <option value="UPDATE" {% if action_filter == 'UPDATE' %}selected{% endif %}>UPDATE</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary" style="padding: 0.6rem 1.2rem;"><i class="fa-solid fa-filter"></i> Search</button>
+        {% if action_filter or search_query %}
+        <a href="{% url 'dashboard_audit_trail' %}" class="btn btn-secondary" style="padding: 0.6rem 1rem;">Reset</a>
+        {% endif %}
+    </form>
+</div>
+
+<!-- Audit Trail Table -->
+<div class="panel">
+    <div class="panel-header">
+        <h2 class="panel-title"><i class="fa-solid fa-shield-halved" style="color: #10b981; margin-right: 0.5rem;"></i>Immutable Regulatory Event Log</h2>
+        <span style="font-size: 0.8rem; color: var(--text-secondary);">Strictly permanent & tamper-proof</span>
+    </div>
+    <div class="table-container">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Timestamp (UTC)</th>
+                    <th>Attributable User</th>
+                    <th>Action</th>
+                    <th>Entity & Reference</th>
+                    <th>Client IP</th>
+                    <th>Regulatory Rationale / Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in audit_logs %}
+                <tr>
+                    <td style="color: var(--text-secondary); font-size: 0.75rem; white-space: nowrap;">
+                        {{ log.timestamp|date:"Y-m-d H:i:s" }}
+                    </td>
+                    <td>
+                        <strong style="color: #fff; font-size: 0.8rem;">{{ log.user.username|default:"System" }}</strong>
+                        <div style="font-size: 0.7rem; color: var(--text-muted);">{{ log.user.email|default:"" }}</div>
+                    </td>
+                    <td>
+                        <span style="font-size: 0.7rem; font-weight: 700; padding: 2px 6px; border-radius: 4px;
+                            {% if log.action == 'APPROVE' or log.action == 'QA_RELEASE' %}background: rgba(16, 185, 129, 0.2); color: #10b981;
+                            {% elif log.action == 'REJECT' or log.action == 'QA_REJECT' or log.action == 'RECALL' %}background: rgba(239, 68, 68, 0.2); color: #ef4444;
+                            {% elif log.action == 'POST' or log.action == 'DISPATCH' %}background: rgba(99, 102, 241, 0.2); color: #818cf8;
+                            {% else %}background: rgba(148, 163, 184, 0.2); color: #cbd5e1;{% endif %}">
+                            {{ log.action }}
+                        </span>
+                    </td>
+                    <td>
+                        <strong style="font-size: 0.8rem; color: #e2e8f0;">{{ log.entity_name }}</strong>
+                        {% if log.document_no %}
+                        <div style="font-size: 0.7rem; color: #60a5fa; font-family: monospace;">{{ log.document_no }}</div>
+                        {% endif %}
+                    </td>
+                    <td style="font-family: monospace; font-size: 0.75rem; color: var(--text-muted);">
+                        {{ log.ip_address|default:"127.0.0.1" }}
+                    </td>
+                    <td style="font-size: 0.8rem; color: #cbd5e1; max-width: 300px;">
+                        {{ log.reason|default:"System state transition" }}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 3rem;">
+                        No audit trail events captured matching your search.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

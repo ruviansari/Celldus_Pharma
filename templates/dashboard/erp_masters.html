@@ -1,0 +1,794 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Master Data Management Hub | Celldus Pharma{% endblock %}
+{% block page_title %}Master Data Management (MDM){% endblock %}
+{% block page_subtitle %}Single source of truth for APIs, raw materials, qualified suppliers, licensed customers, and BOM formulations.{% endblock %}
+
+{% block top_actions %}
+<div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+    <button class="btn btn-primary" onclick="openModal('addItemModal')" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+        <i class="fa-solid fa-pills"></i> Add Item / API
+    </button>
+    <button class="btn btn-secondary" onclick="openModal('addSupplierModal')" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+        <i class="fa-solid fa-truck-field"></i> Add Supplier
+    </button>
+    <button class="btn btn-secondary" onclick="openModal('addCustomerModal')" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+        <i class="fa-solid fa-hospital-user"></i> Add Customer
+    </button>
+    <button class="btn btn-secondary" onclick="openModal('addWarehouseModal')" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+        <i class="fa-solid fa-warehouse"></i> Add Warehouse
+    </button>
+    <button class="btn btn-secondary" onclick="openModal('addBinModal')" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+        <i class="fa-solid fa-boxes-stacked"></i> Add Storage Bin
+    </button>
+    <button class="btn btn-secondary" onclick="openModal('addBomModal')" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+        <i class="fa-solid fa-layer-group"></i> Add Master BOM
+    </button>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .modal-overlay {
+        position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75);
+        backdrop-filter: blur(5px); display: none; align-items: center;
+        justify-content: center; z-index: 1000; padding: 1rem; overflow-y: auto;
+    }
+    .modal-box {
+        background: #0f172a; border: 1px solid var(--border-color);
+        border-radius: 14px; width: 100%; max-width: 650px;
+        max-height: 90vh; overflow-y: auto; padding: 1.75rem;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+    .modal-box.large { max-width: 820px; }
+    .modal-header {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 1.25rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-color);
+    }
+    .modal-header h3 { font-size: 1.15rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 0.5rem; }
+    .modal-close-btn { background: transparent; border: none; color: var(--text-muted); font-size: 1.25rem; cursor: pointer; }
+    .modal-close-btn:hover { color: #fff; }
+    .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+    @media (max-width: 640px) { .form-grid-2, .form-grid-3 { grid-template-columns: 1fr; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Master Data Tabs -->
+<div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; overflow-x: auto;">
+    <button class="btn btn-primary tab-trigger" onclick="showTab('itemsTab', this);"><i class="fa-solid fa-pills"></i> Items & APIs ({{ items|length }})</button>
+    <button class="btn btn-secondary tab-trigger" onclick="showTab('suppliersTab', this);"><i class="fa-solid fa-truck-field"></i> Qualified Suppliers ({{ suppliers|length }})</button>
+    <button class="btn btn-secondary tab-trigger" onclick="showTab('customersTab', this);"><i class="fa-solid fa-hospital-user"></i> Licensed Customers ({{ customers|length }})</button>
+    <button class="btn btn-secondary tab-trigger" onclick="showTab('warehousesTab', this);"><i class="fa-solid fa-warehouse"></i> Warehouses ({{ warehouses|length }})</button>
+    <button class="btn btn-secondary tab-trigger" onclick="showTab('bomsTab', this);"><i class="fa-solid fa-layer-group"></i> Master BOMs ({{ boms|length }})</button>
+    <button class="btn btn-secondary tab-trigger" onclick="showTab('specsTab', this);"><i class="fa-solid fa-clipboard-check"></i> Quality Specs ({{ specs|length }})</button>
+</div>
+
+<!-- Tab 1: Items -->
+<div id="itemsTab" class="master-tab-content panel">
+    <div class="panel-header">
+        <h2 class="panel-title">Active Pharmaceutical Ingredients, Raw Materials & Finished Goods</h2>
+        <button class="btn btn-primary" onclick="openModal('addItemModal')" style="padding: 0.4rem 0.85rem; font-size: 0.8rem;">
+            <i class="fa-solid fa-plus"></i> New Item
+        </button>
+    </div>
+    <div class="table-container">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Item Code</th>
+                    <th>Name & Generic Formulation</th>
+                    <th>Item Type</th>
+                    <th>Base UOM</th>
+                    <th>Storage Condition</th>
+                    <th>Shelf Life</th>
+                    <th>Price / MRP</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td><strong style="color: #60a5fa; font-family: monospace;">{{ item.item_code }}</strong></td>
+                    <td>
+                        <strong style="color: #fff;">{{ item.name }}</strong>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary);">{{ item.generic_name }}</div>
+                    </td>
+                    <td><span style="background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; color: #e2e8f0;">{{ item.get_item_type_display }}</span></td>
+                    <td>{{ item.base_uom.code }}</td>
+                    <td style="font-size: 0.8rem; color: #cbd5e1;">{{ item.get_storage_condition_display }}</td>
+                    <td>{{ item.shelf_life_days }} days</td>
+                    <td><span style="color: #10b981; font-weight: 600;">₹{{ item.mrp|default:item.standard_cost }}</span></td>
+                    <td><span style="color: #10b981; font-weight: 600; font-size: 0.75rem;"><i class="fa-solid fa-check"></i> Active</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Tab 2: Suppliers -->
+<div id="suppliersTab" class="master-tab-content panel" style="display: none;">
+    <div class="panel-header">
+        <h2 class="panel-title">Approved & Qualified Vendors</h2>
+        <button class="btn btn-primary" onclick="openModal('addSupplierModal')" style="padding: 0.4rem 0.85rem; font-size: 0.8rem;">
+            <i class="fa-solid fa-plus"></i> New Supplier
+        </button>
+    </div>
+    <div class="table-container">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Supplier Code</th>
+                    <th>Legal Name</th>
+                    <th>GSTIN</th>
+                    <th>Location</th>
+                    <th>Contact</th>
+                    <th>GMP Cert No</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sup in suppliers %}
+                <tr>
+                    <td><strong style="color: #60a5fa; font-family: monospace;">{{ sup.supplier_code }}</strong></td>
+                    <td style="color: #fff; font-weight: 500;">{{ sup.legal_name }}</td>
+                    <td style="font-family: monospace; font-size: 0.8rem;">{{ sup.gstin }}</td>
+                    <td style="font-size: 0.8rem; color: var(--text-secondary);">{{ sup.city }}, {{ sup.state }}</td>
+                    <td>
+                        <div style="color: #e2e8f0; font-size: 0.8rem;">{{ sup.contact_person }}</div>
+                        <div style="color: var(--text-muted); font-size: 0.7rem;">{{ sup.phone }}</div>
+                    </td>
+                    <td style="font-size: 0.8rem; color: #10b981;">{{ sup.gmp_certificate_no|default:"Verified" }}</td>
+                    <td>
+                        <span style="padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 600;
+                            {% if sup.status == 'QUALIFIED' %}background: rgba(16, 185, 129, 0.2); color: #10b981;
+                            {% else %}background: rgba(245, 158, 11, 0.2); color: #f59e0b;{% endif %}">
+                            {{ sup.status }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Tab 3: Customers -->
+<div id="customersTab" class="master-tab-content panel" style="display: none;">
+    <div class="panel-header">
+        <h2 class="panel-title">Licensed Pharmaceutical Customers & Distributors</h2>
+        <button class="btn btn-primary" onclick="openModal('addCustomerModal')" style="padding: 0.4rem 0.85rem; font-size: 0.8rem;">
+            <i class="fa-solid fa-plus"></i> New Customer
+        </button>
+    </div>
+    <div class="table-container">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Customer Code</th>
+                    <th>Customer Name</th>
+                    <th>Type</th>
+                    <th>Location</th>
+                    <th>Drug License 20-B/21-B</th>
+                    <th>GSTIN</th>
+                    <th>Credit Limit</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cust in customers %}
+                <tr>
+                    <td><strong style="color: #60a5fa; font-family: monospace;">{{ cust.customer_code }}</strong></td>
+                    <td style="color: #fff; font-weight: 600;">{{ cust.name }}</td>
+                    <td><span style="background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem;">{{ cust.get_customer_type_display }}</span></td>
+                    <td style="font-size: 0.8rem; color: var(--text-secondary);">{{ cust.city }}, {{ cust.state }}</td>
+                    <td style="font-family: monospace; font-size: 0.8rem; color: #10b981;">{{ cust.drug_license_20b|default:"Verified" }}</td>
+                    <td style="font-family: monospace; font-size: 0.8rem;">{{ cust.gstin|default:"-" }}</td>
+                    <td><strong style="color: #38bdf8;">₹{{ cust.credit_limit }}</strong></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Tab 4: Warehouses -->
+<div id="warehousesTab" class="master-tab-content panel" style="display: none;">
+    <div class="panel-header">
+        <h2 class="panel-title">GMP Warehouses & Storage Facilities</h2>
+        <div style="display: flex; gap: 0.5rem;">
+            <button class="btn btn-secondary" onclick="openModal('addBinModal')" style="padding: 0.4rem 0.85rem; font-size: 0.8rem;">
+                <i class="fa-solid fa-plus"></i> New Storage Bin
+            </button>
+            <button class="btn btn-primary" onclick="openModal('addWarehouseModal')" style="padding: 0.4rem 0.85rem; font-size: 0.8rem;">
+                <i class="fa-solid fa-plus"></i> New Warehouse
+            </button>
+        </div>
+    </div>
+    <div class="table-container" style="margin-bottom: 2rem;">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Warehouse Code</th>
+                    <th>Facility Name</th>
+                    <th>Branch / Site</th>
+                    <th>Warehouse Type</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for wh in warehouses %}
+                <tr>
+                    <td><strong style="color: #60a5fa; font-family: monospace;">{{ wh.code }}</strong></td>
+                    <td style="color: #fff; font-weight: 600;">{{ wh.name }}</td>
+                    <td>{{ wh.branch.name|default:"Central Site" }}</td>
+                    <td><span style="background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem;">{{ wh.warehouse_type }}</span></td>
+                    <td><span style="color: #10b981; font-weight: 600; font-size: 0.75rem;"><i class="fa-solid fa-check"></i> Operational</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Storage Bins List -->
+    <div style="padding-top: 1rem; border-top: 1px solid var(--border-color);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="font-size: 1rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fa-solid fa-boxes-stacked" style="color: #06b6d4;"></i> Warehouse Storage Bins & Racks ({{ bins|length }})
+            </h3>
+            <button class="btn btn-primary" onclick="openModal('addBinModal')" style="padding: 0.35rem 0.75rem; font-size: 0.75rem;">
+                <i class="fa-solid fa-plus"></i> Add Bin
+            </button>
+        </div>
+        <div class="table-container">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>Bin Code</th>
+                        <th>Warehouse</th>
+                        <th>Zone</th>
+                        <th>Max Capacity (KG)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for bin in bins %}
+                    <tr>
+                        <td><strong style="color: #06b6d4; font-family: monospace;">{{ bin.bin_code }}</strong></td>
+                        <td style="color: #fff;">{{ bin.warehouse.name }} ({{ bin.warehouse.code }})</td>
+                        <td><span style="background: rgba(255,255,255,0.06); padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">{{ bin.zone }}</span></td>
+                        <td style="color: #e2e8f0; font-family: monospace;">{{ bin.capacity_kg|default:"Uncapped" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 2rem;">No storage bins configured yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Tab 5: Master BOMs -->
+<div id="bomsTab" class="master-tab-content panel" style="display: none;">
+    <div class="panel-header">
+        <h2 class="panel-title">Approved Bill of Materials (BOM) & Formulations</h2>
+        <button class="btn btn-primary" onclick="openModal('addBomModal')" style="padding: 0.4rem 0.85rem; font-size: 0.8rem;">
+            <i class="fa-solid fa-plus"></i> New Master BOM
+        </button>
+    </div>
+    <div class="table-container">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>BOM Code</th>
+                    <th>Product Formulation</th>
+                    <th>Standard Batch Size</th>
+                    <th>Version</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for bom in boms %}
+                <tr>
+                    <td><strong style="color: #60a5fa; font-family: monospace;">{{ bom.bom_code }}</strong></td>
+                    <td><strong style="color: #fff;">{{ bom.product.name }}</strong></td>
+                    <td>{{ bom.standard_batch_size }} {{ bom.batch_uom.code }}</td>
+                    <td>v{{ bom.version }}</td>
+                    <td>
+                        <span style="padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; background: rgba(16, 185, 129, 0.2); color: #10b981;">
+                            {{ bom.status }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Tab 6: Quality Specifications -->
+<div id="specsTab" class="master-tab-content panel" style="display: none;">
+    <div class="panel-header">
+        <h2 class="panel-title">Quality Specifications & Pharmacopoeia (IP / BP / USP)</h2>
+    </div>
+    <div class="table-container">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Spec Code</th>
+                    <th>Item</th>
+                    <th>Version</th>
+                    <th>Pharmacopoeia</th>
+                    <th>Effective Date</th>
+                    <th>QA Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for spec in specs %}
+                <tr>
+                    <td><strong style="color: #60a5fa; font-family: monospace;">{{ spec.spec_code }}</strong></td>
+                    <td style="color: #fff;">{{ spec.item.name }}</td>
+                    <td>v{{ spec.version }}</td>
+                    <td><span style="background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 4px;">{{ spec.pharmacopoeia }}</span></td>
+                    <td>{{ spec.effective_date|date:"d M Y" }}</td>
+                    <td><span style="color: #10b981; font-size: 0.75rem; font-weight: 600;"><i class="fa-solid fa-check-double"></i> QA Approved</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+<!-- ============================================================== -->
+<!-- MODAL: ADD ITEM / FORMULATION                                  -->
+<!-- ============================================================== -->
+<div id="addItemModal" class="modal-overlay">
+    <div class="modal-box large">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-pills" style="color: #4f46e5;"></i> Register New Master Item / API</h3>
+            <button type="button" class="modal-close-btn" onclick="closeModal('addItemModal')">&times;</button>
+        </div>
+
+        <form action="{% url 'dashboard_item_create' %}" method="POST">
+            {% csrf_token %}
+
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label class="form-label">Item Code (Unique) *</label>
+                    <input type="text" name="item_code" class="form-control" required placeholder="e.g. FG-AMOX-500 or API-PCM-01">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Trade / Formulation Name *</label>
+                    <input type="text" name="name" class="form-control" required placeholder="e.g. Amoxicillin Trihydrate 500mg Capsules">
+                </div>
+            </div>
+
+            <div class="form-grid-3">
+                <div class="form-group">
+                    <label class="form-label">Generic / Chemical Name</label>
+                    <input type="text" name="generic_name" class="form-control" placeholder="e.g. Amoxicillin IP">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Item Type *</label>
+                    <select name="item_type" class="form-control" required>
+                        {% for code, label in item_type_choices %}
+                        <option value="{{ code }}" {% if code == 'FINISHED_GOOD' %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Base Unit of Measure (UOM) *</label>
+                    <select name="base_uom" class="form-control" required>
+                        {% for u in uoms %}
+                        <option value="{{ u.id }}">{{ u.code }} ({{ u.name }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-grid-3">
+                <div class="form-group">
+                    <label class="form-label">Storage Condition</label>
+                    <select name="storage_condition" class="form-control">
+                        {% for code, label in storage_conditions %}
+                        <option value="{{ code }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Shelf Life (Days)</label>
+                    <input type="number" name="shelf_life_days" class="form-control" value="730">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">GST Tax Rate (%)</label>
+                    <input type="number" step="0.01" name="tax_rate" class="form-control" value="12.00">
+                </div>
+            </div>
+
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label class="form-label">Standard Cost (₹)</label>
+                    <input type="number" step="0.01" name="standard_cost" class="form-control" value="0.00">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Max Retail Price / MRP (₹)</label>
+                    <input type="number" step="0.01" name="mrp" class="form-control" value="0.00">
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('addItemModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> Register Item</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<!-- ============================================================== -->
+<!-- MODAL: ADD SUPPLIER                                            -->
+<!-- ============================================================== -->
+<div id="addSupplierModal" class="modal-overlay">
+    <div class="modal-box large">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-truck-field" style="color: #10b981;"></i> Register Qualified Supplier / Vendor</h3>
+            <button type="button" class="modal-close-btn" onclick="closeModal('addSupplierModal')">&times;</button>
+        </div>
+
+        <form action="{% url 'dashboard_supplier_create' %}" method="POST">
+            {% csrf_token %}
+
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label class="form-label">Supplier Code *</label>
+                    <input type="text" name="supplier_code" class="form-control" required placeholder="e.g. SUPP-002">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Legal Name of Firm *</label>
+                    <input type="text" name="legal_name" class="form-control" required placeholder="e.g. Shasun Pharma Chemicals Ltd">
+                </div>
+            </div>
+
+            <div class="form-grid-3">
+                <div class="form-group">
+                    <label class="form-label">GSTIN (15 Digits)</label>
+                    <input type="text" name="gstin" class="form-control" placeholder="e.g. 27AABCS1429B1ZX">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">GMP Certificate No</label>
+                    <input type="text" name="gmp_certificate_no" class="form-control" placeholder="e.g. WHO-GMP-2026-99">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Qualification Status</label>
+                    <select name="status" class="form-control">
+                        {% for code, label in supplier_status_choices %}
+                        <option value="{{ code }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label class="form-label">City *</label>
+                    <input type="text" name="city" class="form-control" placeholder="e.g. Hyderabad">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">State *</label>
+                    <input type="text" name="state" class="form-control" placeholder="e.g. Telangana">
+                </div>
+            </div>
+
+            <div class="form-grid-3">
+                <div class="form-group">
+                    <label class="form-label">Contact Person</label>
+                    <input type="text" name="contact_person" class="form-control" placeholder="e.g. Vinod Nair">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Phone Number</label>
+                    <input type="tel" name="phone" class="form-control" placeholder="e.g. 9811234567">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" name="email" class="form-control" placeholder="contact@shasun.com">
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('addSupplierModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> Register Supplier</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<!-- ============================================================== -->
+<!-- MODAL: ADD CUSTOMER MASTER                                     -->
+<!-- ============================================================== -->
+<div id="addCustomerModal" class="modal-overlay">
+    <div class="modal-box large">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-hospital-user" style="color: #38bdf8;"></i> Register Licensed Customer Account</h3>
+            <button type="button" class="modal-close-btn" onclick="closeModal('addCustomerModal')">&times;</button>
+        </div>
+
+        <form action="{% url 'dashboard_customer_create' %}" method="POST">
+            {% csrf_token %}
+
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label class="form-label">Customer Code (Leave blank for Auto)</label>
+                    <input type="text" name="customer_code" class="form-control" placeholder="Auto generated if empty">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Hospital / Organization Name *</label>
+                    <input type="text" name="name" class="form-control" required placeholder="e.g. Ruby Hall Clinic & Medical Institute">
+                </div>
+            </div>
+
+            <div class="form-grid-3">
+                <div class="form-group">
+                    <label class="form-label">Customer Type *</label>
+                    <select name="customer_type" class="form-control" required>
+                        {% for code, label in customer_type_choices %}
+                        <option value="{{ code }}" {% if code == 'HOSPITAL' %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Drug License No (Form 20-B/21-B)</label>
+                    <input type="text" name="drug_license_20b" class="form-control" placeholder="e.g. DL-MH-PUN-98765">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">GSTIN</label>
+                    <input type="text" name="gstin" class="form-control" placeholder="e.g. 27AABCR5678C1ZY">
+                </div>
+            </div>
+
+            <div class="form-grid-3">
+                <div class="form-group">
+                    <label class="form-label">City *</label>
+                    <input type="text" name="city" class="form-control" required placeholder="e.g. Pune">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">State *</label>
+                    <input type="text" name="state" class="form-control" required placeholder="e.g. Maharashtra">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Credit Limit (₹)</label>
+                    <input type="number" step="0.01" name="credit_limit" class="form-control" value="500000.00">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Billing & Registered Address</label>
+                <textarea name="billing_address" class="form-control" rows="2" placeholder="Street, landmark, pincode..."></textarea>
+            </div>
+
+            <div class="form-grid-3">
+                <div class="form-group">
+                    <label class="form-label">Contact Person</label>
+                    <input type="text" name="contact_person" class="form-control" placeholder="e.g. Purchase Manager">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Phone Number</label>
+                    <input type="tel" name="phone" class="form-control" placeholder="e.g. 9822334455">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" name="email" class="form-control" placeholder="purchase@rubyhall.com">
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('addCustomerModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> Register Customer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<!-- ============================================================== -->
+<!-- MODAL: ADD WAREHOUSE                                           -->
+<!-- ============================================================== -->
+<div id="addWarehouseModal" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-warehouse" style="color: #f59e0b;"></i> Add Storage Facility / Warehouse</h3>
+            <button type="button" class="modal-close-btn" onclick="closeModal('addWarehouseModal')">&times;</button>
+        </div>
+
+        <form action="{% url 'dashboard_warehouse_create' %}" method="POST">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label class="form-label">Warehouse Code *</label>
+                <input type="text" name="code" class="form-control" required placeholder="e.g. WH-COLD-01">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Facility Name *</label>
+                <input type="text" name="name" class="form-control" required placeholder="e.g. Vaccine & Cold Chain Distribution Center">
+            </div>
+
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label class="form-label">Facility Type</label>
+                    <select name="warehouse_type" class="form-control">
+                        <option value="GENERAL">General Ambient Warehouse</option>
+                        <option value="COLD_CHAIN">Cold Chain (2°C - 8°C)</option>
+                        <option value="QUARANTINE">Quarantine Holding Area</option>
+                        <option value="FINISHED_GOODS">Finished Goods Central</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Branch / Site</label>
+                    <select name="branch" class="form-control">
+                        {% for b in branches %}
+                        <option value="{{ b.id }}">{{ b.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('addWarehouseModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> Create Warehouse</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ============================================================== -->
+<!-- MODAL: ADD STORAGE BIN                                         -->
+<!-- ============================================================== -->
+<div id="addBinModal" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-boxes-stacked" style="color: #06b6d4;"></i> Add Warehouse Storage Bin</h3>
+            <button type="button" class="modal-close-btn" onclick="closeModal('addBinModal')">&times;</button>
+        </div>
+
+        <form action="{% url 'dashboard_storage_bin_create' %}" method="POST">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label class="form-label">Warehouse Facility *</label>
+                <select name="warehouse_id" class="form-control" required>
+                    <option value="">-- Choose Warehouse --</option>
+                    {% for wh in warehouses %}
+                    <option value="{{ wh.id }}">{{ wh.name }} ({{ wh.code }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Warehouse Zone *</label>
+                <select name="zone" class="form-control">
+                    <option value="Quarantine Zone">Quarantine Zone</option>
+                    <option value="Sampling Booth">Sampling Booth</option>
+                    <option value="Released Material Store">Released Material Store</option>
+                    <option value="Cold Room (2-8°C)">Cold Room (2-8°C)</option>
+                    <option value="Finished Goods Bay">Finished Goods Bay</option>
+                </select>
+            </div>
+
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label class="form-label">Bin Code / Rack ID *</label>
+                    <input type="text" name="bin_code" class="form-control" required placeholder="e.g. RACK-A-01">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Capacity (KG)</label>
+                    <input type="number" step="0.01" name="capacity_kg" class="form-control" placeholder="e.g. 500.00">
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('addBinModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> Add Storage Bin</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<!-- ============================================================== -->
+<!-- MODAL: ADD MASTER BOM                                          -->
+<!-- ============================================================== -->
+<div id="addBomModal" class="modal-overlay">
+    <div class="modal-box large">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-layer-group" style="color: #10b981;"></i> Create Master Bill of Materials (BOM)</h3>
+            <button type="button" class="modal-close-btn" onclick="closeModal('addBomModal')">&times;</button>
+        </div>
+
+        <form action="{% url 'dashboard_bom_create' %}" method="POST">
+            {% csrf_token %}
+
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label class="form-label">BOM Master Code *</label>
+                    <input type="text" name="bom_code" class="form-control" required placeholder="e.g. BOM-PCM-650-01">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Finished Good / Formulation *</label>
+                    <select name="product_id" class="form-control" required>
+                        <option value="">-- Select Product Formulation --</option>
+                        {% for prod in products %}
+                        <option value="{{ prod.id }}">{{ prod.name }} ({{ prod.item_code }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-grid-3">
+                <div class="form-group">
+                    <label class="form-label">Standard Batch Size *</label>
+                    <input type="number" step="0.0001" name="batch_size" class="form-control" required placeholder="e.g. 100000.00">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Batch UOM *</label>
+                    <select name="batch_uom_id" class="form-control" required>
+                        {% for u in uoms %}
+                        <option value="{{ u.id }}">{{ u.name }} ({{ u.code }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Effective From Date</label>
+                    <input type="date" name="effective_from" class="form-control" value="{% now 'Y-m-d' %}">
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('addBomModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> Register Master BOM</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showTab(tabId, btn) {
+    document.querySelectorAll('.master-tab-content').forEach(function(el) {
+        el.style.display = 'none';
+    });
+    document.querySelectorAll('.tab-trigger').forEach(function(b) {
+        b.className = 'btn btn-secondary tab-trigger';
+    });
+    document.getElementById(tabId).style.display = 'block';
+    if (btn) {
+        btn.className = 'btn btn-primary tab-trigger';
+    }
+}
+
+// Auto open tab from query parameter if present
+window.addEventListener('DOMContentLoaded', function() {
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get('tab');
+    if (tab) {
+        const tabEl = document.getElementById(tab + 'Tab');
+        if (tabEl) {
+            document.querySelectorAll('.master-tab-content').forEach(el => el.style.display = 'none');
+            tabEl.style.display = 'block';
+            document.querySelectorAll('.tab-trigger').forEach(b => {
+                b.className = 'btn btn-secondary tab-trigger';
+                if (b.getAttribute('onclick') && b.getAttribute('onclick').includes(tab + 'Tab')) {
+                    b.className = 'btn btn-primary tab-trigger';
+                }
+            });
+        }
+    }
+});
+</script>
+{% endblock %}

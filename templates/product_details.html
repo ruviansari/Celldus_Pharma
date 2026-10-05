@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<!-- page-title -->
+<div class="ttm-page-title-row">
+    <div class="ttm-page-title-row-inner">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-12">
+                    <div class="page-title-heading">
+                        <h2 class="title">Product Details</h2>
+                    </div>
+                    <div class="breadcrumb-wrapper">
+                        <span>
+                            <a title="Homepage" href="{% url 'home' %}">Home</a>
+                        </span>
+                        <span>Product Details</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div><!-- page-title end-->
+
+
+<!--site-main start-->
+<div class="site-main">
+
+
+    <section class="ttm-row overview-section clearfix">
+        <div class"ttm-team-member-single-content-wrapper ttm-team-member-view-default">
+            <div class="container">
+                <div class="ttm-team-member-single-content row">
+                    <div class="col-lg-5 col-md-5">
+                        <!-- featured-team-item -->
+                        <div class="featured-item featured-team-item ttm-item-view-leftimage">
+                            <div class="featured-thumbnail">
+                                <img class="img-fluid" src="{% static product.image %}" alt="image">
+                            </div>
+                            <div class="featured-team-data">
+                                <h5>Call Us: +91 9217499771</h5>
+                            </div>
+                        </div><!-- featured-team-item end-->
+                    </div>
+                    <div class="ttm-team-member-single-content-area col-xs-12 col-sm-12 col-md-7 col-lg-7">
+                        <div class="ttm-team-member-content shadow-box">
+                            <div class="ttm-team-member-single-list">
+                                <h2 class="ttm-team-member-single-title" style="margin-bottom: 15px;">{{ product.name }}</h2>
+                                <div class="ttm-team-details-wrapper">
+                                    <ul class="ttm-team-details-list mb-20 clearfix">
+                                        <li>
+                                            <div class="ttm-team-list-title">
+                                                <h5>Category: </h5>
+                                            </div>
+                                            <div class="ttm-team-list-value">
+                                                <a href="{% url 'product' %}?category={{ product.category.id }}" style="color: #007bff; font-weight: 600; text-decoration: none;">
+                                                    <i class="fa fa-tag"></i> {{ product.category.name }}
+                                                </a>
+                                            </div>
+                                        </li>
+                                        <li>
+                                            <div class="ttm-team-list-title">
+                                                <h5>Formulation / Salt: </h5>
+                                            </div>
+                                            <div class="ttm-team-list-value">{{ product.description }}</div>
+                                        </li>
+                                        {% if product.size %}
+                                        <li>
+                                            <div class="ttm-team-list-title">
+                                                <h5>Pack Size: </h5>
+                                            </div>
+                                            <div class="ttm-team-list-value">{{ product.size }}</div>
+                                        </li>
+                                        {% endif %}
+                                        {% if product.specification %}
+                                        <li>
+                                            <div class="ttm-team-list-title">
+                                                <h5>Specification: </h5>
+                                            </div>
+                                            <div class="ttm-team-list-value" style="white-space: pre-line;">{{ product.specification }}</div>
+                                        </li>
+                                        {% endif %}
+                                        <li>
+                                            <div class="ttm-team-list-title">
+                                                <h5>Compliance: </h5>
+                                            </div>
+                                            <div class="ttm-team-list-value">
+                                                <span style="background: #e0f2fe; color: #0284c7; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 0.8rem;">
+                                                    <i class="fa fa-certificate"></i> WHO-GMP Certified
+                                                </span>
+                                            </div>
+                                        </li>
+                                    </ul>
+
+                                    <div style="margin-top: 25px; display: flex; gap: 12px; flex-wrap: wrap;">
+                                        <a href="{% url 'contact' %}?subject=Commercial+Supply+Inquiry:+{{ product.name|urlencode }}" 
+                                           style="padding: 12px 24px; background: #031b4e; color: #fff; border-radius: 6px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                                            <i class="fa fa-envelope"></i> Inquire for Bulk / Hospital Supply
+                                        </a>
+                                        <a href="{% url 'product' %}" 
+                                           style="padding: 12px 20px; background: #f1f5f9; color: #475569; border-radius: 6px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                                            <i class="fa fa-arrow-left"></i> All Formulations
+                                        </a>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+    </section>
+
+    {% if related_products %}
+    <!-- Related Products Section -->
+    <section class="ttm-row" style="background: #f8fafc; padding: 40px 0;">
+        <div class="container">
+            <div class="section-title text-center" style="margin-bottom: 25px;">
+                <h5 style="color: #007bff; font-weight: 700; text-transform: uppercase; font-size: 0.85rem;">Therapeutic Category</h5>
+                <h3 class="title" style="margin-top: 5px;">Related Formulations in {{ product.category.name }}</h3>
+            </div>
+            <div class="row">
+                {% for item in related_products %}
+                <div class="col-lg-3 col-md-4 col-sm-6" style="margin-bottom: 20px;">
+                    <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 15px; text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <img src="{% static item.image %}" alt="{{ item.name }}" style="max-height: 120px; object-fit: contain; margin-bottom: 12px;">
+                            <h5 style="font-size: 0.95rem; margin-bottom: 5px;">
+                                <a href="{% url 'product_details' item.id %}" style="color: #031b4e; text-decoration: none;">{{ item.name }}</a>
+                            </h5>
+                            <p style="font-size: 0.8rem; color: #64748b; line-height: 1.3;">{{ item.description|truncatechars:50 }}</p>
+                        </div>
+                        <a href="{% url 'product_details' item.id %}" style="font-size: 0.82rem; font-weight: 600; color: #007bff; text-decoration: none; margin-top: 10px;">
+                            View Details &rarr;
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+
+
+
+    <section class="ttm-row clearfix">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4">
+                    <div class="section-title">
+                        <div class="title-header">
+                            <h2 class="title">Our <br>Achievements</h2>
+                        </div>
+                    </div>
+                    <p>
+Celldus Pharma is dedicated to delivering high-quality and reliable pharmaceutical
+solutions. With a focus on innovation, safety, and excellence, we continue to build
+trust among healthcare professionals and patients across the nation.
+</p>
+                </div>
+                <div class="col-lg-8">
+                    <div class="row ttm-boxes-spacing-0px">
+                        <div class="col-sm-4 ttm-box-col-wrapper text-center">
+                            <div class="border-bottom pb-10">
+                                <img class="img-fluid" src="{% static 'images/award-one.png' %}" alt="image">
+                            </div>
+                        </div>
+                        <div class="col-sm-4 ttm-box-col-wrapper text-center border-left">
+                            <div class="border-bottom pb-10">
+                                <img class="img-fluid" src="{% static 'images/award-three.png' %}" alt="image">
+                            </div>
+                        </div>
+                        <div class="col-sm-4 ttm-box-col-wrapper text-center border-left">
+                            <div class="border-bottom pb-10">
+                                <img class="img-fluid" src="{% static 'images/award-two.png' %}" alt="image">
+                            </div>
+                        </div>
+                        <div class="col-sm-4 ttm-box-col-wrapper text-center">
+                            <img class="img-fluid" src="{% static 'images/award-two.png' %}" alt="image">
+                        </div>
+                        <div class="col-sm-4 ttm-box-col-wrapper text-center border-left">
+                            <img class="img-fluid" src="{% static 'images/award-one.png' %}" alt="image">
+                        </div>
+                        <div class="col-sm-4 ttm-box-col-wrapper text-center border-left">
+                            <img class="img-fluid" src="{% static 'images/award-three.png' %}" alt="image">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+</div><!--site-main end-->
+{% endblock %}

@@ -1,0 +1,271 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Product Management | Celldus Pharma{% endblock %}
+{% block page_title %}Product Management{% endblock %}
+{% block page_subtitle %}Add, update or remove items from the product catalog.{% endblock %}
+
+{% block top_actions %}
+<button class="btn btn-primary" onclick="openModal('addProductModal')">
+    <i class="fa-solid fa-plus"></i> Add Product
+</button>
+{% endblock %}
+
+{% block content %}
+<div class="panel">
+    <div class="panel-header">
+        <h2 class="panel-title">All Products</h2>
+    </div>
+
+    <div class="table-container">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th style="width: 80px;">Image</th>
+                    <th>Product Name</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Description</th>
+                    <th>Created At</th>
+                    <th style="width: 100px; text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for prod in products %}
+                <tr>
+                    <td>
+                        <img src="{% static prod.image %}" alt="{{ prod.name }}" class="table-product-img">
+                    </td>
+                    <td>
+                        <strong style="color: #fff; font-size: 0.95rem;">{{ prod.name }}</strong>
+                        {% if prod.size %}
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.15rem;">
+                            Size: {{ prod.size }}
+                        </div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge badge-primary">{{ prod.category.name }}</span>
+                    </td>
+                    <td>
+                        {% if prod.selling_price < prod.price and prod.selling_price > 0 %}
+                        <span style="color: #10b981; font-weight: 600;">₹{{ prod.selling_price }}</span>
+                        <span style="text-decoration: line-through; color: var(--text-muted); font-size: 0.8rem; margin-left: 0.25rem;">₹{{ prod.price }}</span>
+                        {% else %}
+                        <span style="color: #fff; font-weight: 600;">₹{{ prod.price }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if prod.stock > 0 %}
+                        <span style="color: #10b981; font-weight: 500;">{{ prod.stock }} in stock</span>
+                        {% else %}
+                        <span style="color: #ef4444; font-weight: 600;">Out of Stock</span>
+                        {% endif %}
+                    </td>
+                    <td
+                        style="color: var(--text-secondary); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        {{ prod.description }}
+                    </td>
+                    <td style="color: var(--text-muted); font-size: 0.85rem;">{{ prod.created_at|date:"M d, Y" }}</td>
+                    <td>
+                        <div class="action-btn-group" style="justify-content: flex-end;">
+                            <button class="action-btn edit"
+                                onclick="prepareEditProduct('{{ prod.id }}', '{{ prod.name|escapejs }}', '{{ prod.category.id }}', '{{ prod.description|escapejs }}', '{% static prod.image %}', '{{ prod.price }}', '{{ prod.selling_price }}', '{{ prod.size|escapejs }}', '{{ prod.stock }}', '{{ prod.specification|escapejs }}')"
+                                title="Edit Product">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                            <form action="{% url 'dashboard_product_delete' prod.id %}" method="POST"
+                                onsubmit="return confirm('Are you sure you want to delete this product?')"
+                                style="margin:0;">
+                                {% csrf_token %}
+                                <button type="submit" class="action-btn delete" title="Delete Product">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 3rem;">
+                        No products found. Click 'Add Product' to list one.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add Product Modal -->
+<div id="addProductModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
+        <h3 class="modal-title">Add New Product</h3>
+        <form action="{% url 'dashboard_product_add' %}" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label" for="add_prod_name">Product Name</label>
+                <input type="text" id="add_prod_name" name="name" class="form-control" placeholder="e.g. CELLSPAS-MF"
+                    required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="add_prod_category">Category</label>
+                <select id="add_prod_category" name="category" class="form-control" required>
+                    <option value="" disabled selected>Select Category</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.id }}">{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="add_prod_price">Regular Price (₹)</label>
+                    <input type="number" step="0.01" id="add_prod_price" name="price" class="form-control" placeholder="0.00" value="0.00">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="add_prod_selling_price">Selling Price (₹)</label>
+                    <input type="number" step="0.01" id="add_prod_selling_price" name="selling_price" class="form-control" placeholder="0.00" value="0.00">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="add_prod_size">Size / Pack</label>
+                    <input type="text" id="add_prod_size" name="size" class="form-control" placeholder="e.g. 10x10 Tablets, 100ml">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="add_prod_stock">Stock Qty</label>
+                    <input type="number" id="add_prod_stock" name="stock" class="form-control" placeholder="0" value="0">
+                </div>
+            </div>
+
+
+
+            <div class="form-group">
+                <label class="form-label" for="add_prod_desc">Description</label>
+                <textarea id="add_prod_desc" name="description" class="form-control" rows="3"
+                    placeholder="Enter product ingredients or details..." required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="add_prod_specification">Specifications</label>
+                <textarea id="add_prod_specification" name="specification" class="form-control" rows="3" placeholder="Detailed product specifications..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="add_prod_image">Product Image</label>
+                <input type="file" id="add_prod_image" name="image_file" class="form-control" accept="image/*">
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">
+                    Upload an image. If left empty, a default placeholder will be used.
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('addProductModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Product</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Product Modal -->
+<div id="editProductModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
+        <h3 class="modal-title">Edit Product</h3>
+        <form id="editProductForm" action="" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label" for="edit_prod_name">Product Name</label>
+                <input type="text" id="edit_prod_name" name="name" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="edit_prod_category">Category</label>
+                <select id="edit_prod_category" name="category" class="form-control" required>
+                    {% for cat in categories %}
+                    <option value="{{ cat.id }}">{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="edit_prod_price">Regular Price (₹)</label>
+                    <input type="number" step="0.01" id="edit_prod_price" name="price" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="edit_prod_selling_price">Selling Price (₹)</label>
+                    <input type="number" step="0.01" id="edit_prod_selling_price" name="selling_price" class="form-control" required>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="edit_prod_size">Size / Pack</label>
+                    <input type="text" id="edit_prod_size" name="size" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="edit_prod_stock">Stock Qty</label>
+                    <input type="number" id="edit_prod_stock" name="stock" class="form-control" required>
+                </div>
+            </div>
+
+
+
+            <div class="form-group">
+                <label class="form-label" for="edit_prod_desc">Description</label>
+                <textarea id="edit_prod_desc" name="description" class="form-control" rows="3" required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="edit_prod_specification">Specifications</label>
+                <textarea id="edit_prod_specification" name="specification" class="form-control" rows="3"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="edit_prod_image">Product Image (Optional)</label>
+                <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 0.5rem;">
+                    <img id="edit_prod_preview" src="" alt="preview"
+                        style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border-color);">
+                    <span style="font-size: 0.8rem; color: var(--text-secondary);">Current Image</span>
+                </div>
+                <input type="file" id="edit_prod_image" name="image_file" class="form-control" accept="image/*">
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">
+                    Leave empty to keep current image.
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('editProductModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Update Product</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function prepareEditProduct(id, name, categoryId, description, imageUrl, price, sellingPrice, size, stock, specification) {
+        const form = document.getElementById('editProductForm');
+        form.action = `/dashboard/products/edit/${id}/`;
+
+        document.getElementById('edit_prod_name').value = name;
+        document.getElementById('edit_prod_category').value = categoryId;
+        document.getElementById('edit_prod_desc').value = description;
+        document.getElementById('edit_prod_preview').src = imageUrl;
+        
+        // Populate new fields
+        document.getElementById('edit_prod_price').value = price;
+        document.getElementById('edit_prod_selling_price').value = sellingPrice;
+        document.getElementById('edit_prod_size').value = size;
+        document.getElementById('edit_prod_stock').value = stock;
+        document.getElementById('edit_prod_specification').value = specification;
+
+        openModal('editProductModal');
+    }
+</script>
+{% endblock %}

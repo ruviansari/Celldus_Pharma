@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<!-- page-title -->
+<div class="ttm-page-title-row">
+    <div class="ttm-page-title-row-inner">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-12">
+                    <div class="page-title-heading">
+                        <h2 class="title">Our Blog</h2>
+                    </div>
+                    <div class="breadcrumb-wrapper">
+                        <span>
+                            <a title="Homepage" href="{% url 'home' %}">Home</a>
+                        </span>
+                        <span>Our Blog</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div><!-- page-title end-->
+<!--site-main start-->
+<div class="site-main">
+
+    <!--grid-section-->
+    <section class="ttm-row grid-section clearfix">
+        <div class="container">
+            <div class="row multi-columns-row ttm-boxes-spacing-15px">
+                {% for blog in blogs %}
+<div class="ttm-box-col-wrapper col-lg-4 col-md-6 col-sm-6">
+    <div class="featured-imagebox featured-imagebox-post">
+
+        <div class="ttm-post-thumbnail featured-thumbnail">
+            <img class="img-fluid" src="{% static blog.image %}" alt="image">
+        </div>
+
+        <div class="featured-content featured-content-post">
+            <div class="post-meta">
+                <span class="ttm-meta-line">
+                    <i class="fa fa-user"></i>{{ blog.author }}
+                </span>
+                <span class="ttm-meta-line">
+                    <i class="fa fa-calendar"></i>{{ blog.date }}
+                </span>
+            </div>
+
+            <div class="post-title featured-title">
+                <h5>
+                    <!-- 🔥 IMPORTANT FIX -->
+                    <a href="{% url 'blog_details' blog.id %}">
+                        {{ blog.title }}
+                    </a>
+                </h5>
+            </div>
+
+            <div class="post-desc featured-desc">
+                <p>{{ blog.desc }}</p>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endfor %}
+            </div>
+            
+        </div>
+    </section>
+    <!--grid-section end-->
+
+
+</div><!--site-main end-->
+{% endblock %}

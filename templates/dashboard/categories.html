@@ -1,0 +1,130 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Category Management | Celldus Pharma{% endblock %}
+{% block page_title %}Category Management{% endblock %}
+{% block page_subtitle %}Add, edit or remove product categories.{% endblock %}
+
+{% block top_actions %}
+<button class="btn btn-primary" onclick="openModal('addCategoryModal')">
+    <i class="fa-solid fa-plus"></i> Add Category
+</button>
+{% endblock %}
+
+{% block content %}
+<div class="panel">
+    <div class="panel-header">
+        <h2 class="panel-title">All Categories</h2>
+    </div>
+
+    <div class="table-container">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Category Name</th>
+                    <th>Description</th>
+                    <th>Products Count</th>
+                    <th>Created At</th>
+                    <th style="width: 100px; text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cat in categories %}
+                <tr>
+                    <td style="color: var(--text-muted);">#{{ cat.id }}</td>
+                    <td><strong style="color: #fff;">{{ cat.name }}</strong></td>
+                    <td style="color: var(--text-secondary);">{{ cat.description|default:"No description" }}</td>
+                    <td>
+                        <span class="badge badge-info">{{ cat.products.count }} Products</span>
+                    </td>
+                    <td style="color: var(--text-muted); font-size: 0.85rem;">{{ cat.created_at|date:"M d, Y" }}</td>
+                    <td>
+                        <div class="action-btn-group" style="justify-content: flex-end;">
+                            <button class="action-btn edit"
+                                onclick="prepareEdit('{{ cat.id }}', '{{ cat.name|escapejs }}', '{{ cat.description|escapejs }}')"
+                                title="Edit Category">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                            <form action="{% url 'dashboard_category_delete' cat.id %}" method="POST"
+                                onsubmit="return confirm('Are you sure you want to delete this category? All related products will also be deleted!')"
+                                style="margin:0;">
+                                {% csrf_token %}
+                                <button type="submit" class="action-btn delete" title="Delete Category">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 3rem;">
+                        No categories found. Click 'Add Category' to create one.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add Category Modal -->
+<div id="addCategoryModal" class="modal-overlay">
+    <div class="modal-content">
+        <h3 class="modal-title">Create New Category</h3>
+        <form action="{% url 'dashboard_category_add' %}" method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label" for="add_name">Category Name</label>
+                <input type="text" id="add_name" name="name" class="form-control"
+                    placeholder="e.g. Pediatric, Antibiotics" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="add_description">Description</label>
+                <textarea id="add_description" name="description" class="form-control" rows="4"
+                    placeholder="Brief details about the category..."></textarea>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('addCategoryModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Category</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Category Modal -->
+<div id="editCategoryModal" class="modal-overlay">
+    <div class="modal-content">
+        <h3 class="modal-title">Edit Category</h3>
+        <form id="editCategoryForm" action="" method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label" for="edit_name">Category Name</label>
+                <input type="text" id="edit_name" name="name" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="edit_description">Description</label>
+                <textarea id="edit_description" name="description" class="form-control" rows="4"></textarea>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary"
+                    onclick="closeModal('editCategoryModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Update Category</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function prepareEdit(id, name, description) {
+        const form = document.getElementById('editCategoryForm');
+        // Set the dynamic form action URL
+        form.action = `/dashboard/categories/edit/${id}/`;
+        document.getElementById('edit_name').value = name;
+        document.getElementById('edit_description').value = description;
+        openModal('editCategoryModal');
+    }
+</script>
+{% endblock %}

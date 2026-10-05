@@ -1,0 +1,141 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Manufacturing & BMR Batch Records | Celldus Pharma{% endblock %}
+{% block page_title %}Manufacturing & Electronic BMR{% endblock %}
+{% block page_subtitle %}Formulation batch tracking, material dispensing, yield reconciliation, and quarantine hand-off.{% endblock %}
+
+{% block content %}
+<div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 1.5rem;">
+    <div class="stats-card" style="border-left: 4px solid #6366f1;">
+        <div class="stats-info">
+            <h3 style="color: #6366f1;">Active Manufacturing Batches</h3>
+            <div class="stats-number">{{ active_batches }}</div>
+        </div>
+        <div class="stats-icon-wrapper indigo"><i class="fa-solid fa-industry"></i></div>
+    </div>
+    <div class="stats-card" style="border-left: 4px solid #10b981;">
+        <div class="stats-info">
+            <h3 style="color: #10b981;">Completed Batches</h3>
+            <div class="stats-number">{{ completed_batches }}</div>
+        </div>
+        <div class="stats-icon-wrapper emerald"><i class="fa-solid fa-check-circle"></i></div>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-header">
+        <h2 class="panel-title"><i class="fa-solid fa-mortar-pestle" style="color: #6366f1; margin-right: 0.5rem;"></i>Electronic Batch Production Records (BMR)</h2>
+        <span style="font-size: 0.8rem; color: var(--text-secondary);">Batch-level traceability and yield</span>
+    </div>
+    <div class="table-container">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Order & Batch No</th>
+                    <th>Product Formulation</th>
+                    <th>BOM Version</th>
+                    <th>Target Qty</th>
+                    <th>Actual Produced</th>
+                    <th>Yield %</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td>
+                        <strong style="color: #60a5fa; font-family: monospace;">{{ order.document_no }}</strong>
+                        <div style="font-size: 0.75rem; color: #10b981; font-family: monospace; font-weight: 600;">Batch: {{ order.batch_no }}</div>
+                    </td>
+                    <td>
+                        <strong style="color: #fff;">{{ order.product.name }}</strong>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary);">Code: {{ order.product.item_code }}</div>
+                    </td>
+                    <td style="color: #e2e8f0; font-size: 0.8rem;">{{ order.bom.bom_code }}</td>
+                    <td style="color: #e2e8f0; font-size: 0.85rem;">{{ order.planned_qty }} {{ order.uom.code }}</td>
+                    <td>
+                        {% if order.actual_produced_qty > 0 %}
+                        <strong style="color: #10b981;">{{ order.actual_produced_qty }}</strong> {{ order.uom.code }}
+                        {% else %}
+                        <span style="color: var(--text-muted);">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if order.yield_percentage > 0 %}
+                        <span style="font-weight: 700; color: {% if order.yield_percentage >= 95 %}#10b981{% else %}#f59e0b{% endif %}; font-size: 0.85rem;">
+                            {{ order.yield_percentage }}%
+                        </span>
+                        {% else %}
+                        <span style="color: var(--text-muted);">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span style="padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 600;
+                            {% if order.status == 'COMPLETED' %}background: rgba(16, 185, 129, 0.2); color: #10b981;
+                            {% elif order.status == 'RELEASED' or order.status == 'IN_PROGRESS' %}background: rgba(99, 102, 241, 0.2); color: #818cf8;
+                            {% else %}background: rgba(148, 163, 184, 0.2); color: #cbd5e1;{% endif %}">
+                            {{ order.status }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if order.status != 'COMPLETED' and order.status != 'CLOSED' %}
+                        <button type="button" class="btn btn-primary" style="padding: 0.35rem 0.7rem; font-size: 0.75rem;" 
+                                onclick="openBatchCompleteModal('{{ order.id }}', '{{ order.batch_no }}', '{{ order.planned_qty }}', '{{ order.uom.code }}');">
+                            <i class="fa-solid fa-flag-checkered"></i> Complete Batch
+                        </button>
+                        {% else %}
+                        <span style="color: var(--text-muted); font-size: 0.75rem;"><i class="fa-solid fa-check"></i> QC Handed-Off</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 2rem;">No production orders logged.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Complete Batch Modal -->
+<div id="batchCompleteModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); z-index: 999; align-items: center; justify-content: center;">
+    <div style="background: #111827; border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; width: 90%; max-width: 480px; padding: 2rem; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+        <h3 style="margin-top: 0; color: #fff; font-size: 1.2rem; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fa-solid fa-check-to-slot" style="color: #6366f1;"></i> Complete Formulation Batch
+        </h3>
+        <p style="color: var(--text-secondary); font-size: 0.85rem;" id="batchModalSubtitle">Reconciling output for batch</p>
+
+        <form id="batchCompleteForm" method="POST" action="">
+            {% csrf_token %}
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.3rem;">Actual Produced Quantity *</label>
+                <input type="number" step="0.0001" min="0.0001" name="actual_produced_qty" id="modalActualQty" required style="width: 100%; padding: 0.6rem; background: #1f2937; border: 1px solid var(--border-color); border-radius: 6px; color: #fff;">
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.3rem;">Scrap / Rejection Quantity</label>
+                <input type="number" step="0.0001" min="0.0000" name="scrap_qty" value="0.0000" style="width: 100%; padding: 0.6rem; background: #1f2937; border: 1px solid var(--border-color); border-radius: 6px; color: #fff;">
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+                <button type="button" class="btn btn-secondary" onclick="closeBatchCompleteModal();">Cancel</button>
+                <button type="submit" class="btn btn-primary" style="background: #6366f1; border-color: #6366f1;">Submit to QC</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openBatchCompleteModal(orderId, batchNo, plannedQty, uom) {
+    document.getElementById('batchModalSubtitle').innerText = "Batch: " + batchNo + " (Planned: " + plannedQty + " " + uom + ")";
+    document.getElementById('modalActualQty').value = plannedQty;
+    document.getElementById('batchCompleteForm').action = "/dashboard/production/complete/" + orderId + "/";
+    document.getElementById('batchCompleteModal').style.display = 'flex';
+}
+function closeBatchCompleteModal() {
+    document.getElementById('batchCompleteModal').style.display = 'none';
+}
+</script>
+{% endblock %}

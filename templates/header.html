@@ -1,0 +1,174 @@
+{% load static %}
+<!--header start-->
+<header id="masthead" class="header ttm-header-style-01">
+    <!-- top_bar -->
+    <div class="top_bar ttm-bgcolor-skincolor clearfix">
+        <div class="container">
+            <div class="row">
+                <div class="col-xl-12 d-flex flex-row align-items-center">
+                    <div class="top_bar_contact_item">
+                        <div class="top_bar_icon"><i class="fa fa-phone"></i></div><a href="tel:+919217499771">+91 9217499771</a>
+                    </div>
+                    <div class="top_bar_contact_item">
+                        <div class="top_bar_icon"><i class="fa fa-envelope-o"></i></div>
+                        <a href="mailto:info@cellduspharma.com">info@cellduspharma.com</a>
+                    </div>
+                    <div class="top_bar_contact_item ml-auto">
+                        <div class="top_bar_icon"><i class="fa fa-clock-o"></i></div>
+                        Working Hours - Mon - Fri: 9:30 - 18:30
+                    </div>
+                    <div class="top_bar_social">
+                        <ul class="social-icons">
+                            <li><a class="tooltip-bottom" target="_blank"
+                                    href="https://www.facebook.com/preyantechnosys19" data-tooltip="Facebook"
+                                    tabindex="-1"><i class="fa-brands fa-facebook-f"></i></a>
+                            </li>
+                            <li><a class="tooltip-bottom" target="_blank" href="https://twitter.com/PreyanTechnosys"
+                                    data-tooltip="Twitter" tabindex="-1"><i class="fa-brands fa-twitter -f "></i></a>
+                            </li>
+                            <li><a class="tooltip-bottom" target="_blank"
+                                    href="https://www.flickr.com/photos/166353669@N03/" data-tooltip="Flickr"
+                                    tabindex="-1"><i class="fa-brands fa-flickr -f"></i></a>
+                            </li>
+                            <li><a class="tooltip-bottom" target="_blank"
+                                    href="https://www.linkedin.com/in/preyan-technosys-pvt-ltd/" data-tooltip="Linkedin"
+                                    tabindex="-1"><i class="fa-brands fa-linkedin -f"></i></a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- top_bar end-->
+    <!-- site-header-menu -->
+    <div id="site-header-menu" class="site-header-menu ttm-bgcolor-white">
+        <div class="site-header-menu-inner ttm-stickable-header">
+            <div class="container">
+                <div class="row">
+                    <div class="col">
+                        <!--site-navigation -->
+                        <div class="site-navigation d-flex flex-row">
+                            <!-- LOGO -->
+                            <div class="site-branding mr-auto">
+                                <a href="{% url 'home' %}">
+                                    <img src="{% static 'images/logo-img.png' %}" class="logo-img"
+                                        style="height: 80px;">
+                                </a>
+                            </div>
+                            <div class="btn-show-menu-mobile menubar menubar--squeeze">
+                                <span class="menubar-box">
+                                    <span class="menubar-inner"></span>
+                                </span>
+                            </div>
+                            <!-- menu -->
+                            <nav class="main-menu menu-mobile" id="menu">
+                                <ul class="menu">
+
+                                    <li class="mega-menu-item">
+                                        <a href="{% url 'home' %}" class="">Home</a>
+                                    </li>
+
+                                    <li class="mega-menu-item">
+                                        <a href="{% url 'about_us' %}" class="">About Us</a>
+                                    </li>
+
+                                    <li class="mega-menu-item">
+                                        <a href="{% url 'product' %}" class="">Product Portfolio</a>
+                                    </li>
+
+                                    <li class="mega-menu-item">
+                                        <a href="{% url 'our_blog' %}" class="">Our Blog</a>
+                                    </li>
+
+                                    <li class="mega-menu-item">
+                                        <a href="{% url 'contact' %}" class="">Contact Us</a>
+                                    </li>
+
+                                </ul>
+                            </nav>
+                            <div class="header_extra d-flex flex-row align-items-center justify-content-end">
+                                <div class="header_btn">
+                                    <a class="ttm-btn ttm-btn-size-md ttm-btn-shape-rounded ttm-btn-style-fill ttm-icon-btn-left ttm-btn-color-grey"
+                                        href="#"> <i class="fa fa-calendar"></i>Appointment</a>
+                                    <div id="appointment">
+                                        <h3>Keep in touch!</h3>
+                                        <form class="wrap-form appointment_form clearfix" method="post" action="#">
+                                            <div class="row">
+                                                <div class="col-md-4">
+                                                    <label class="form-group">
+                                                        <span class="text-input">
+                                                            <i class="fa fa-user" aria-hidden="true"></i>
+                                                            <input name="name" type="text" value=""
+                                                                placeholder="Your Name" required="required">
+                                                        </span>
+                                                    </label>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-group">
+                                                        <span class="text-input">
+                                                            <i class="fa fa-phone" aria-hidden="true"></i>
+                                                            <input name="phone" type="tel" value=""
+                                                                placeholder="Phone Number" required="required">
+                                                        </span>
+                                                    </label>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-group">
+                                                        <span class="text-input">
+                                                            <i class="fa fa-envelope" aria-hidden="true"></i>
+                                                            <input name="email" type="email" value=""
+                                                                placeholder="Email">
+                                                        </span>
+                                                    </label>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="form-group date">
+                                                        <span class="text-input">
+                                                            <i class="fa fa-calendar" aria-hidden="true"></i>
+                                                            <input type="text" value="" id="datetimepicker1">
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-group">
+                                                        <span class="text-input">
+                                                            <i class="fa fa-pencil" aria-hidden="true"></i>
+                                                            <input name="Note" type="text" value="" placeholder="Note">
+                                                        </span>
+                                                    </label>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <button
+                                                        class="submit ttm-btn ttm-btn-size-md ttm-btn-shape-rounded ttm-btn-style-fill ttm-btn-color-skincolor"
+                                                        type="submit">Book appointment</button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+
+                                <div class="header_search">
+                                    <a href="javascript:void(0)" class="btn-default search_btn">
+                                        <i class="fa-solid fa-magnifying-glass"></i>
+                                    </a>
+
+                                    <div class="header_search_content">
+                                        <form id="searchbox" method="get" action="/search/">
+                                            <input class="search_query" type="text" name="q"
+                                                placeholder="Enter Keyword">
+                                            <button type="submit" class="btn close-search">
+                                                <i class="fa-solid fa-magnifying-glass"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div><!-- site-navigation end-->
+            </div>
+        </div>
+    </div>
+    <!-- site-header-menu end-->
+</header><!--header end-->

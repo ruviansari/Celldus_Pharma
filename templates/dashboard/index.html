@@ -1,0 +1,201 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Pharma ERP Executive Cockpit | Celldus Pharma{% endblock %}
+{% block page_title %}Celldus Pharma ERP Cockpit{% endblock %}
+{% block page_subtitle %}Real-time GMP formulation metrics, FEFO batch allocations, QC/QA release workflows, and 21 CFR Part 11 audit trails.{% endblock %}
+
+{% block content %}
+<!-- Quick Action Banner -->
+<div class="quick-action-banner" style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 2rem; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);">
+    <div>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #10b981; box-shadow: 0 0 10px #10b981;"></span>
+            <h3 style="margin: 0; color: #fff; font-size: 1.1rem; font-weight: 600;">GMP Production & API System Active</h3>
+            <span style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); font-size: 0.75rem; padding: 2px 8px; border-radius: 20px; font-weight: 500;">21 CFR Part 11 Compliant</span>
+        </div>
+        <p style="margin: 0.35rem 0 0; color: var(--text-secondary); font-size: 0.85rem;">All REST APIs, audit events, and optimistic concurrency locks are enforced across all 10 enterprise roles.</p>
+    </div>
+    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+        <a href="/api/docs/" target="_blank" class="btn btn-primary" style="background: #3b82f6; border-color: #3b82f6; padding: 0.5rem 1rem; font-size: 0.85rem; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fa-solid fa-bolt"></i> Interactive Swagger APIs
+        </a>
+        <a href="/admin/erp_core/auditlog/" target="_blank" class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.85rem; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fa-solid fa-fingerprint"></i> Full Audit Trail
+        </a>
+    </div>
+</div>
+
+<!-- Pharma ERP Metrics Cards Grid -->
+<!-- Pharma ERP Metrics Cards Grid -->
+<div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+    <!-- Quarantine Lots Card -->
+    <a href="{% url 'dashboard_inventory_lots' %}?status=QUARANTINE" style="text-decoration: none; color: inherit; display: block;" title="View Quarantine Lots">
+        <div class="stats-card" style="border-left: 4px solid #f59e0b; cursor: pointer;">
+            <div class="stats-info">
+                <h3 style="color: #f59e0b;">Quarantine Lots (QC Pending)</h3>
+                <div class="stats-number">{{ quarantine_lots_count }}</div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px;">Awaiting analytical release &rarr;</div>
+            </div>
+            <div class="stats-icon-wrapper amber" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;">
+                <i class="fa-solid fa-hourglass-half"></i>
+            </div>
+        </div>
+    </a>
+
+    <!-- Commercial Available Lots Card -->
+    <a href="{% url 'dashboard_inventory_lots' %}?status=RELEASED" style="text-decoration: none; color: inherit; display: block;" title="View Released FEFO Batches">
+        <div class="stats-card" style="border-left: 4px solid #10b981; cursor: pointer;">
+            <div class="stats-info">
+                <h3 style="color: #10b981;">Released Batches (FEFO Ready)</h3>
+                <div class="stats-number">{{ available_lots_count }}</div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px;">Approved for dispatch & use &rarr;</div>
+            </div>
+            <div class="stats-icon-wrapper emerald">
+                <i class="fa-solid fa-boxes-stacked"></i>
+            </div>
+        </div>
+    </a>
+
+    <!-- Active Production Batches Card -->
+    <a href="{% url 'dashboard_production' %}" style="text-decoration: none; color: inherit; display: block;" title="View Production Orders">
+        <div class="stats-card" style="border-left: 4px solid #6366f1; cursor: pointer;">
+            <div class="stats-info">
+                <h3 style="color: #6366f1;">Active Manufacturing Batches</h3>
+                <div class="stats-number">{{ active_batches_count }}</div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px;">Electronic BMR/BPR In-Progress &rarr;</div>
+            </div>
+            <div class="stats-icon-wrapper indigo">
+                <i class="fa-solid fa-industry"></i>
+            </div>
+        </div>
+    </a>
+
+    <!-- Open Purchase Orders Card -->
+    <a href="{% url 'dashboard_procurement' %}" style="text-decoration: none; color: inherit; display: block;" title="View Purchase Orders & GRN">
+        <div class="stats-card" style="border-left: 4px solid #06b6d4; cursor: pointer;">
+            <div class="stats-info">
+                <h3 style="color: #06b6d4;">Procurement Orders (PO)</h3>
+                <div class="stats-number">{{ active_pos_count }}</div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px;">Inward GRNs pending receipt &rarr;</div>
+            </div>
+            <div class="stats-icon-wrapper cyan">
+                <i class="fa-solid fa-truck-ramp-box"></i>
+            </div>
+        </div>
+    </a>
+
+    <!-- CRM Leads Card -->
+    <a href="{% url 'dashboard_crm' %}" style="text-decoration: none; color: inherit; display: block;" title="View CRM Leads & Pipeline">
+        <div class="stats-card" style="border-left: 4px solid #ec4899; cursor: pointer;">
+            <div class="stats-info">
+                <h3 style="color: #ec4899;">CRM Distribution Leads</h3>
+                <div class="stats-number">{{ total_leads_count }}</div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px;">Wholesalers & Hospitals &rarr;</div>
+            </div>
+            <div class="stats-icon-wrapper rose">
+                <i class="fa-solid fa-user-group"></i>
+            </div>
+        </div>
+    </a>
+</div>
+
+<!-- Detailed Grid -->
+<div class="dashboard-grid-2" style="margin-top: 2rem;">
+    <!-- 21 CFR Part 11 Audit Trail Feed -->
+    <div class="panel">
+        <div class="panel-header">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fa-solid fa-shield-halved" style="color: #10b981;"></i>
+                <h2 class="panel-title">Attributable Audit Trail (21 CFR Part 11)</h2>
+            </div>
+            <a href="/admin/erp_core/auditlog/" target="_blank" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">View Detailed Log</a>
+        </div>
+        <div class="table-container">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>Time (UTC)</th>
+                        <th>User</th>
+                        <th>Action</th>
+                        <th>Entity & Ref</th>
+                        <th>Reason / Rationale</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in recent_audits %}
+                    <tr>
+                        <td style="color: var(--text-secondary); font-size: 0.75rem; white-space: nowrap;">
+                            {{ log.timestamp|date:"M d, H:i:s" }}
+                        </td>
+                        <td>
+                            <strong style="color: #fff; font-size: 0.8rem;">{{ log.user.username|default:"System" }}</strong>
+                        </td>
+                        <td>
+                            <span style="font-size: 0.7rem; font-weight: 600; padding: 2px 6px; border-radius: 4px;
+                                {% if log.action == 'APPROVE' or log.action == 'QA_RELEASE' %}background: rgba(16, 185, 129, 0.2); color: #10b981;
+                                {% elif log.action == 'REJECT' or log.action == 'QA_REJECT' or log.action == 'RECALL' %}background: rgba(239, 68, 68, 0.2); color: #ef4444;
+                                {% elif log.action == 'POST' or log.action == 'DISPATCH' %}background: rgba(99, 102, 241, 0.2); color: #818cf8;
+                                {% else %}background: rgba(148, 163, 184, 0.2); color: #cbd5e1;{% endif %}">
+                                {{ log.action }}
+                            </span>
+                        </td>
+                        <td>
+                            <span style="font-size: 0.8rem; color: #e2e8f0;">{{ log.entity_name }}</span>
+                            {% if log.document_no %}
+                            <div style="font-size: 0.7rem; color: #94a3b8; font-family: monospace;">{{ log.document_no }}</div>
+                            {% endif %}
+                        </td>
+                        <td style="font-size: 0.75rem; color: var(--text-secondary); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                            {{ log.reason|default:"System state transition" }}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                            No audit trail events captured yet.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Recent Website Inquiries -->
+    <div class="panel">
+        <div class="panel-header">
+            <h2 class="panel-title">Recent Website Inquiries</h2>
+            <a href="{% url 'dashboard_customers' %}" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">View Inquiries</a>
+        </div>
+        <div class="table-container">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>Sender</th>
+                        <th>Subject</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inquiry in recent_inquiries %}
+                    <tr>
+                        <td>
+                            <strong style="color: #fff;">{{ inquiry.name }}</strong>
+                            <div style="font-size: 0.75rem; color: var(--text-secondary);">{{ inquiry.email }}</div>
+                        </td>
+                        <td>{{ inquiry.subject }}</td>
+                        <td style="color: var(--text-secondary); font-size: 0.8rem;">{{ inquiry.created_at|date:"M d, Y" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                            No recent inquiries found.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

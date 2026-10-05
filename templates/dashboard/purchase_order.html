@@ -1,0 +1,463 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Purchase Order {{ po.document_no }} | Celldus Pharma</title>
+    <!-- Google Fonts & Font Awesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        body {
+            background: #f1f5f9;
+            color: #0f172a;
+            padding: 2rem 1rem;
+        }
+        .po-wrapper {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e2e8f0;
+            padding: 2.5rem;
+        }
+        .po-top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #0f172a;
+        }
+        .company-header h1 {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: #1e3a8a;
+            text-transform: uppercase;
+            letter-spacing: -0.02em;
+        }
+        .company-header p {
+            font-size: 0.8rem;
+            color: #475569;
+            margin-top: 0.2rem;
+            line-height: 1.4;
+        }
+        .po-title-block {
+            text-align: right;
+        }
+        .po-badge {
+            background: #4338ca;
+            color: #ffffff;
+            padding: 4px 12px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            border-radius: 4px;
+            display: inline-block;
+            margin-bottom: 0.5rem;
+        }
+        .po-number {
+            font-size: 1.15rem;
+            font-weight: 800;
+            font-family: monospace;
+            color: #0f172a;
+        }
+        .details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+        }
+        .info-col h4 {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #64748b;
+            margin-bottom: 0.5rem;
+            border-bottom: 1px solid #cbd5e1;
+            padding-bottom: 0.25rem;
+        }
+        .info-row {
+            font-size: 0.82rem;
+            margin-bottom: 0.35rem;
+            display: flex;
+        }
+        .info-label {
+            width: 140px;
+            color: #64748b;
+            font-weight: 500;
+        }
+        .info-val {
+            font-weight: 600;
+            color: #0f172a;
+            flex: 1;
+        }
+        .order-meta-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+            padding: 0.75rem 1rem;
+            background: #eef2ff;
+            border-radius: 6px;
+            border-left: 4px solid #4338ca;
+        }
+        .meta-item {
+            font-size: 0.78rem;
+        }
+        .meta-item .meta-label {
+            color: #64748b;
+            display: block;
+            margin-bottom: 0.15rem;
+        }
+        .meta-item .meta-val {
+            font-weight: 700;
+            color: #1e1b4b;
+        }
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1.5rem;
+        }
+        .items-table th {
+            background: #0f172a;
+            color: #ffffff;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            padding: 0.6rem 0.75rem;
+            text-align: left;
+        }
+        .items-table td {
+            padding: 0.75rem;
+            font-size: 0.8rem;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: top;
+        }
+        .items-table tr:nth-child(even) {
+            background: #f8fafc;
+        }
+        .text-right {
+            text-align: right;
+        }
+        .summary-section {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            gap: 2rem;
+        }
+        .terms-block {
+            flex: 1.2;
+            font-size: 0.75rem;
+            color: #475569;
+            background: #fafafa;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 0.75rem 1rem;
+        }
+        .terms-block h5 {
+            font-size: 0.78rem;
+            color: #0f172a;
+            margin-bottom: 0.4rem;
+            text-transform: uppercase;
+        }
+        .terms-block ul {
+            padding-left: 1.2rem;
+            line-height: 1.5;
+        }
+        .calc-block {
+            flex: 0.8;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 0.75rem 1rem;
+            background: #f8fafc;
+        }
+        .calc-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.82rem;
+            margin-bottom: 0.4rem;
+        }
+        .calc-row.total-row {
+            border-top: 2px solid #0f172a;
+            padding-top: 0.5rem;
+            margin-top: 0.5rem;
+            font-size: 1rem;
+            font-weight: 800;
+            color: #1e3a8a;
+        }
+        .signature-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            margin-top: 2.5rem;
+            padding-top: 1rem;
+        }
+        .sig-box {
+            border-top: 1px dashed #94a3b8;
+            padding-top: 0.5rem;
+            text-align: center;
+            font-size: 0.78rem;
+            color: #475569;
+        }
+        .sig-box strong {
+            display: block;
+            color: #0f172a;
+            margin-bottom: 0.15rem;
+        }
+        .action-bar {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            display: flex;
+            gap: 0.75rem;
+            z-index: 100;
+        }
+        .btn-action {
+            background: #1e3a8a;
+            color: #ffffff;
+            border: none;
+            padding: 0.6rem 1.25rem;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            text-decoration: none;
+        }
+        .btn-action:hover {
+            background: #1e40af;
+        }
+        .btn-action.btn-secondary {
+            background: #475569;
+        }
+        @media print {
+            body {
+                background: #ffffff;
+                padding: 0;
+            }
+            .po-wrapper {
+                box-shadow: none;
+                border: none;
+                padding: 0;
+                max-width: 100%;
+            }
+            .action-bar {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="action-bar">
+    <button class="btn-action" onclick="window.print();"><i class="fa-solid fa-print"></i> Print Purchase Order</button>
+    <a href="{% url 'dashboard_procurement' %}" class="btn-action btn-secondary"><i class="fa-solid fa-arrow-left"></i> Back to Procurement</a>
+</div>
+
+<div class="po-wrapper">
+    <!-- Top Header -->
+    <div class="po-top-bar">
+        <div class="company-header">
+            <h1><i class="fa-solid fa-flask-vial" style="color: #4338ca; margin-right: 0.5rem;"></i>Celldus Pharma Limited</h1>
+            <p><strong>WHO-GMP & US-FDA cGMP Compliant Pharmaceutical Manufacturer</strong></p>
+            <p>Plot No. 42-45, Phase-II Pharma City, Kurkumbh MIDC, Pune - 412219, Maharashtra</p>
+            <p>GSTIN: <strong>27AAACC4455P1Z3</strong> | Drug Lic: <strong>MH-PUN-20B-184920 / 21B-184921</strong></p>
+        </div>
+        <div class="po-title-block">
+            <span class="po-badge">PURCHASE ORDER</span>
+            <div class="po-number">{{ po.document_no }}</div>
+            <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.2rem;">Generated: {{ po.created_at|date:"d M Y, H:i" }}</div>
+        </div>
+    </div>
+
+    <!-- Meta Bar -->
+    <div class="order-meta-bar">
+        <div class="meta-item">
+            <span class="meta-label">PO Issue Date:</span>
+            <span class="meta-val">{{ po.order_date|date:"d M Y" }}</span>
+        </div>
+        <div class="meta-item">
+            <span class="meta-label">Expected Delivery:</span>
+            <span class="meta-val" style="color: #4338ca;">{{ po.expected_delivery_date|date:"d M Y" }}</span>
+        </div>
+        <div class="meta-item">
+            <span class="meta-label">Payment Terms:</span>
+            <span class="meta-val">{{ po.payment_terms|default:"Net 30 Days" }}</span>
+        </div>
+        <div class="meta-item">
+            <span class="meta-label">Approval Status:</span>
+            <span class="meta-val" style="color: {% if po.status == 'APPROVED' %}#15803d{% else %}#b45309{% endif %};">
+                <i class="fa-solid fa-circle-check"></i> {{ po.get_status_display|upper }}
+            </span>
+        </div>
+    </div>
+
+    <!-- Address Details -->
+    <div class="details-grid">
+        <!-- Supplier Col -->
+        <div class="info-col">
+            <h4><i class="fa-solid fa-truck-field"></i> Vendor / Qualified Supplier</h4>
+            <div class="info-row">
+                <span class="info-label">Supplier Name:</span>
+                <span class="info-val">{{ supplier.legal_name }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Supplier Code:</span>
+                <span class="info-val" style="font-family: monospace;">{{ supplier.supplier_code }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">GSTIN:</span>
+                <span class="info-val" style="font-family: monospace;">{{ supplier.gstin|default:"Unregistered / Form 60" }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">City & State:</span>
+                <span class="info-val">{{ supplier.city }}, {{ supplier.state }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Contact Person:</span>
+                <span class="info-val">{{ supplier.contact_person|default:"Purchase Desk" }} ({{ supplier.phone|default:"-" }})</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">GMP Certificate:</span>
+                <span class="info-val">{{ supplier.gmp_certificate_no|default:"Verified on Audit" }}</span>
+            </div>
+        </div>
+
+        <!-- Ship To / Plant -->
+        <div class="info-col">
+            <h4><i class="fa-solid fa-building-wheat"></i> Deliver / Consignee Site</h4>
+            <div class="info-row">
+                <span class="info-label">Consignee Plant:</span>
+                <span class="info-val">Celldus Pharma - {{ branch.name|default:"Central Site" }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Delivery Address:</span>
+                <span class="info-val">Raw Material Quarantine Store, Gate 3, Celldus Pharma Facility</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">State / Code:</span>
+                <span class="info-val">Maharashtra (Code: 27)</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Inspection Note:</span>
+                <span class="info-val" style="color: #b45309;">Subject to QC Sampling & CoA Clearance</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Authorized Buyer:</span>
+                <span class="info-val">{{ po.created_by.get_full_name|default:po.created_by.username }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Items Table -->
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th style="width: 35px;">#</th>
+                <th>Item Code & Material Description</th>
+                <th>Pharmacopoeial Grade</th>
+                <th class="text-right">Qty</th>
+                <th>UOM</th>
+                <th class="text-right">Unit Rate (₹)</th>
+                <th class="text-right">Tax (%)</th>
+                <th class="text-right">Line Total (₹)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for line in lines %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                    <strong style="color: #1e3a8a;">{{ line.item.name }}</strong>
+                    <div style="font-size: 0.72rem; color: #64748b; font-family: monospace;">Code: {{ line.item.item_code }}</div>
+                    {% if line.item.generic_name %}
+                    <div style="font-size: 0.72rem; color: #475569;">Generic: {{ line.item.generic_name }}</div>
+                    {% endif %}
+                </td>
+                <td style="font-size: 0.75rem; color: #475569;">
+                    {{ line.item.get_item_type_display }}
+                    <div style="font-size: 0.7rem; color: #64748b;">{{ line.item.get_storage_condition_display }}</div>
+                </td>
+                <td class="text-right" style="font-weight: 700;">{{ line.ordered_qty }}</td>
+                <td>{{ line.uom.code }}</td>
+                <td class="text-right" style="font-family: monospace;">₹{{ line.rate }}</td>
+                <td class="text-right">{{ line.tax_percent }}%</td>
+                <td class="text-right" style="font-weight: 700; font-family: monospace;">
+                    ₹{{ line.ordered_qty|floatformat:2 }}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8" style="text-align: center; color: #94a3b8; padding: 2rem;">No items listed in this PO.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Summary Section -->
+    <div class="summary-section">
+        <!-- Terms -->
+        <div class="terms-block">
+            <h5>Pharmaceutical Purchase Conditions & Instructions:</h5>
+            <ul>
+                <li><strong>Certificate of Analysis (CoA):</strong> A manufacturer signed CoA mentioning batch number, manufacturing date, and expiry date must accompany each consignment.</li>
+                <li><strong>Quality Clearance:</strong> Materials will be kept in Quarantine upon receipt. Payment is release contingent on Quality Control (QC) analytical clearance.</li>
+                <li><strong>Shelf Life Requirement:</strong> Material must have a minimum of 80% remaining shelf life from the date of inward delivery.</li>
+                <li><strong>Packaging & Labeling:</strong> Tamper-evident seals, proper warning symbols, and cold-chain indicators (if applicable) are mandatory.</li>
+            </ul>
+        </div>
+
+        <!-- Calculations -->
+        <div class="calc-block">
+            <div class="calc-row">
+                <span style="color: #64748b;">Subtotal (Base Value):</span>
+                <span style="font-family: monospace; font-weight: 600;">₹{{ po.subtotal }}</span>
+            </div>
+            <div class="calc-row">
+                <span style="color: #64748b;">Applicable GST (CGST/SGST/IGST):</span>
+                <span style="font-family: monospace; font-weight: 600;">₹{{ po.tax_total }}</span>
+            </div>
+            <div class="calc-row total-row">
+                <span>Grand Total:</span>
+                <span style="font-family: monospace;">₹{{ po.grand_total }}</span>
+            </div>
+            <div style="font-size: 0.7rem; color: #64748b; margin-top: 0.5rem; text-align: right;">
+                (Amounts inclusive of applicable Goods and Services Tax)
+            </div>
+        </div>
+    </div>
+
+    <!-- Signatures -->
+    <div class="signature-grid">
+        <div class="sig-box">
+            <strong>Prepared & Issued By</strong>
+            <div>{{ po.created_by.username }} (Procurement Officer)</div>
+            <div style="font-size: 0.7rem; color: #94a3b8;">Celldus Pharma Supply Chain Division</div>
+        </div>
+        <div class="sig-box">
+            <strong>Authorized Signatory / QA Verification</strong>
+            <div>{{ po.approved_by.username|default:"Head of Quality & Materials" }}</div>
+            <div style="font-size: 0.7rem; color: #94a3b8;">
+                {% if po.approved_at %}Approved on {{ po.approved_at|date:"d M Y H:i" }}{% else %}Electronically Approved under 21 CFR Part 11{% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

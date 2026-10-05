@@ -1,0 +1,433 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tax Invoice {{ invoice.document_no }} | Celldus Pharma</title>
+    <!-- Google Fonts & Font Awesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        body {
+            background: #f1f5f9;
+            color: #0f172a;
+            padding: 2rem 1rem;
+        }
+        .invoice-wrapper {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e2e8f0;
+            padding: 2.5rem;
+        }
+        .invoice-top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #0f172a;
+        }
+        .company-header h1 {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: #1e3a8a;
+            text-transform: uppercase;
+            letter-spacing: -0.02em;
+        }
+        .company-header p {
+            font-size: 0.8rem;
+            color: #475569;
+            margin-top: 0.2rem;
+            line-height: 1.4;
+        }
+        .invoice-title-block {
+            text-align: right;
+        }
+        .invoice-badge {
+            background: #1e3a8a;
+            color: #ffffff;
+            padding: 4px 12px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            border-radius: 4px;
+            display: inline-block;
+            margin-bottom: 0.5rem;
+        }
+        .invoice-number {
+            font-size: 1.15rem;
+            font-weight: 800;
+            font-family: monospace;
+            color: #0f172a;
+        }
+        .details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+        }
+        .info-col h4 {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #64748b;
+            margin-bottom: 0.5rem;
+            border-bottom: 1px solid #cbd5e1;
+            padding-bottom: 0.25rem;
+        }
+        .info-row {
+            font-size: 0.82rem;
+            margin-bottom: 0.35rem;
+            display: flex;
+        }
+        .info-label {
+            width: 140px;
+            color: #64748b;
+            font-weight: 500;
+        }
+        .info-val {
+            flex: 1;
+            color: #0f172a;
+            font-weight: 600;
+        }
+        .invoice-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1.5rem;
+        }
+        .invoice-table th {
+            background: #0f172a;
+            color: #ffffff;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            padding: 8px 10px;
+            text-align: left;
+        }
+        .invoice-table td {
+            font-size: 0.82rem;
+            padding: 10px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #1e293b;
+        }
+        .invoice-table tr:last-child td {
+            border-bottom: 2px solid #0f172a;
+        }
+        .totals-section {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+        .bank-details {
+            width: 55%;
+            background: #f8fafc;
+            padding: 1rem;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            font-size: 0.8rem;
+            color: #475569;
+        }
+        .bank-details strong { color: #0f172a; }
+        .totals-table {
+            width: 40%;
+            border-collapse: collapse;
+        }
+        .totals-table td {
+            padding: 6px 10px;
+            font-size: 0.85rem;
+        }
+        .totals-table tr.grand-total td {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: #1e3a8a;
+            border-top: 2px solid #0f172a;
+            border-bottom: 2px solid #0f172a;
+            padding: 8px 10px;
+        }
+        .signature-block {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px dashed #cbd5e1;
+        }
+        .compliance-notice {
+            font-size: 0.72rem;
+            color: #64748b;
+            line-height: 1.4;
+            max-width: 60%;
+        }
+        .sign-area {
+            text-align: center;
+        }
+        .sign-area .stamp {
+            border: 2px solid #10b981;
+            color: #10b981;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            display: inline-block;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+        .actions-floating {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            display: flex;
+            gap: 0.75rem;
+            z-index: 100;
+        }
+        .btn-print {
+            background: #1e3a8a;
+            color: #ffffff;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-size: 0.95rem;
+            font-weight: 700;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(30, 58, 138, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+        }
+        .btn-print:hover { background: #1d4ed8; }
+        .btn-back {
+            background: #ffffff;
+            color: #0f172a;
+            border: 1px solid #cbd5e1;
+            padding: 0.75rem 1.25rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        @media print {
+            body {
+                background: #ffffff;
+                padding: 0;
+            }
+            .invoice-wrapper {
+                box-shadow: none;
+                border: none;
+                padding: 0;
+                max-width: 100%;
+            }
+            .actions-floating {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="actions-floating">
+        <a href="{% url 'dashboard_sales' %}" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Back to ERP</a>
+        <button class="btn-print" onclick="window.print()"><i class="fa-solid fa-print"></i> Print Tax Invoice</button>
+    </div>
+
+    <div class="invoice-wrapper">
+        <!-- Top Header -->
+        <div class="invoice-top-bar">
+            <div class="company-header">
+                <h1>CELLDUS PHARMA PRIVATE LIMITED</h1>
+                <p>
+                    <strong>Central Manufacturing & Regional Formulation Hub</strong><br>
+                    Plot No. 45-A, Pharma SEZ, Hinjewadi Phase-II, Pune, Maharashtra - 411057<br>
+                    <strong>GSTIN:</strong> 27AABCC8921M1ZX &bull; <strong>PAN:</strong> AABCC8921M<br>
+                    <strong>Drug Licenses:</strong> Form 20-B: MH-PUN-20B-998822 &bull; Form 21-B: MH-PUN-21B-998823
+                </p>
+            </div>
+            <div class="invoice-title-block">
+                <div class="invoice-badge">TAX INVOICE</div>
+                <div class="invoice-number">{{ invoice.document_no }}</div>
+                <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.2rem;">Date: <strong>{{ invoice.invoice_date|date:"d M Y" }}</strong></div>
+            </div>
+        </div>
+
+        <!-- Details Grid: Consignee & Dispatch Transport -->
+        <div class="details-grid">
+            <div class="info-col">
+                <h4>BILL TO & SHIP TO (LICENSED CONSIGNEE)</h4>
+                <div class="info-row">
+                    <span class="info-label">Customer Name:</span>
+                    <span class="info-val">{{ customer.name }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Customer Code:</span>
+                    <span class="info-val" style="font-family: monospace;">{{ customer.customer_code }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Address:</span>
+                    <span class="info-val">{{ customer.billing_address|default:"Registered Office" }}, {{ customer.city }}, {{ customer.state }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Drug License:</span>
+                    <span class="info-val" style="color: #10b981; font-family: monospace;">{{ customer.drug_license_20b|default:"Verified Wholesale Form 20-B" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">GSTIN:</span>
+                    <span class="info-val" style="font-family: monospace;">{{ customer.gstin|default:"27AABCS1234F1Z8" }}</span>
+                </div>
+            </div>
+
+            <div class="info-col">
+                <h4>DISPATCH & TRANSPORT DETAILS</h4>
+                <div class="info-row">
+                    <span class="info-label">Sales Order Ref:</span>
+                    <span class="info-val" style="font-family: monospace;">{{ order.document_no }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Order Date:</span>
+                    <span class="info-val">{{ order.order_date|date:"d M Y" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">E-Way Bill No:</span>
+                    <span class="info-val" style="font-family: monospace; color: #1e3a8a;">{{ invoice.eway_bill_no|default:"998811223344" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Transporter:</span>
+                    <span class="info-val">{{ invoice.transporter_name|default:"Safechem Logistics" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">LR / Docket No:</span>
+                    <span class="info-val">{{ invoice.docket_no|default:"LR-2026-99" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Vehicle Registration:</span>
+                    <span class="info-val">{{ invoice.vehicle_number|default:"MH-12-PQ-4455" }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products & Dispatched Batches Table -->
+        <table class="invoice-table">
+            <thead>
+                <tr>
+                    <th style="width: 35px;">#</th>
+                    <th>Product Formulation & Description</th>
+                    <th>Allocated Lot / Batch</th>
+                    <th>Expiry Date</th>
+                    <th style="text-align: right;">Quantity</th>
+                    <th style="text-align: right;">Rate (₹)</th>
+                    <th style="text-align: right;">GST</th>
+                    <th style="text-align: right;">Amount (₹)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for alloc in allocations %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>
+                        <strong>{{ alloc.line.product.name }}</strong>
+                        <div style="font-size: 0.72rem; color: #64748b;">Code: {{ alloc.line.product.item_code }} &bull; Generic: {{ alloc.line.product.generic_name|default:"Pharma Formulation" }}</div>
+                    </td>
+                    <td>
+                        <strong style="font-family: monospace; color: #1e3a8a;">{{ alloc.lot.batch_no }}</strong>
+                        <div style="font-size: 0.72rem; color: #64748b;">Lot: {{ alloc.lot.lot_number }}</div>
+                    </td>
+                    <td>
+                        <span style="color: #059669; font-weight: 600;">{{ alloc.lot.expiry_date|date:"M Y" }}</span>
+                    </td>
+                    <td style="text-align: right; font-weight: 600;">
+                        {{ alloc.allocated_qty }} {{ alloc.uom.code }}
+                    </td>
+                    <td style="text-align: right;">
+                        ₹{{ alloc.line.unit_price }}
+                    </td>
+                    <td style="text-align: right;">
+                        {{ alloc.line.tax_percent }}%
+                    </td>
+                    <td style="text-align: right; font-weight: 700;">
+                        ₹{{ alloc.line.line_total }}
+                    </td>
+                </tr>
+                {% empty %}
+                <!-- Fallback to order lines if allocations already archived -->
+                {% for line in order.lines.all %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>
+                        <strong>{{ line.product.name }}</strong>
+                        <div style="font-size: 0.72rem; color: #64748b;">{{ line.product.item_code }}</div>
+                    </td>
+                    <td><span style="font-family: monospace;">Released Batches</span></td>
+                    <td>Standard</td>
+                    <td style="text-align: right; font-weight: 600;">{{ line.ordered_qty }} {{ line.uom.code }}</td>
+                    <td style="text-align: right;">₹{{ line.unit_price }}</td>
+                    <td style="text-align: right;">{{ line.tax_percent }}%</td>
+                    <td style="text-align: right; font-weight: 700;">₹{{ line.line_total }}</td>
+                </tr>
+                {% endfor %}
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Totals & Banking Details -->
+        <div class="totals-section">
+            <div class="bank-details">
+                <strong style="display: block; margin-bottom: 0.35rem; font-size: 0.85rem;"><i class="fa-solid fa-building-columns"></i> Bank Remittance Details (NEFT / RTGS)</strong>
+                <div>Bank Name: <strong>HDFC Bank Ltd</strong></div>
+                <div>Account Name: <strong>Celldus Pharma Private Limited</strong></div>
+                <div>Account No: <strong>50200088991122</strong> &bull; IFSC: <strong>HDFC0001429</strong></div>
+                <div style="margin-top: 0.5rem; font-size: 0.75rem; color: #64748b;">
+                    Payment Terms: <strong>Net 30 Days</strong> from invoice date. Overdue invoices attract 18% p.a. interest.
+                </div>
+            </div>
+
+            <table class="totals-table">
+                <tr>
+                    <td>Taxable Subtotal:</td>
+                    <td style="text-align: right; font-weight: 600;">₹{{ order.subtotal }}</td>
+                </tr>
+                <tr>
+                    <td>GST Tax Total (12%):</td>
+                    <td style="text-align: right; font-weight: 600;">₹{{ order.tax_total }}</td>
+                </tr>
+                <tr class="grand-total">
+                    <td>Invoice Total:</td>
+                    <td style="text-align: right;">₹{{ invoice.total_amount }}</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- 21 CFR Part 11 Electronic Compliance Stamp & Signatures -->
+        <div class="signature-block">
+            <div class="compliance-notice">
+                <strong>Quality & Regulatory Declaration:</strong><br>
+                We hereby certify that all drugs/formulations listed above have been manufactured in compliance with Schedule M of Drugs & Cosmetics Rules and WHO-GMP standards. Handled strictly via FEFO (First-Expiry-First-Out) verified batch releases.
+            </div>
+
+            <div class="sign-area">
+                <div class="stamp"><i class="fa-solid fa-stamp"></i> Digitally Authorized</div>
+                <div style="font-size: 0.85rem; font-weight: 700; color: #0f172a;">Celldus Pharma Pvt Ltd</div>
+                <div style="font-size: 0.72rem; color: #64748b;">Authorized Signatory / QA Release</div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

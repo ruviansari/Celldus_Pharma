@@ -1,0 +1,700 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Website Inquiries & Customer Communications | Celldus Pharma{% endblock %}
+{% block page_title %}Customer Inquiries & Communications{% endblock %}
+{% block page_subtitle %}Inbound medical & commercial inquiries from the Celldus website and newsletter subscribers.{% endblock %}
+
+{% block top_actions %}
+<a href="{% url 'contact' %}" target="_blank" class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.85rem; display: flex; align-items: center; gap: 0.5rem;">
+    <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Live Contact Form
+</a>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Tab Navigation */
+    .tab-pills {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 0.75rem;
+        overflow-x: auto;
+    }
+
+    .tab-pill-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.6rem 1.25rem;
+        border-radius: 9999px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border-color);
+        color: var(--text-secondary);
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: var(--transition);
+        user-select: none;
+    }
+
+    .tab-pill-btn:hover {
+        color: var(--text-primary);
+        border-color: var(--border-hover);
+        background: rgba(255, 255, 255, 0.06);
+    }
+
+    .tab-pill-btn.active {
+        background: var(--color-primary);
+        border-color: var(--color-primary);
+        color: #ffffff;
+        box-shadow: 0 4px 15px var(--color-primary-glow);
+    }
+
+    [data-theme="light"] .tab-pill-btn {
+        background: #f1f5f9;
+        border-color: #cbd5e1;
+        color: #475569;
+    }
+
+    [data-theme="light"] .tab-pill-btn:hover {
+        background: #e2e8f0;
+        color: #0f172a;
+    }
+
+    [data-theme="light"] .tab-pill-btn.active {
+        background: var(--color-primary);
+        border-color: var(--color-primary);
+        color: #ffffff;
+    }
+
+    .tab-badge {
+        font-size: 0.75rem;
+        padding: 2px 8px;
+        border-radius: 9999px;
+        background: rgba(255, 255, 255, 0.2);
+        color: inherit;
+        font-weight: 700;
+    }
+
+    .tab-content {
+        display: none;
+    }
+
+    .tab-content.active {
+        display: block;
+        animation: fadeIn 0.25s ease-out;
+    }
+
+    /* Sender Avatar */
+    .sender-avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .sender-card {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.85rem;
+    }
+
+    .sender-info-name {
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: var(--text-primary);
+        line-height: 1.2;
+    }
+
+    .sender-info-meta {
+        margin-top: 0.35rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
+
+    .sender-info-meta a {
+        color: var(--color-accent);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        transition: color 0.2s;
+    }
+
+    .sender-info-meta a:hover {
+        text-decoration: underline;
+    }
+
+    .message-snippet {
+        font-size: 0.88rem;
+        color: var(--text-secondary);
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        line-height: 1.45;
+        max-width: 320px;
+    }
+
+    .subject-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.25rem 0.6rem;
+        border-radius: 6px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        background: rgba(79, 70, 229, 0.12);
+        color: #818cf8;
+        border: 1px solid rgba(79, 70, 229, 0.25);
+    }
+
+    [data-theme="light"] .subject-chip {
+        background: #e0e7ff;
+        color: #4338ca;
+        border-color: #c7d2fe;
+    }
+
+    /* Modal message box */
+    .modal-message-box {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 1.25rem;
+        white-space: pre-wrap;
+        line-height: 1.6;
+        max-height: 280px;
+        overflow-y: auto;
+        color: var(--text-primary);
+        font-size: 0.92rem;
+    }
+
+    [data-theme="light"] .modal-message-box {
+        background: #f8fafc;
+        border-color: #cbd5e1;
+        color: #0f172a;
+    }
+
+    .modal-sender-header {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.2rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    [data-theme="light"] .modal-sender-header {
+        background: #f8fafc;
+        border-color: #e2e8f0;
+    }
+
+    .modal-subject-box {
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: var(--text-primary);
+        background: rgba(79, 70, 229, 0.08);
+        padding: 0.6rem 0.85rem;
+        border-radius: 8px;
+        border: 1px solid rgba(79, 70, 229, 0.2);
+    }
+
+    [data-theme="light"] .modal-subject-box {
+        background: #eef2ff;
+        color: #3730a3;
+        border-color: #c7d2fe;
+    }
+
+    .inbox-search-input {
+        width: 100%;
+        padding: 0.65rem 1rem 0.65rem 2.5rem;
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        color: var(--text-primary);
+        outline: none;
+        transition: var(--transition);
+    }
+
+    .inbox-search-input:focus {
+        border-color: var(--color-primary);
+        box-shadow: 0 0 0 3px var(--color-primary-glow);
+    }
+
+    [data-theme="light"] .inbox-search-input {
+        background: #f8fafc !important;
+        border-color: #cbd5e1 !important;
+        color: #0f172a !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Quick KPI Cards Grid -->
+<div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem; margin-bottom: 2rem; width: 100%; box-sizing: border-box;">
+    <!-- Total Inquiries Card -->
+    <a href="javascript:void(0);" onclick="selectCustomerTab('inquiriesTab')" class="stats-card-link" title="Click to view Website Inquiries">
+        <div class="stats-card" style="border-left: 4px solid #4f46e5; cursor: pointer;">
+            <div class="stats-info" style="min-width: 0; flex: 1;">
+                <h3 style="color: #6366f1;">Total Inbound Messages</h3>
+                <div class="stats-number">{{ total_inquiries }}</div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px;">Website & physician inquiries &rarr;</div>
+            </div>
+            <div class="stats-icon-wrapper indigo" style="flex-shrink: 0; margin-left: 0.5rem;">
+                <i class="fa-solid fa-envelope-open-text"></i>
+            </div>
+        </div>
+    </a>
+
+    <!-- Newsletter Subscribers Card -->
+    <a href="javascript:void(0);" onclick="selectCustomerTab('subscribersTab')" class="stats-card-link" title="Click to view Newsletter Subscribers">
+        <div class="stats-card" style="border-left: 4px solid #10b981; cursor: pointer;">
+            <div class="stats-info" style="min-width: 0; flex: 1;">
+                <h3 style="color: #10b981;">Subscribers Audience</h3>
+                <div class="stats-number">{{ total_subscribers }}</div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px;">Opted-in newsletter emails &rarr;</div>
+            </div>
+            <div class="stats-icon-wrapper emerald" style="flex-shrink: 0; margin-left: 0.5rem;">
+                <i class="fa-solid fa-paper-plane"></i>
+            </div>
+        </div>
+    </a>
+
+    <!-- Displayed Records Card -->
+    <a href="javascript:void(0);" onclick="focusInboxSearch();" class="stats-card-link" title="Click to search / filter active inbox records">
+        <div class="stats-card" style="border-left: 4px solid #06b6d4; cursor: pointer;">
+            <div class="stats-info" style="min-width: 0; flex: 1;">
+                <h3 style="color: #06b6d4;">Active Inbox View</h3>
+                <div class="stats-number">{{ inquiries|length }}</div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px;">Recent indexed communications &rarr;</div>
+            </div>
+            <div class="stats-icon-wrapper cyan" style="background: rgba(6, 182, 212, 0.15); color: #06b6d4; flex-shrink: 0; margin-left: 0.5rem;">
+                <i class="fa-solid fa-filter"></i>
+            </div>
+        </div>
+    </a>
+
+    <!-- Corporate Helpdesk Desk Card -->
+    <a href="mailto:info@cellduspharma.com" class="stats-card-link" title="Click to email info@cellduspharma.com">
+        <div class="stats-card" style="border-left: 4px solid #f59e0b; cursor: pointer;">
+            <div class="stats-info" style="min-width: 0; flex: 1; overflow: hidden;">
+                <h3 style="color: #f59e0b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Support Desk</h3>
+                <div class="stats-number" style="font-size: 0.90rem; font-weight: 600; margin-top: 0.35rem; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="info@cellduspharma.com">info@cellduspharma.com</div>
+                <div style="font-size: 0.72rem; color: var(--text-secondary); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Monitored mailbox &rarr;</div>
+            </div>
+            <div class="stats-icon-wrapper amber" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; flex-shrink: 0; margin-left: 0.5rem;">
+                <i class="fa-solid fa-headset"></i>
+            </div>
+        </div>
+    </a>
+</div>
+
+<!-- Controls & Search Filter Bar -->
+<div class="panel" style="margin-bottom: 1.75rem; padding: 1.25rem 1.5rem;">
+    <form method="GET" action="{% url 'dashboard_customers' %}" style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 280px; position: relative;">
+            <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.9rem;"></i>
+            <input type="text" name="q" value="{{ search_query }}" placeholder="Search by sender name, email, phone, or keyword..." 
+                   class="inbox-search-input">
+        </div>
+        <button type="submit" class="btn btn-primary" style="padding: 0.65rem 1.25rem;">
+            <i class="fa-solid fa-filter"></i> Search Inbox
+        </button>
+        {% if search_query %}
+        <a href="{% url 'dashboard_customers' %}" class="btn btn-secondary" style="padding: 0.65rem 1.1rem;">
+            <i class="fa-solid fa-rotate-left"></i> Reset
+        </a>
+        {% endif %}
+    </form>
+</div>
+
+<!-- Segmented Tab Navigation -->
+<div class="tab-pills">
+    <button class="tab-pill-btn active" onclick="switchTab('inquiriesTab', this);">
+        <i class="fa-solid fa-envelope-open-text"></i>
+        <span>Website Inquiries</span>
+        <span class="tab-badge">{{ total_inquiries }}</span>
+    </button>
+    <button class="tab-pill-btn" onclick="switchTab('subscribersTab', this);">
+        <i class="fa-solid fa-paper-plane"></i>
+        <span>Newsletter Subscribers</span>
+        <span class="tab-badge">{{ total_subscribers }}</span>
+    </button>
+</div>
+
+<!-- Tab 1: Contact Inquiries -->
+<div id="inquiriesTab" class="tab-content active">
+    <div class="panel">
+        <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+            <h2 class="panel-title" style="display: flex; align-items: center; gap: 0.6rem;">
+                <i class="fa-solid fa-inbox" style="color: var(--color-accent);"></i>
+                Inbound Website Communications
+            </h2>
+            <span style="font-size: 0.82rem; color: var(--text-secondary);">
+                Showing latest {{ inquiries|length }} of {{ total_inquiries }} records
+            </span>
+        </div>
+        
+        <div class="table-container">
+            <table class="custom-table" style="min-width: 950px;">
+                <thead>
+                    <tr>
+                        <th style="width: 28%;">Sender Information</th>
+                        <th style="width: 22%;">Subject</th>
+                        <th style="width: 28%;">Message Preview</th>
+                        <th style="width: 12%;">Received On</th>
+                        <th style="width: 10%; text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in inquiries %}
+                    <tr>
+                        <!-- Sender Details -->
+                        <td>
+                            <div class="sender-card">
+                                <div class="sender-avatar">
+                                    {{ item.name|slice:":1"|upper|default:"?" }}
+                                </div>
+                                <div>
+                                    <div class="sender-info-name">{{ item.name|default:"Anonymous Sender" }}</div>
+                                    <div class="sender-info-meta">
+                                        {% if item.email %}
+                                        <a href="mailto:{{ item.email }}" title="Send Email">
+                                            <i class="fa-regular fa-envelope"></i> {{ item.email }}
+                                        </a>
+                                        {% endif %}
+                                        {% if item.phone %}
+                                        <a href="tel:{{ item.phone }}" style="color: var(--text-secondary);" title="Call Number">
+                                            <i class="fa-solid fa-phone"></i> {{ item.phone }}
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+
+                        <!-- Subject -->
+                        <td>
+                            <div class="subject-chip">
+                                <i class="fa-solid fa-tag"></i>
+                                <span>{{ item.subject|default:"General Inquiry"|truncatechars:35 }}</span>
+                            </div>
+                        </td>
+
+                        <!-- Message Preview -->
+                        <td>
+                            <div class="message-snippet" title="{{ item.message }}">
+                                {{ item.message|default:"No message text provided." }}
+                            </div>
+                        </td>
+
+                        <!-- Date -->
+                        <td>
+                            <div style="font-size: 0.85rem; color: var(--text-primary); font-weight: 500;">
+                                {{ item.created_at|date:"M d, Y" }}
+                            </div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">
+                                {{ item.created_at|date:"H:i" }} hrs
+                            </div>
+                        </td>
+
+                        <!-- Actions -->
+                        <td style="text-align: right;">
+                            <div class="action-btn-group" style="justify-content: flex-end;">
+                                <button type="button" class="action-btn edit view-inquiry-btn"
+                                    data-name="{{ item.name|escape }}"
+                                    data-email="{{ item.email|escape }}"
+                                    data-phone="{{ item.phone|escape }}"
+                                    data-subject="{{ item.subject|escape }}"
+                                    data-message="{{ item.message|escape }}"
+                                    data-date="{{ item.created_at|date:'M d, Y H:i' }}"
+                                    title="View Full Message Dialog">
+                                    <i class="fa-regular fa-eye"></i>
+                                </button>
+                                <form action="{% url 'dashboard_inquiry_delete' item.id %}" method="POST"
+                                    onsubmit="return confirm('Confirm permanent deletion of inquiry from {{ item.name|escapejs }}?')"
+                                    style="margin: 0; display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="action-btn delete" title="Delete Message">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 3.5rem 1rem;">
+                            <i class="fa-regular fa-folder-open" style="font-size: 2.5rem; color: var(--text-muted); margin-bottom: 0.75rem; display: block;"></i>
+                            <div style="font-size: 1.05rem; font-weight: 600; color: var(--text-primary);">No Customer Inquiries Found</div>
+                            <p style="font-size: 0.85rem; margin-top: 0.25rem;">There are currently no inbound messages matching your filter criteria.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Tab 2: Newsletter Subscribers -->
+<div id="subscribersTab" class="tab-content">
+    <div class="panel">
+        <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+            <h2 class="panel-title" style="display: flex; align-items: center; gap: 0.6rem;">
+                <i class="fa-solid fa-users" style="color: #10b981;"></i>
+                Registered Newsletter Subscribers
+            </h2>
+            <span style="font-size: 0.82rem; color: var(--text-secondary);">
+                Total audience: {{ total_subscribers }} verified emails
+            </span>
+        </div>
+
+        <div class="table-container">
+            <table class="custom-table" style="min-width: 700px;">
+                <thead>
+                    <tr>
+                        <th style="width: 15%;">ID</th>
+                        <th style="width: 50%;">Subscriber Email Address</th>
+                        <th style="width: 25%;">Subscription Timestamp</th>
+                        <th style="width: 10%; text-align: right;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sub in subscribers %}
+                    <tr>
+                        <td>
+                            <strong style="color: var(--color-accent); font-family: monospace;">#SUB-{{ sub.id }}</strong>
+                        </td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <div class="sender-avatar" style="width: 32px; height: 32px; font-size: 0.8rem; background: linear-gradient(135deg, #10b981, #06b6d4);">
+                                    <i class="fa-regular fa-envelope"></i>
+                                </div>
+                                <div>
+                                    <a href="mailto:{{ sub.email }}" style="font-weight: 600; color: var(--text-primary); text-decoration: none;">
+                                        {{ sub.email }}
+                                    </a>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div style="font-size: 0.85rem; color: var(--text-primary); font-weight: 500;">
+                                {{ sub.created_at|date:"M d, Y" }}
+                            </div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">
+                                {{ sub.created_at|date:"H:i" }} hrs
+                            </div>
+                        </td>
+                        <td style="text-align: right;">
+                            <form action="{% url 'dashboard_subscriber_delete' sub.id %}" method="POST"
+                                onsubmit="return confirm('Remove subscriber {{ sub.email|escapejs }} from newsletter list?')"
+                                style="margin: 0; display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="action-btn delete" title="Remove Subscriber">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 3.5rem 1rem;">
+                            <i class="fa-regular fa-envelope-open" style="font-size: 2.5rem; color: var(--text-muted); margin-bottom: 0.75rem; display: block;"></i>
+                            <div style="font-size: 1.05rem; font-weight: 600; color: var(--text-primary);">No Newsletter Subscribers Found</div>
+                            <p style="font-size: 0.85rem; margin-top: 0.25rem;">No emails have been captured from the website newsletter form yet.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modern View Inquiry Detail Modal -->
+<div id="viewInquiryModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 620px; padding: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem;">
+            <h3 class="modal-title" style="margin: 0; display: flex; align-items: center; gap: 0.6rem;">
+                <i class="fa-solid fa-envelope-open-text" style="color: var(--color-accent);"></i>
+                Inquiry Message Details
+            </h3>
+            <button type="button" onclick="closeModal('viewInquiryModal');" style="background: transparent; border: none; font-size: 1.25rem; color: var(--text-muted); cursor: pointer;">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <!-- Sender Header Card -->
+        <div class="modal-sender-header">
+            <div id="modal_avatar" class="sender-avatar" style="width: 48px; height: 48px; font-size: 1.2rem;">?</div>
+            <div style="flex: 1;">
+                <div id="view_sender_name" style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary);"></div>
+                <div style="display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 0.35rem; font-size: 0.85rem;">
+                    <div>
+                        <i class="fa-regular fa-envelope" style="color: var(--color-accent); margin-right: 0.25rem;"></i>
+                        <span id="view_sender_email" style="color: var(--text-primary);"></span>
+                    </div>
+                    <div>
+                        <i class="fa-solid fa-phone" style="color: #10b981; margin-right: 0.25rem;"></i>
+                        <span id="view_sender_phone" style="color: var(--text-primary);"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Subject Line -->
+        <div style="margin-bottom: 1.25rem;">
+            <label style="display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; color: var(--text-muted); margin-bottom: 0.4rem;">
+                Subject Line
+            </label>
+            <div id="view_subject" class="modal-subject-box"></div>
+        </div>
+
+        <!-- Full Message Content -->
+        <div style="margin-bottom: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+                <label style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; color: var(--text-muted);">
+                    Full Message Body
+                </label>
+                <span id="view_date" style="font-size: 0.75rem; color: var(--text-secondary);"></span>
+            </div>
+            <div id="view_message" class="modal-message-box"></div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions" style="display: flex; justify-content: space-between; align-items: center;">
+            <a id="replyEmailBtn" href="#" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                <i class="fa-solid fa-reply"></i> Reply via Email Client
+            </a>
+            <button type="button" class="btn btn-secondary" onclick="closeModal('viewInquiryModal');">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function resetHorizontalScroll() {
+        if (window.scrollX !== 0 || window.pageXOffset !== 0) {
+            window.scrollTo({ left: 0, top: window.scrollY });
+        }
+        if (document.documentElement && document.documentElement.scrollLeft !== 0) {
+            document.documentElement.scrollLeft = 0;
+        }
+        if (document.body && document.body.scrollLeft !== 0) {
+            document.body.scrollLeft = 0;
+        }
+    }
+
+    function switchTab(tabId, btnElement) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-pill-btn').forEach(el => el.classList.remove('active'));
+
+        const target = document.getElementById(tabId);
+        if (target) {
+            target.classList.add('active');
+        }
+        if (btnElement) {
+            btnElement.classList.add('active');
+        }
+        resetHorizontalScroll();
+    }
+
+    function selectCustomerTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-pill-btn').forEach(el => el.classList.remove('active'));
+
+        const target = document.getElementById(tabId);
+        if (target) {
+            target.classList.add('active');
+        }
+        const tabBtns = document.querySelectorAll('.tab-pill-btn');
+        if (tabId === 'inquiriesTab' && tabBtns[0]) {
+            tabBtns[0].classList.add('active');
+        } else if (tabId === 'subscribersTab' && tabBtns[1]) {
+            tabBtns[1].classList.add('active');
+        }
+
+        resetHorizontalScroll();
+
+        if (target) {
+            const y = target.getBoundingClientRect().top + window.pageYOffset - 25;
+            window.scrollTo({ top: Math.max(0, y), left: 0, behavior: 'smooth' });
+        }
+    }
+
+    function focusInboxSearch() {
+        selectCustomerTab('inquiriesTab');
+        const searchInput = document.querySelector('.inbox-search-input');
+        if (searchInput) {
+            setTimeout(() => {
+                searchInput.focus({ preventScroll: true });
+                resetHorizontalScroll();
+            }, 100);
+        }
+    }
+
+    function openInquiryModal(name, email, phone, subject, message, date) {
+        document.getElementById('view_sender_name').innerText = name || 'Anonymous';
+        document.getElementById('view_sender_email').innerText = email || 'No email provided';
+        document.getElementById('view_sender_phone').innerText = phone || 'N/A';
+        document.getElementById('view_date').innerText = 'Received: ' + date;
+        document.getElementById('view_subject').innerText = subject || 'General Inquiry';
+        document.getElementById('view_message').innerText = message || 'No message body provided.';
+
+        const initial = name ? name.trim().charAt(0).toUpperCase() : '?';
+        document.getElementById('modal_avatar').innerText = initial;
+
+        const replyBtn = document.getElementById('replyEmailBtn');
+        if (email && email.trim() !== '') {
+            replyBtn.href = 'mailto:' + encodeURIComponent(email) + '?subject=' + encodeURIComponent('Re: ' + subject);
+            replyBtn.style.display = 'inline-flex';
+        } else {
+            replyBtn.style.display = 'none';
+        }
+
+        openModal('viewInquiryModal');
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        resetHorizontalScroll();
+        window.addEventListener('resize', resetHorizontalScroll, { passive: true });
+        window.addEventListener('scroll', function() {
+            if (window.scrollX !== 0 || window.pageXOffset !== 0) {
+                window.scrollTo({ left: 0, top: window.scrollY });
+            }
+        }, { passive: true });
+
+        document.addEventListener('click', function (e) {
+            const btn = e.target.closest('.view-inquiry-btn');
+            if (btn) {
+                const name = btn.getAttribute('data-name');
+                const email = btn.getAttribute('data-email');
+                const phone = btn.getAttribute('data-phone');
+                const subject = btn.getAttribute('data-subject');
+                const message = btn.getAttribute('data-message');
+                const date = btn.getAttribute('data-date');
+
+                openInquiryModal(name, email, phone, subject, message, date);
+            }
+        });
+    });
+</script>
+{% endblock %}

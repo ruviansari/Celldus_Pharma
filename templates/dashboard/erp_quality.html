@@ -1,0 +1,187 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Quality Assurance & QC Testing | Celldus Pharma{% endblock %}
+{% block page_title %}QC Testing & QA Batch Disposition{% endblock %}
+{% block page_subtitle %}Analytical test execution, OOS investigations, electronic batch release, and deviations.{% endblock %}
+
+{% block content %}
+<!-- Quick KPI Cards -->
+<div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 1.5rem;">
+    <div class="stats-card" style="border-left: 4px solid #f59e0b;">
+        <div class="stats-info">
+            <h3 style="color: #f59e0b;">Pending Sampling / Tests</h3>
+            <div class="stats-number">{{ pending_sampling_count }}</div>
+        </div>
+        <div class="stats-icon-wrapper amber" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;"><i class="fa-solid fa-vial"></i></div>
+    </div>
+    <div class="stats-card" style="border-left: 4px solid #06b6d4;">
+        <div class="stats-info">
+            <h3 style="color: #06b6d4;">Under Analytical Testing</h3>
+            <div class="stats-number">{{ testing_count }}</div>
+        </div>
+        <div class="stats-icon-wrapper cyan"><i class="fa-solid fa-flask-vial"></i></div>
+    </div>
+    <div class="stats-card" style="border-left: 4px solid #10b981;">
+        <div class="stats-info">
+            <h3 style="color: #10b981;">QA Dispositioned</h3>
+            <div class="stats-number">{{ dispositioned_count }}</div>
+        </div>
+        <div class="stats-icon-wrapper emerald"><i class="fa-solid fa-signature"></i></div>
+    </div>
+</div>
+
+<!-- Inspections Table -->
+<div class="panel" style="margin-bottom: 2rem;">
+    <div class="panel-header">
+        <h2 class="panel-title"><i class="fa-solid fa-microscope" style="color: #06b6d4; margin-right: 0.5rem;"></i>Active QC Inspection Requests</h2>
+        <span style="font-size: 0.8rem; color: var(--text-secondary);">Quarantined lots awaiting QA Release</span>
+    </div>
+    <div class="table-container">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Inspection ID</th>
+                    <th>Material / Product</th>
+                    <th>Lot & Batch No</th>
+                    <th>Specification</th>
+                    <th>Sampling Status</th>
+                    <th>Test Result</th>
+                    <th>Status</th>
+                    <th>QA Batch Release</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for insp in inspections %}
+                <tr>
+                    <td>
+                        <strong style="color: #60a5fa; font-family: monospace;">{{ insp.document_no }}</strong>
+                        <div style="font-size: 0.7rem; color: var(--text-muted);">{{ insp.created_at|date:"M d, H:i" }}</div>
+                    </td>
+                    <td>
+                        <strong style="color: #fff;">{{ insp.item.name }}</strong>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary);">Code: {{ insp.item.item_code }}</div>
+                    </td>
+                    <td>
+                        <div style="color: #e2e8f0; font-family: monospace;">{{ insp.lot.lot_number }}</div>
+                        <div style="color: var(--text-secondary); font-size: 0.75rem;">Batch: {{ insp.lot.batch_no }}</div>
+                    </td>
+                    <td>
+                        <span style="color: #e2e8f0; font-size: 0.8rem;">{{ insp.specification.spec_code }}</span>
+                        <div style="font-size: 0.7rem; color: var(--text-muted);">Pharmacopoeia: {{ insp.specification.pharmacopoeia }}</div>
+                    </td>
+                    <td>
+                        {% if insp.sampler %}
+                        <span style="color: #10b981; font-size: 0.8rem;"><i class="fa-solid fa-check"></i> Sampled ({{ insp.sample_quantity }} {{ insp.sample_uom_code }})</span>
+                        <div style="font-size: 0.7rem; color: var(--text-muted);">by {{ insp.sampler.username }}</div>
+                        {% else %}
+                        <span style="color: #f59e0b; font-size: 0.8rem;"><i class="fa-solid fa-clock"></i> Pending Sampling</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span style="font-weight: 700; font-size: 0.75rem; padding: 2px 6px; border-radius: 4px;
+                            {% if insp.overall_test_result == 'PASS' %}background: rgba(16, 185, 129, 0.2); color: #10b981;
+                            {% elif insp.overall_test_result == 'FAIL' %}background: rgba(244, 63, 94, 0.2); color: #f43f5e;
+                            {% else %}background: rgba(148, 163, 184, 0.2); color: #cbd5e1;{% endif %}">
+                            {{ insp.overall_test_result }}
+                        </span>
+                    </td>
+                    <td>
+                        <span style="padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 600;
+                            {% if insp.status == 'DISPOSITIONED' %}background: rgba(16, 185, 129, 0.15); color: #10b981;
+                            {% else %}background: rgba(245, 158, 11, 0.15); color: #f59e0b;{% endif %}">
+                            {{ insp.status }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if insp.status != 'DISPOSITIONED' %}
+                        <button type="button" class="btn btn-primary" style="padding: 0.35rem 0.75rem; font-size: 0.75rem;" 
+                                onclick="openDispositionModal('{{ insp.id }}', '{{ insp.document_no }}', '{{ insp.lot.batch_no }}', '{{ insp.lot.lot_number }}');">
+                            <i class="fa-solid fa-file-signature"></i> QA Action
+                        </button>
+                        {% else %}
+                        <span style="color: var(--text-muted); font-size: 0.75rem;"><i class="fa-solid fa-check-double"></i> Complete</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                        No pending QC inspection requests.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- QA Electronic Disposition Modal -->
+<div id="dispositionModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); z-index: 999; align-items: center; justify-content: center;">
+    <div style="background: #111827; border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; width: 90%; max-width: 500px; padding: 2rem; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+        <h3 style="margin-top: 0; color: #fff; font-size: 1.2rem; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fa-solid fa-stamp" style="color: #10b981;"></i> 21 CFR Part 11 Electronic QA Release
+        </h3>
+        <p style="color: var(--text-secondary); font-size: 0.85rem;" id="modalSubtitle">Executing disposition for inspection</p>
+
+        <form id="dispositionForm" method="POST" action="">
+            {% csrf_token %}
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.3rem;">QA Regulatory Decision *</label>
+                <select name="disposition" required style="width: 100%; padding: 0.6rem; background: #1f2937; border: 1px solid var(--border-color); border-radius: 6px; color: #fff;">
+                    <option value="RELEASE">AUTHORIZE RELEASE (Move to Commercial Stock)</option>
+                    <option value="REJECT">REJECT & SEGREGATE FOR DESTRUCTION</option>
+                    <option value="HOLD">QUARANTINE HOLD (Pending Investigation)</option>
+                </select>
+            </div>
+
+            <div style="margin-bottom: 1rem;">
+                <label id="coaLabel" style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.3rem;">Certificate of Analysis (COA) No *</label>
+                <input type="text" name="coa_number" id="coaInput" required placeholder="e.g. COA-2026-9988 (Required for release)" style="width: 100%; padding: 0.6rem; background: #1f2937; border: 1px solid var(--border-color); border-radius: 6px; color: #fff;">
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.3rem;">Regulatory Rationale / Reason *</label>
+                <textarea name="reason" rows="3" required minlength="5" placeholder="State analytical review findings, compliance with specifications (min 5 chars)..." style="width: 100%; padding: 0.6rem; background: #1f2937; border: 1px solid var(--border-color); border-radius: 6px; color: #fff;"></textarea>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+                <button type="button" class="btn btn-secondary" onclick="closeDispositionModal();">Cancel</button>
+                <button type="submit" class="btn btn-primary" style="background: #10b981; border-color: #10b981;">Sign & Authorize</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openDispositionModal(inspId, docNo, batchNo, lotNo) {
+    document.getElementById('modalSubtitle').innerText = "Inspection " + docNo + " | Batch " + batchNo + " (Lot: " + lotNo + ")";
+    document.getElementById('dispositionForm').action = "/dashboard/quality/disposition/" + inspId + "/";
+    document.getElementById('dispositionModal').style.display = 'flex';
+}
+function closeDispositionModal() {
+    document.getElementById('dispositionModal').style.display = 'none';
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    const dispSelect = document.querySelector('select[name="disposition"]');
+    const coaInput = document.getElementById('coaInput');
+    const coaLabel = document.getElementById('coaLabel');
+
+    if (dispSelect && coaInput) {
+        function updateCoaRequirement() {
+            if (dispSelect.value === 'RELEASE') {
+                coaInput.required = true;
+                coaLabel.innerText = "Certificate of Analysis (COA) No *";
+                coaInput.placeholder = "e.g. COA-2026-9988 (Required for release)";
+            } else {
+                coaInput.required = false;
+                coaLabel.innerText = "Certificate of Analysis (COA) No (Optional)";
+                coaInput.placeholder = "Optional for reject or hold";
+            }
+        }
+        dispSelect.addEventListener('change', updateCoaRequirement);
+        updateCoaRequirement();
+    }
+});
+</script>
+{% endblock %}

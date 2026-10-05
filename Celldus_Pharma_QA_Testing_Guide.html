@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Celldus Pharma - QA Test Plan & System Verification Guide</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 16mm 14mm 16mm 14mm;
+            @bottom-right {
+                content: counter(page);
+            }
+        }
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+            color: #1e293b;
+            line-height: 1.5;
+            font-size: 10.5pt;
+            margin: 0;
+            padding: 0;
+            background: #fff;
+        }
+        
+        /* Cover Page */
+        .cover {
+            page-break-after: always;
+            height: 94vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 35px 20px 20px 20px;
+            border-left: 8px solid #0284c7;
+        }
+        .cover-header {
+            margin-top: 30px;
+        }
+        .cover-badge {
+            display: inline-block;
+            background: #e0f2fe;
+            color: #0369a1;
+            font-size: 10.5pt;
+            font-weight: 700;
+            padding: 6px 16px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+        }
+        .cover-title {
+            font-size: 30pt;
+            font-weight: 800;
+            color: #031b4e;
+            line-height: 1.15;
+            margin: 0 0 12px 0;
+        }
+        .cover-subtitle {
+            font-size: 15pt;
+            color: #475569;
+            font-weight: 400;
+            margin: 0 0 25px 0;
+        }
+        .cover-meta {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin-top: 25px;
+        }
+        .cover-meta table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .cover-meta td {
+            padding: 7px 10px;
+            font-size: 10.5pt;
+        }
+        .cover-meta td.label {
+            font-weight: 600;
+            color: #64748b;
+            width: 190px;
+        }
+        .cover-meta td.val {
+            font-weight: 700;
+            color: #031b4e;
+        }
+        .cover-footer {
+            border-top: 2px solid #e2e8f0;
+            padding-top: 15px;
+            display: flex;
+            justify-content: space-between;
+            color: #64748b;
+            font-size: 9.5pt;
+        }
+
+        /* Content Styling */
+        .page-break {
+            page-break-before: always;
+        }
+        h1 {
+            color: #031b4e;
+            font-size: 18pt;
+            border-bottom: 2px solid #0284c7;
+            padding-bottom: 6px;
+            margin-top: 0;
+            margin-bottom: 16px;
+        }
+        h2 {
+            color: #031b4e;
+            font-size: 13pt;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+        h3 {
+            color: #0f172a;
+            font-size: 11pt;
+            margin-top: 14px;
+            margin-bottom: 6px;
+        }
+        p {
+            margin: 0 0 10px 0;
+            color: #334155;
+        }
+        ul, ol {
+            margin: 0 0 14px 0;
+            padding-left: 22px;
+            color: #334155;
+        }
+        li {
+            margin-bottom: 4px;
+        }
+
+        /* Callout Cards */
+        .callout {
+            background: #f0fdf4;
+            border-left: 4px solid #16a34a;
+            padding: 12px 16px;
+            border-radius: 0 8px 8px 0;
+            margin: 12px 0;
+            font-size: 10pt;
+        }
+        .callout-info {
+            background: #f0f9ff;
+            border-left: 4px solid #0284c7;
+            padding: 12px 16px;
+            border-radius: 0 8px 8px 0;
+            margin: 12px 0;
+            font-size: 10pt;
+        }
+        .callout-warning {
+            background: #fffbeb;
+            border-left: 4px solid #d97706;
+            padding: 12px 16px;
+            border-radius: 0 8px 8px 0;
+            margin: 12px 0;
+            font-size: 10pt;
+        }
+
+        /* Tables */
+        table.data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0 18px 0;
+            font-size: 9.5pt;
+        }
+        table.data-table th {
+            background: #031b4e;
+            color: #ffffff;
+            font-weight: 600;
+            text-align: left;
+            padding: 8px 10px;
+            border: 1px solid #031b4e;
+        }
+        table.data-table td {
+            padding: 7px 10px;
+            border: 1px solid #cbd5e1;
+            color: #1e293b;
+        }
+        table.data-table tr:nth-child(even) td {
+            background: #f8fafc;
+        }
+
+        /* Badge Pills */
+        .pill {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 8pt;
+            font-weight: 700;
+        }
+        .pill-blue { background: #dbeafe; color: #1d4ed8; }
+        .pill-green { background: #dcfce7; color: #15803d; }
+        .pill-purple { background: #f3e8ff; color: #7e22ce; }
+        .pill-amber { background: #fef3c7; color: #b45309; }
+        .pill-red { background: #fee2e2; color: #b91c1c; }
+
+        .url-box {
+            font-family: 'Consolas', 'Courier New', monospace;
+            background: #f1f5f9;
+            color: #0f172a;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 9pt;
+            font-weight: 600;
+            border: 1px solid #e2e8f0;
+        }
+
+        /* Test Case Box */
+        .tc-box {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 14px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+        }
+        .tc-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 6px;
+            margin-bottom: 8px;
+        }
+        .tc-id {
+            font-weight: 800;
+            color: #0284c7;
+            font-size: 10.5pt;
+        }
+        .tc-title {
+            font-weight: 700;
+            color: #0f172a;
+            font-size: 10.5pt;
+            margin-left: 8px;
+        }
+        .tc-row {
+            margin: 4px 0;
+            font-size: 9.5pt;
+        }
+        .tc-label {
+            font-weight: 600;
+            color: #475569;
+            display: inline-block;
+            width: 140px;
+        }
+        .tc-expect {
+            color: #15803d;
+            font-weight: 600;
+        }
+        .checkbox-box {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 1.5px solid #94a3b8;
+            border-radius: 3px;
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- COVER PAGE -->
+    <div class="cover">
+        <div class="cover-header">
+            <div class="cover-badge">Quality Assurance & Verification Protocol</div>
+            <h1 class="cover-title">CELLDUS PHARMA</h1>
+            <div class="cover-subtitle">Enterprise ERP & Public Commercial Web Portal — Master QA Test Plan & Verification Guide</div>
+            <p style="font-size: 11pt; color: #475569; max-width: 620px;">
+                Comprehensive test specifications, environment access setups, functional test cases, pharmaceutical compliance checks, and formal sign-off protocol for system testers and evaluators.
+            </p>
+        </div>
+
+        <div class="cover-meta">
+            <table>
+                <tr>
+                    <td class="label">Project Title:</td>
+                    <td class="val">Celldus Pharma Digital Ecosystem (Website + ERP)</td>
+                </tr>
+                <tr>
+                    <td class="label">Testing Scope:</td>
+                    <td class="val">Public Portal, Catalog, Inquiries, Admin CMS & Pharma ERP Modules</td>
+                </tr>
+                <tr>
+                    <td class="label">Local Test URL:</td>
+                    <td class="val"><span class="url-box">http://127.0.0.1:8000/</span></td>
+                </tr>
+                <tr>
+                    <td class="label">GitHub Repository:</td>
+                    <td class="val"><span class="url-box">https://github.com/ruviansari/Celldus_Pharma</span></td>
+                </tr>
+                <tr>
+                    <td class="label">Compliance Standards:</td>
+                    <td class="val">WHO-GMP Guidelines & 21 CFR Part 11 Audit Trail Integrity</td>
+                </tr>
+                <tr>
+                    <td class="label">Document ID:</td>
+                    <td class="val">CEL-QA-TP-2026-V1.0</td>
+                </tr>
+                <tr>
+                    <td class="label">Publish Date:</td>
+                    <td class="val">October 2026</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="cover-footer">
+            <span>Confidential & Proprietary — Celldus Pharma Healthcare</span>
+            <span>Document ID: CEL-QA-TP-2026</span>
+        </div>
+    </div>
+
+    <!-- PAGE 1: TEST ENVIRONMENT & ACCESS DETAILS -->
+    <div class="page-break">
+        <h1>1. Test Environment & Access Setup</h1>
+        <p>This section provides all connection URLs, access procedures, and verified credentials required by the tester to evaluate both the public-facing commercial portal and the internal staff ERP.</p>
+
+        <h2>1.1 Portal Access URLs</h2>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Component</th>
+                    <th>Direct Route</th>
+                    <th>Target Audience</th>
+                    <th>Type</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Website Homepage</strong></td>
+                    <td><span class="url-box">/home/</span></td>
+                    <td>Public / Wholesalers / Doctors</td>
+                    <td><span class="pill pill-green">Public</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Products Catalog</strong></td>
+                    <td><span class="url-box">/product/</span></td>
+                    <td>Stockists / Buyers</td>
+                    <td><span class="pill pill-green">Public</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Contact & Inquiries</strong></td>
+                    <td><span class="url-box">/contact/</span></td>
+                    <td>Leads / Hospital Procurement</td>
+                    <td><span class="pill pill-green">Public</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Staff Login Portal</strong></td>
+                    <td><span class="url-box">/dashboard/login/</span></td>
+                    <td>Authorized QA & Staff</td>
+                    <td><span class="pill pill-amber">Secured</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Executive Dashboard</strong></td>
+                    <td><span class="url-box">/dashboard/</span></td>
+                    <td>Management / Admins</td>
+                    <td><span class="pill pill-blue">Role-Based</span></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>1.2 Verified Test Credentials</h2>
+        <div class="callout-info">
+            <strong>Tester Login Instructions:</strong> Open <span class="url-box">http://127.0.0.1:8000/dashboard/login/</span>. Use the primary Administrator credentials below to access full ERP and catalog control.
+        </div>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Role</th>
+                    <th>Username / Email</th>
+                    <th>Password</th>
+                    <th>Assigned Permissions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Primary Super Admin</strong></td>
+                    <td><span class="url-box">admin</span> or <span class="url-box">ruviansari144@gmail.com</span></td>
+                    <td><span class="url-box">admin123</span></td>
+                    <td>Full access to all ERP modules, CMS, user permissions, audit logs.</td>
+                </tr>
+                <tr>
+                    <td><strong>Operations Admin</strong></td>
+                    <td><span class="url-box">Admin2</span> or <span class="url-box">admin2@gmail.com</span></td>
+                    <td><em>(As assigned)</em></td>
+                    <td>Procurement, Quality release, Batch manufacturing, Catalog.</td>
+                </tr>
+                <tr>
+                    <td><strong>Staff Associate</strong></td>
+                    <td><span class="url-box">staff_user</span></td>
+                    <td><em>(As assigned)</em></td>
+                    <td>Customer inquiries viewing, CRM leads, order review.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>1.3 How to Create a Direct Web Link for Remote Testers</h2>
+        <p>If the tester is evaluating from a different computer or phone without local setup:</p>
+        <ul>
+            <li><strong>Method A (Instant Temporary Tunnel - 2 Minutes):</strong> With local server running on port 8000, run in terminal:
+                <br><code>npx localtunnel --port 8000</code>
+                <br>Share the generated public URL (e.g. <code>https://celldus-preview.loca.lt</code>) with the tester.
+            </li>
+            <li><strong>Method B (Permanent Cloud Deployment):</strong> Connect GitHub repository <code>ruviansari/Celldus_Pharma</code> to Render.com or PythonAnywhere for a permanent 24/7 web link.</li>
+        </ul>
+    </div>
+
+    <!-- PAGE 2: PUBLIC WEBSITE TEST SUITE -->
+    <div class="page-break">
+        <h1>2. Public Commercial Website Test Suite</h1>
+        <p>Verify that the commercial catalog, live database rendering, and inquiry submission channels function seamlessly for buyers.</p>
+
+        <!-- TC-01 -->
+        <div class="tc-box">
+            <div class="tc-header">
+                <div><span class="tc-id">TC-WEB-01</span><span class="tc-title">Homepage & Dynamic Portfolio Counter</span></div>
+                <span class="pill pill-blue">High Priority</span>
+            </div>
+            <div class="tc-row"><span class="tc-label">Test Route:</span><span class="url-box">/home/</span></div>
+            <div class="tc-row"><span class="tc-label">Pre-conditions:</span>Server running, active formulations in database.</div>
+            <div class="tc-row"><span class="tc-label">Action Steps:</span>1. Navigate to <code>/home/</code>. 2. Inspect hero banner carousel, active formulation counter, and latest blog cards.</div>
+            <div class="tc-row"><span class="tc-label">Expected Result:</span><span class="tc-expect"><span class="checkbox-box"></span>Live database count renders dynamically; hero slider navigates without visual glitches.</span></div>
+        </div>
+
+        <!-- TC-02 -->
+        <div class="tc-box">
+            <div class="tc-header">
+                <div><span class="tc-id">TC-WEB-02</span><span class="tc-title">Catalog Therapeutic Category Filter Tabs</span></div>
+                <span class="pill pill-blue">High Priority</span>
+            </div>
+            <div class="tc-row"><span class="tc-label">Test Route:</span><span class="url-box">/product/</span></div>
+            <div class="tc-row"><span class="tc-label">Pre-conditions:</span>Multiple therapeutic categories exist (Antibiotics, Pediatric, etc.).</div>
+            <div class="tc-row"><span class="tc-label">Action Steps:</span>1. Click on category pills (e.g., "Antibiotics", "Pediatric Drops"). 2. Verify products filter instantly.</div>
+            <div class="tc-row"><span class="tc-label">Expected Result:</span><span class="tc-expect"><span class="checkbox-box"></span>Only formulations belonging to selected category are displayed without 404 or page crash.</span></div>
+        </div>
+
+        <!-- TC-03 -->
+        <div class="tc-box">
+            <div class="tc-header">
+                <div><span class="tc-id">TC-WEB-03</span><span class="tc-title">Live Product Keyword Search Bar</span></div>
+                <span class="pill pill-green">Medium</span>
+            </div>
+            <div class="tc-row"><span class="tc-label">Test Route:</span><span class="url-box">/product/</span></div>
+            <div class="tc-row"><span class="tc-label">Action Steps:</span>1. Type a salt/brand keyword (e.g. <code>Paracetamol</code>, <code>Cefixime</code>) into search bar.</div>
+            <div class="tc-row"><span class="tc-label">Expected Result:</span><span class="tc-expect"><span class="checkbox-box"></span>Matching products filter in real-time. If non-matching string entered, displays "No formulations found".</span></div>
+        </div>
+
+        <!-- TC-04 -->
+        <div class="tc-box">
+            <div class="tc-header">
+                <div><span class="tc-id">TC-WEB-04</span><span class="tc-title">Formulation Technical Details & Breadcrumbs</span></div>
+                <span class="pill pill-green">Medium</span>
+            </div>
+            <div class="tc-row"><span class="tc-label">Test Route:</span><span class="url-box">/product_details/&lt;id&gt;/</span></div>
+            <div class="tc-row"><span class="tc-label">Action Steps:</span>1. Click "View Details" on any product card. 2. Verify composition, packaging specs, and breadcrumbs. 3. Click "Home" breadcrumb.</div>
+            <div class="tc-row"><span class="tc-label">Expected Result:</span><span class="tc-expect"><span class="checkbox-box"></span>Detailed pack size & indications show; breadcrumb link safely returns to <code>/home/</code> without 404 error.</span></div>
+        </div>
+
+        <!-- TC-05 -->
+        <div class="tc-box">
+            <div class="tc-header">
+                <div><span class="tc-id">TC-WEB-05</span><span class="tc-title">Customer Trade Inquiry Submission</span></div>
+                <span class="pill pill-blue">Critical</span>
+            </div>
+            <div class="tc-row"><span class="tc-label">Test Route:</span><span class="url-box">/contact/</span></div>
+            <div class="tc-row"><span class="tc-label">Action Steps:</span>1. Fill full name, email, phone, subject, and medicine requirement message. 2. Click "Submit Inquiry".</div>
+            <div class="tc-row"><span class="tc-label">Expected Result:</span><span class="tc-expect"><span class="checkbox-box"></span>Green success alert confirms submission; record is instantly created in database CRM table.</span></div>
+        </div>
+    </div>
+
+    <!-- PAGE 3: ADMIN & CMS TEST SUITE -->
+    <div class="page-break">
+        <h1>3. Staff Administrative & CMS Test Suite</h1>
+        <p>Verify that administrators can log in securely, update catalog items in real-time, and manage customer inquiries.</p>
+
+        <!-- TC-06 -->
+        <div class="tc-box">
+            <div class="tc-header">
+                <div><span class="tc-id">TC-ADM-01</span><span class="tc-title">Staff Authentication & Role Gating</span></div>
+                <span class="pill pill-blue">Critical</span>
+            </div>
+            <div class="tc-row"><span class="tc-label">Test Route:</span><span class="url-box">/dashboard/login/</span></div>
+            <div class="tc-row"><span class="tc-label">Action Steps:</span>1. Try wrong password -> verify rejection. 2. Enter <code>admin</code> / <code>admin123</code> -> verify redirect to dashboard. 3. Click logout.</div>
+            <div class="tc-row"><span class="tc-label">Expected Result:</span><span class="tc-expect"><span class="checkbox-box"></span>Secure authentication; unauthenticated visitors are prevented from opening <code>/dashboard/</code> directly.</span></div>
+        </div>
+
+        <!-- TC-07 -->
+        <div class="tc-box">
+            <div class="tc-header">
+                <div><span class="tc-id">TC-ADM-02</span><span class="tc-title">Therapeutic Category CRUD Management</span></div>
+                <span class="pill pill-blue">High Priority</span>
+            </div>
+            <div class="tc-row"><span class="tc-label">Test Route:</span><span class="url-box">/dashboard/categories/</span></div>
+            <div class="tc-row"><span class="tc-label">Action Steps:</span>1. Add new category "Dermatology & Cosmetology". 2. Check public website <code>/product/</code> to confirm new filter pill appeared. 3. Edit category name.</div>
+            <div class="tc-row"><span class="tc-label">Expected Result:</span><span class="tc-expect"><span class="checkbox-box"></span>New category creates and edits successfully; immediate dynamic reflection on public website.</span></div>
+        </div>
+
+        <!-- TC-08 -->
+        <div class="tc-box">
+            <div class="tc-header">
+                <div><span class="tc-id">TC-ADM-03</span><span class="tc-title">Formulation Publishing & Image Upload</span></div>
+                <span class="pill pill-blue">Critical</span>
+            </div>
+            <div class="tc-row"><span class="tc-label">Test Route:</span><span class="url-box">/dashboard/products/</span></div>
+            <div class="tc-row"><span class="tc-label">Action Steps:</span>1. Click "+ Add Product". 2. Fill Name, Category, Pack Size, Description, upload box image. 3. Save and inspect product list.</div>
+            <div class="tc-row"><span class="tc-label">Expected Result:</span><span class="tc-expect"><span class="checkbox-box"></span>Product saves with image; formulation is immediately live and searchable on public website.</span></div>
+        </div>
+
+        <!-- TC-09 -->
+        <div class="tc-box">
+            <div class="tc-header">
+                <div><span class="tc-id">TC-ADM-04</span><span class="tc-title">Customer Inquiry CRM Desk</span></div>
+                <span class="pill pill-blue">High Priority</span>
+            </div>
+            <div class="tc-row"><span class="tc-label">Test Route:</span><span class="url-box">/dashboard/customers/</span></div>
+            <div class="tc-row"><span class="tc-label">Action Steps:</span>1. Open inquiries tab. 2. Verify inquiry submitted in TC-WEB-05 is present at the top. 3. Click inquiry card to focus details.</div>
+            <div class="tc-row"><span class="tc-label">Expected Result:</span><span class="tc-expect"><span class="checkbox-box"></span>Lead details (name, email, phone, message) display accurately without layout distortion.</span></div>
+        </div>
+    </div>
+
+    <!-- PAGE 4: ENTERPRISE PHARMA ERP & COMPLIANCE -->
+    <div class="page-break">
+        <h1>4. Enterprise Pharma ERP & Compliance Test Suite</h1>
+        <p>Verify that batch inventory, supply chain procurement, quality control, and 21 CFR Part 11 audit trails adhere to WHO-GMP standards.</p>
+
+        <!-- TC-10 -->
+        <div class="tc-box">
+            <div class="tc-header">
+                <div><span class="tc-id">TC-ERP-01</span><span class="tc-title">FEFO Inventory Lots & Quarantine Status</span></div>
+                <span class="pill pill-blue">High Priority</span>
+            </div>
+            <div class="tc-row"><span class="tc-label">Test Route:</span><span class="url-box">/dashboard/</span> (Inventory Section)</div>
+            <div class="tc-row"><span class="tc-label">Action Steps:</span>1. Review Quarantine Lots vs Available Lots metrics on main dashboard. 2. Verify batch expiry dates.</div>
+            <div class="tc-row"><span class="tc-label">Expected Result:</span><span class="tc-expect"><span class="checkbox-box"></span>Quarantine status prevents unauthorized release; lots sort cleanly by Expiry Date (FEFO principle).</span></div>
+        </div>
+
+        <!-- TC-11 -->
+        <div class="tc-box">
+            <div class="tc-header">
+                <div><span class="tc-id">TC-ERP-02</span><span class="tc-title">Purchase Order & Procurement Lifecycle</span></div>
+                <span class="pill pill-green">Medium</span>
+            </div>
+            <div class="tc-row"><span class="tc-label">Test Route:</span><span class="url-box">/dashboard/procurement/</span></div>
+            <div class="tc-row"><span class="tc-label">Action Steps:</span>1. Inspect Active PO counts. 2. Verify supplier name, raw material items, and PO status progression.</div>
+            <div class="tc-row"><span class="tc-label">Expected Result:</span><span class="tc-expect"><span class="checkbox-box"></span>Purchase orders track order status accurately through DRAFT, APPROVED, and RECEIVED states.</span></div>
+        </div>
+
+        <!-- TC-12 -->
+        <div class="tc-box">
+            <div class="tc-header">
+                <div><span class="tc-id">TC-ERP-03</span><span class="tc-title">Quality Assurance (QC) Inspection & Deviations</span></div>
+                <span class="pill pill-blue">High Priority</span>
+            </div>
+            <div class="tc-row"><span class="tc-label">Test Route:</span><span class="url-box">/dashboard/quality/</span></div>
+            <div class="tc-row"><span class="tc-label">Action Steps:</span>1. Review Pending QC inspection list. 2. Check open Quality Deviations counter on dashboard.</div>
+            <div class="tc-row"><span class="tc-label">Expected Result:</span><span class="tc-expect"><span class="checkbox-box"></span>QC inspection status (PENDING / APPROVED / REJECTED) updates accurately with QA officer disposition.</span></div>
+        </div>
+
+        <!-- TC-13 -->
+        <div class="tc-box">
+            <div class="tc-header">
+                <div><span class="tc-id">TC-ERP-04</span><span class="tc-title">21 CFR Part 11 Audit Trail Integrity</span></div>
+                <span class="pill pill-purple">Compliance</span>
+            </div>
+            <div class="tc-row"><span class="tc-label">Test Route:</span><span class="url-box">/dashboard/</span> (Audit Trail Widget)</div>
+            <div class="tc-row"><span class="tc-label">Action Steps:</span>1. Perform any create/edit action as <code>admin</code>. 2. Inspect the Recent 21 CFR Part 11 Audit Trail table on dashboard.</div>
+            <div class="tc-row"><span class="tc-label">Expected Result:</span><span class="tc-expect"><span class="checkbox-box"></span>Immutable audit record logged: Timestamp, User (admin), Action Performed, and Object ID recorded.</span></div>
+        </div>
+    </div>
+
+    <!-- PAGE 5: SIGN-OFF & BUG REPORT SHEET -->
+    <div class="page-break">
+        <h1>5. Test Sign-Off & Defect Reporting Sheet</h1>
+        <p>Use the formal tables below to log any discovered anomalies, UI defects, or functional issues during the testing lifecycle.</p>
+
+        <h2>5.1 Defect Classification Matrix</h2>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th style="width: 110px;">Severity Level</th>
+                    <th>Definition</th>
+                    <th>Example In Scope</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="pill pill-red">Critical (P1)</span></td>
+                    <td>System crash, data loss, 500 server error, security breach.</td>
+                    <td>Login fails, unable to submit commercial inquiry, database crash.</td>
+                </tr>
+                <tr>
+                    <td><span class="pill pill-amber">Major (P2)</span></td>
+                    <td>Core business feature blocked with no immediate workaround.</td>
+                    <td>Product filter fails, newly added medicine not visible in catalog.</td>
+                </tr>
+                <tr>
+                    <td><span class="pill pill-blue">Minor (P3)</span></td>
+                    <td>Non-critical feature issue with existing workaround.</td>
+                    <td>Search is case-sensitive, pagination issue with large dataset.</td>
+                </tr>
+                <tr>
+                    <td><span class="pill pill-green">Cosmetic (P4)</span></td>
+                    <td>Visual misalignment, typo, color inconsistency, spacing glitch.</td>
+                    <td>Button padding uneven on specific mobile viewport, typo in header.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>5.2 Test Execution Defect Log</h2>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th style="width: 70px;">Defect #</th>
+                    <th style="width: 100px;">Module</th>
+                    <th>Observed Issue / Steps to Reproduce</th>
+                    <th style="width: 80px;">Severity</th>
+                    <th style="width: 80px;">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>BUG-01</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>OPEN</td>
+                </tr>
+                <tr>
+                    <td>BUG-02</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>OPEN</td>
+                </tr>
+                <tr>
+                    <td>BUG-03</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>OPEN</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>5.3 Formal QA Sign-Off</h2>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Reviewer Role</th>
+                    <th>Reviewer Name</th>
+                    <th>Verification Date</th>
+                    <th>Final Verdict</th>
+                    <th>Signature</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Lead QA Tester</strong></td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>[ ] PASS &nbsp; [ ] FAIL</td>
+                    <td>&nbsp;</td>
+                </tr>
+                <tr>
+                    <td><strong>Project Supervisor</strong></td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>[ ] PASS &nbsp; [ ] FAIL</td>
+                    <td>&nbsp;</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</body>
+</html>

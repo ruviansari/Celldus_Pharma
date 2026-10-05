@@ -58,17 +58,6 @@
             box-sizing: border-box !important;
         }
 
-        /* Sidebar Header and Toggle Buttons */
-        .sidebar-header-box {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 1.25rem;
-            padding: 0.25rem 0.2rem;
-            flex-shrink: 0;
-            width: 100%;
-            box-sizing: border-box;
-        }
         .sidebar-logo {
             cursor: pointer;
             user-select: none;
@@ -76,8 +65,8 @@
             align-items: center;
             gap: 0.75rem;
             transition: opacity 0.2s ease, transform 0.15s ease;
-            margin-bottom: 0 !important;
-            padding: 0 !important;
+            margin-bottom: 1.25rem !important;
+            padding: 0.25rem 0.5rem !important;
         }
         .sidebar-logo:hover {
             opacity: 0.88;
@@ -85,40 +74,12 @@
         .sidebar-logo:active {
             transform: scale(0.96);
         }
-        .sidebar-toggle-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 36px;
-            height: 36px;
-            border-radius: 9999px;
-            border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
-            background: rgba(255, 255, 255, 0.05);
-            color: var(--text-secondary, #94a3b8);
-            cursor: pointer;
-            font-size: 0.95rem;
-            transition: all 0.2s ease;
-            outline: none;
-            flex-shrink: 0;
+        .sidebar-logo i {
+            transition: transform 0.2s ease, filter 0.2s ease;
         }
-        .sidebar-toggle-btn:hover {
-            background: rgba(79, 70, 229, 0.15);
-            border-color: rgba(79, 70, 229, 0.35);
-            color: var(--color-accent, #06b6d4);
-            transform: scale(1.05);
-        }
-        .sidebar-toggle-btn:active {
-            transform: scale(0.95);
-        }
-        [data-theme="light"] .sidebar-toggle-btn {
-            background: #f1f5f9;
-            border-color: #cbd5e1;
-            color: #475569;
-        }
-        [data-theme="light"] .sidebar-toggle-btn:hover {
-            background: #e2e8f0;
-            color: #0f172a;
-            border-color: #94a3b8;
+        .sidebar-logo:hover i {
+            transform: scale(1.12);
+            filter: drop-shadow(0 0 8px var(--color-accent));
         }
 
         /* Collapsed Sidebar Styles */
@@ -132,19 +93,22 @@
         body.sidebar-collapsed .main-content {
             margin-left: 78px !important;
         }
-        html.sidebar-collapsed .sidebar-header-box,
-        body.sidebar-collapsed .sidebar-header-box {
-            justify-content: center !important;
-            padding: 0.25rem 0 !important;
-        }
         html.sidebar-collapsed .sidebar-logo,
         body.sidebar-collapsed .sidebar-logo {
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            padding: 0.5rem 0 !important;
+            margin: 0 0 1.25rem 0 !important;
+        }
+        html.sidebar-collapsed .sidebar-logo h2,
+        body.sidebar-collapsed .sidebar-logo h2 {
             display: none !important;
         }
-        html.sidebar-collapsed #sidebarToggleBtn,
-        body.sidebar-collapsed #sidebarToggleBtn {
-            display: inline-flex !important;
-            margin: 0 auto !important;
+        html.sidebar-collapsed .sidebar-logo i,
+        body.sidebar-collapsed .sidebar-logo i {
+            margin: 0 !important;
+            font-size: 1.5rem !important;
         }
         html.sidebar-collapsed .sidebar-menu-header,
         body.sidebar-collapsed .sidebar-menu-header {
@@ -198,14 +162,9 @@
     <div class="dashboard-wrapper">
         <!-- Sidebar -->
         <aside class="sidebar">
-            <div class="sidebar-header-box">
-                <div class="sidebar-logo" id="sidebarLogoToggle" title="Click to collapse / expand sidebar">
-                    <i class="fa-solid fa-flask-vial"></i>
-                    <h2>Celldus Admin</h2>
-                </div>
-                <button type="button" id="sidebarToggleBtn" class="sidebar-toggle-btn" title="Toggle Sidebar" aria-label="Toggle Sidebar">
-                    <i class="fa-solid fa-bars"></i>
-                </button>
+            <div class="sidebar-logo" id="sidebarLogoToggle" title="Click icon to collapse / expand sidebar">
+                <i class="fa-solid fa-flask-vial"></i>
+                <h2>Celldus Admin</h2>
             </div>
 
             <ul class="sidebar-menu">
@@ -429,15 +388,11 @@
             }
         });
 
-        // Sidebar Collapse/Expand Toggle on Icon Click
+        // Sidebar Collapse/Expand Toggle on Logo / Icon Click
         (function () {
             function updateToggleTitles(isCollapsed) {
-                const sidebarBtn = document.getElementById('sidebarToggleBtn');
-                const topbarBtn = document.getElementById('topbarSidebarToggle');
                 const logo = document.getElementById('sidebarLogoToggle');
-                const titleText = isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar';
-                if (sidebarBtn) sidebarBtn.setAttribute('title', titleText);
-                if (topbarBtn) topbarBtn.setAttribute('title', titleText);
+                const titleText = isCollapsed ? 'Click to expand sidebar' : 'Click to collapse sidebar';
                 if (logo) logo.setAttribute('title', titleText);
             }
 
@@ -450,21 +405,14 @@
                 } catch (e) {}
             }
 
-            const toggleElements = [
-                document.getElementById('sidebarLogoToggle'),
-                document.getElementById('sidebarToggleBtn'),
-                document.getElementById('topbarSidebarToggle')
-            ];
-
-            toggleElements.forEach(function (el) {
-                if (el) {
-                    el.addEventListener('click', function (e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        toggleSidebar();
-                    });
-                }
-            });
+            const logo = document.getElementById('sidebarLogoToggle');
+            if (logo) {
+                logo.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleSidebar();
+                });
+            }
 
             const currentCollapsed = document.documentElement.classList.contains('sidebar-collapsed');
             updateToggleTitles(currentCollapsed);

@@ -30,6 +30,7 @@ from erp_sales.models import SalesOrder, SalesOrderLine, SalesOrderLotAllocation
 from erp_sales.services import approve_sales_order_and_reserve_fefo, dispatch_sales_order
 from erp_crm.models import Lead, FollowUpTask, LeadImportBatch
 from erp_crm.services import process_lead_import_rows
+from erp_hr.models import Employee, AttendanceRecord, LeaveApplication
 
 
 def staff_required(view_func):
@@ -1516,3 +1517,309 @@ def dashboard_invoices(request):
         'today': timezone.now().date(),
     }
     return render(request, 'dashboard/erp_invoices.html', context)
+
+
+# ==========================================
+# 11. EMPLOYEE CRM & WORKFORCE OPERATIONS
+# ==========================================
+@staff_required
+def dashboard_employee(request):
+    tab = request.GET.get('tab', 'directory')
+    dept_filter = request.GET.get('dept', '')
+    search = request.GET.get('q', '').strip()
+
+    employees_qs = Employee.objects.select_related('branch', 'user').all().order_by('employee_code')
+
+    if dept_filter:
+        employees_qs = employees_qs.filter(department=dept_filter)
+    if search:
+        employees_qs = employees_qs.filter(
+            Q(first_name__icontains=search) |
+            Q(last_name__icontains=search) |
+            Q(employee_code__icontains=search) |
+            Q(designation__icontains=search) |
+            Q(email__icontains=search) |
+            Q(phone__icontains=search)
+        )
+
+    all_employees = Employee.objects.all()
+    total_employees = all_employees.count()
+    active_employees = all_employees.filter(is_active=True).count()
+    tech_staff_count = all_employees.filter(department__in=['QA', 'QC', 'PRODUCTION']).count()
+    sales_staff_count = all_employees.filter(department='SALES').count()
+    total_payroll = sum((e.base_salary for e in all_employees if e.is_active), Decimal('0.00'))
+
+    today = timezone.now().date()
+    attendance_records = AttendanceRecord.objects.select_related('employee').filter(date=today)
+    present_today_count = attendance_records.filter(status='PRESENT').count()
+
+    leaves = LeaveApplication.objects.select_related('employee', 'branch').order_by('-created_at')[:50]
+    pending_leaves_count = LeaveApplication.objects.filter(status='SUBMITTED').count()
+
+    # Field Force (Sales & Marketing / Medical Representatives)
+    field_force = Employee.objects.select_related('branch', 'user').filter(department='SALES')
+
+    branches = Branch.objects.all()
+    departments = Employee.DEPARTMENT_CHOICES
+
+    context = {
+        'employees': employees_qs,
+        'all_employees': all_employees,
+        'total_employees': total_employees,
+        'active_employees': active_employees,
+        'tech_staff_count': tech_staff_count,
+        'sales_staff_count': sales_staff_count,
+        'total_payroll': total_payroll,
+        'today': today,
+        'attendance_records': attendance_records,
+        'present_today_count': present_today_count,
+        'leaves': leaves,
+        'pending_leaves_count': pending_leaves_count,
+        'field_force': field_force,
+        'branches': branches,
+        'departments': departments,
+        'active_tab': tab,
+        'dept_filter': dept_filter,
+        'search_query': search,
+    }
+    return render(request, 'dashboard/erp_employee.html', context)
+
+
+@staff_required
+def dashboard_employee_create(request):
+    if request.method == "POST":
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+        department = request.POST.get('department', 'SALES')
+        designation = request.POST.get('designation', '').strip()
+        branch_id = request.POST.get('branch')
+        joining_date = request.POST.get('joining_date')
+        base_salary = request.POST.get('base_salary', '0.00')
+        phone = request.POST.get('phone', '').strip()
+        email = request.POST.get('email', '').strip()
+        bank_account = request.POST.get('bank_account_no', '').strip()
+        bank_ifsc = request.POST.get('bank_ifsc', '').strip()
+        employee_code = request.POST.get('employee_code', '').strip()
+
+        if not first_name or not last_name or not designation or not branch_id or not joining_date:
+            messages.error(request, "First Name, Last Name, Designation, Branch, and Joining Date are required.")
+            return redirect('/dashboard/employee/?tab=directory')
+
+        branch = get_object_or_404(Branch, id=branch_id)
+
+        if not employee_code:
+            dept_prefix = department[:3].upper()
+            count = Employee.objects.filter(department=department).count() + 1
+            employee_code = f"EMP-{dept_prefix}-{count:03d}"
+            while Employee.objects.filter(employee_code=employee_code).exists():
+                count += 1
+                employee_code = f"EMP-{dept_prefix}-{count:03d}"
+
+        try:
+            emp = Employee.objects.create(
+                employee_code=employee_code,
+                first_name=first_name,
+                last_name=last_name,
+                department=department,
+                designation=designation,
+                branch=branch,
+                joining_date=joining_date,
+                base_salary=Decimal(base_salary or '0.00'),
+                phone=phone,
+                email=email,
+                bank_account_no=bank_account,
+                bank_ifsc=bank_ifsc,
+                created_by=request.user
+            )
+            audit_log_event(
+                user=request.user,
+                action='CREATE',
+                entity_name='Employee',
+                entity_id=str(emp.id),
+                reason=f"Onboarded employee [{emp.employee_code}] {emp.first_name} {emp.last_name} in {emp.department}",
+                request=request
+            )
+            messages.success(request, f"Employee [{emp.employee_code}] '{emp.first_name} {emp.last_name}' onboarded successfully!")
+        except Exception as e:
+            messages.error(request, f"Error onboarding employee: {str(e)}")
+
+    return redirect('/dashboard/employee/?tab=directory')
+
+
+@staff_required
+def dashboard_employee_edit(request, employee_id):
+    emp = get_object_or_404(Employee, id=employee_id)
+    if request.method == "POST":
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+        department = request.POST.get('department', emp.department)
+        designation = request.POST.get('designation', '').strip()
+        branch_id = request.POST.get('branch')
+        base_salary = request.POST.get('base_salary', str(emp.base_salary))
+        phone = request.POST.get('phone', '').strip()
+        email = request.POST.get('email', '').strip()
+        bank_account = request.POST.get('bank_account_no', '').strip()
+        bank_ifsc = request.POST.get('bank_ifsc', '').strip()
+
+        if not first_name or not last_name or not designation:
+            messages.error(request, "First Name, Last Name, and Designation are required.")
+            return redirect('/dashboard/employee/?tab=directory')
+
+        if branch_id:
+            try:
+                emp.branch = Branch.objects.get(id=branch_id)
+            except Branch.DoesNotExist:
+                pass
+
+        try:
+            emp.first_name = first_name
+            emp.last_name = last_name
+            emp.department = department
+            emp.designation = designation
+            emp.base_salary = Decimal(base_salary or '0.00')
+            emp.phone = phone
+            emp.email = email
+            emp.bank_account_no = bank_account
+            emp.bank_ifsc = bank_ifsc
+            emp.updated_by = request.user
+            emp.save()
+
+            audit_log_event(
+                user=request.user,
+                action='UPDATE',
+                entity_name='Employee',
+                entity_id=str(emp.id),
+                reason=f"Updated details for employee [{emp.employee_code}] {emp.first_name} {emp.last_name}",
+                request=request
+            )
+            messages.success(request, f"Employee [{emp.employee_code}] updated successfully!")
+        except Exception as e:
+            messages.error(request, f"Error updating employee: {str(e)}")
+
+    return redirect('/dashboard/employee/?tab=directory')
+
+
+@staff_required
+def dashboard_employee_toggle_status(request, employee_id):
+    emp = get_object_or_404(Employee, id=employee_id)
+    emp.is_active = not emp.is_active
+    emp.updated_by = request.user
+    emp.save()
+
+    status_str = "Activated" if emp.is_active else "Deactivated"
+    audit_log_event(
+        user=request.user,
+        action='UPDATE',
+        entity_name='Employee',
+        entity_id=str(emp.id),
+        reason=f"{status_str} employee [{emp.employee_code}] {emp.first_name} {emp.last_name}",
+        request=request
+    )
+    messages.success(request, f"Employee [{emp.employee_code}] has been {status_str.lower()}.")
+    return redirect('/dashboard/employee/?tab=directory')
+
+
+@staff_required
+def dashboard_attendance_mark(request):
+    if request.method == "POST":
+        employee_id = request.POST.get('employee')
+        date_str = request.POST.get('date') or str(timezone.now().date())
+        status = request.POST.get('status', 'PRESENT')
+        in_time = request.POST.get('in_time') or None
+        out_time = request.POST.get('out_time') or None
+        overtime = request.POST.get('overtime_hours', '0.00')
+
+        emp = get_object_or_404(Employee, id=employee_id)
+        try:
+            record, created = AttendanceRecord.objects.update_or_create(
+                employee=emp,
+                date=date_str,
+                defaults={
+                    'status': status,
+                    'in_time': in_time,
+                    'out_time': out_time,
+                    'overtime_hours': Decimal(overtime or '0.00'),
+                    'created_by': request.user if created else emp.created_by,
+                    'updated_by': request.user if not created else None
+                }
+            )
+            audit_log_event(
+                user=request.user,
+                action='CREATE' if created else 'UPDATE',
+                entity_name='AttendanceRecord',
+                entity_id=str(record.id),
+                reason=f"Attendance logged for [{emp.employee_code}] on {date_str} as {status}",
+                request=request
+            )
+            messages.success(request, f"Attendance marked for {emp.first_name} {emp.last_name} ({status})!")
+        except Exception as e:
+            messages.error(request, f"Error logging attendance: {str(e)}")
+
+    return redirect('/dashboard/employee/?tab=attendance')
+
+
+@staff_required
+def dashboard_leave_create(request):
+    if request.method == "POST":
+        employee_id = request.POST.get('employee')
+        leave_type = request.POST.get('leave_type', 'CASUAL')
+        from_date = request.POST.get('from_date')
+        to_date = request.POST.get('to_date')
+        days_count = request.POST.get('days_count', '1.0')
+        reason = request.POST.get('reason', '').strip()
+
+        if not employee_id or not from_date or not to_date or not reason:
+            messages.error(request, "Employee, dates, and reason are required.")
+            return redirect('/dashboard/employee/?tab=leaves')
+
+        emp = get_object_or_404(Employee, id=employee_id)
+        try:
+            leave = LeaveApplication.objects.create(
+                employee=emp,
+                branch=emp.branch,
+                leave_type=leave_type,
+                from_date=from_date,
+                to_date=to_date,
+                days_count=Decimal(days_count or '1.0'),
+                reason=reason,
+                status='SUBMITTED',
+                created_by=request.user
+            )
+            audit_log_event(
+                user=request.user,
+                action='CREATE',
+                entity_name='LeaveApplication',
+                entity_id=str(leave.id),
+                reason=f"Leave application [{leave.document_no}] submitted for {emp.first_name} ({leave_type})",
+                request=request
+            )
+            messages.success(request, f"Leave application [{leave.document_no}] submitted successfully!")
+        except Exception as e:
+            messages.error(request, f"Error submitting leave: {str(e)}")
+
+    return redirect('/dashboard/employee/?tab=leaves')
+
+
+@staff_required
+def dashboard_leave_action(request, leave_id, action):
+    leave = get_object_or_404(LeaveApplication, id=leave_id)
+    if action == 'approve':
+        leave.status = 'APPROVED'
+        leave.approved_by = request.user
+        messages.success(request, f"Leave [{leave.document_no}] approved.")
+    elif action == 'reject':
+        leave.status = 'REJECTED'
+        messages.warning(request, f"Leave [{leave.document_no}] rejected.")
+    leave.updated_by = request.user
+    leave.save()
+
+    audit_log_event(
+        user=request.user,
+        action='UPDATE',
+        entity_name='LeaveApplication',
+        entity_id=str(leave.id),
+        reason=f"Leave [{leave.document_no}] {leave.status} by {request.user.username}",
+        request=request
+    )
+    return redirect('/dashboard/employee/?tab=leaves')
+

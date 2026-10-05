@@ -1,0 +1,882 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Employee CRM & Workforce Operations | Celldus Pharma{% endblock %}
+{% block page_title %}Employee CRM & Workforce Operations{% endblock %}
+{% block page_subtitle %}Comprehensive 360° management of pharmaceutical field representatives, plant technical chemists, QA/QC staff, attendance records, and leave approvals.{% endblock %}
+
+{% block top_actions %}
+<div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+    <button class="btn btn-primary" onclick="openModal('addEmployeeModal')" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+        <i class="fa-solid fa-user-plus"></i> Onboard Employee
+    </button>
+    <button class="btn btn-secondary" onclick="openModal('markAttendanceModal')" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+        <i class="fa-solid fa-clock"></i> Mark Attendance
+    </button>
+    <button class="btn btn-secondary" onclick="openModal('applyLeaveModal')" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+        <i class="fa-solid fa-calendar-check"></i> Apply Leave
+    </button>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Tabs Navigation */
+    .emp-tabs {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 0.75rem;
+        overflow-x: auto;
+    }
+    .emp-tab-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.6rem 1.25rem;
+        border-radius: 9999px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border-color);
+        color: var(--text-secondary);
+        font-weight: 600;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: var(--transition);
+        text-decoration: none;
+        white-space: nowrap;
+    }
+    .emp-tab-btn:hover {
+        color: var(--text-primary);
+        border-color: var(--border-hover);
+        background: rgba(255, 255, 255, 0.06);
+    }
+    .emp-tab-btn.active {
+        background: var(--color-primary);
+        border-color: var(--color-primary);
+        color: #ffffff;
+        box-shadow: 0 4px 15px var(--color-primary-glow);
+    }
+
+    /* Filter Chips */
+    .filter-chips-bar {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1.25rem;
+        overflow-x: auto;
+        padding-bottom: 0.3rem;
+    }
+    .filter-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.35rem 0.85rem;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        text-decoration: none;
+        transition: var(--transition);
+        white-space: nowrap;
+    }
+    .filter-chip:hover, .filter-chip.active {
+        background: rgba(14, 165, 233, 0.12);
+        border-color: var(--color-accent);
+        color: var(--color-accent);
+    }
+
+    /* Avatar Pill */
+    .emp-avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #0284c7, #2563eb);
+        color: #ffffff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.85rem;
+        flex-shrink: 0;
+    }
+
+    /* Search & Filter Bar */
+    .search-filter-wrapper {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.25rem;
+        flex-wrap: wrap;
+    }
+
+    .emp-field-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: 1.25rem;
+        transition: var(--transition);
+        position: relative;
+    }
+    .emp-field-card:hover {
+        border-color: var(--border-hover);
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Top Metrics Cockpit -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(14, 165, 233, 0.15); color: #0ea5e9;">
+            <i class="fa-solid fa-users"></i>
+        </div>
+        <div class="stat-details">
+            <span class="stat-value">{{ total_employees }}</span>
+            <span class="stat-label">Total Workforce</span>
+            <span style="font-size: 0.75rem; color: #10b981; margin-top: 0.2rem; display: block;">
+                <i class="fa-solid fa-circle-check"></i> {{ active_employees }} Active On Roll
+            </span>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(168, 85, 247, 0.15); color: #a855f7;">
+            <i class="fa-solid fa-flask-vial"></i>
+        </div>
+        <div class="stat-details">
+            <span class="stat-value">{{ tech_staff_count }}</span>
+            <span class="stat-label">Plant & Technical QA/QC</span>
+            <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem; display: block;">
+                WHO-GMP Certified Chemists
+            </span>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">
+            <i class="fa-solid fa-briefcase-medical"></i>
+        </div>
+        <div class="stat-details">
+            <span class="stat-value">{{ sales_staff_count }}</span>
+            <span class="stat-label">Commercial Sales / MRs</span>
+            <span style="font-size: 0.75rem; color: #10b981; margin-top: 0.2rem; display: block;">
+                Field Detailing Force
+            </span>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;">
+            <i class="fa-solid fa-indian-rupee-sign"></i>
+        </div>
+        <div class="stat-details">
+            <span class="stat-value">₹{{ total_payroll|floatformat:0 }}</span>
+            <span class="stat-label">Monthly Payroll Base</span>
+            <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem; display: block;">
+                Active Staff Salary Liability
+            </span>
+        </div>
+    </div>
+</div>
+
+<!-- Tabs Navigation Bar -->
+<div class="emp-tabs">
+    <a href="?tab=directory" class="emp-tab-btn {% if active_tab == 'directory' %}active{% endif %}">
+        <i class="fa-solid fa-id-card-clip"></i> Staff Directory & Master Desk
+        <span class="badge badge-info" style="font-size: 0.7rem; padding: 2px 6px;">{{ total_employees }}</span>
+    </a>
+    <a href="?tab=fieldforce" class="emp-tab-btn {% if active_tab == 'fieldforce' %}active{% endif %}">
+        <i class="fa-solid fa-user-doctor"></i> Field Force & MR CRM
+        <span class="badge badge-success" style="font-size: 0.7rem; padding: 2px 6px;">{{ sales_staff_count }}</span>
+    </a>
+    <a href="?tab=attendance" class="emp-tab-btn {% if active_tab == 'attendance' %}active{% endif %}">
+        <i class="fa-solid fa-clock-rotate-left"></i> Daily Attendance & Shifts
+        <span class="badge badge-info" style="font-size: 0.7rem; padding: 2px 6px;">{{ present_today_count }} Present</span>
+    </a>
+    <a href="?tab=leaves" class="emp-tab-btn {% if active_tab == 'leaves' %}active{% endif %}">
+        <i class="fa-solid fa-envelope-open-text"></i> Leave Requests
+        {% if pending_leaves_count > 0 %}
+        <span class="badge badge-warning" style="font-size: 0.7rem; padding: 2px 6px;">{{ pending_leaves_count }} Pending</span>
+        {% endif %}
+    </a>
+</div>
+
+<!-- ========================================== -->
+<!-- TAB 1: STAFF DIRECTORY & PROFILES           -->
+<!-- ========================================== -->
+{% if active_tab == 'directory' %}
+<div class="panel">
+    <!-- Department Filter Chips -->
+    <div class="filter-chips-bar">
+        <a href="?tab=directory" class="filter-chip {% if not dept_filter %}active{% endif %}">
+            All Departments ({{ total_employees }})
+        </a>
+        {% for code, label in departments %}
+        <a href="?tab=directory&dept={{ code }}" class="filter-chip {% if dept_filter == code %}active{% endif %}">
+            {{ label }}
+        </a>
+        {% endfor %}
+    </div>
+
+    <!-- Search Form -->
+    <div class="search-filter-wrapper">
+        <form method="GET" action="" style="display: flex; gap: 0.5rem; max-width: 450px; flex: 1;">
+            <input type="hidden" name="tab" value="directory">
+            {% if dept_filter %}<input type="hidden" name="dept" value="{{ dept_filter }}">{% endif %}
+            <div class="form-group" style="margin-bottom: 0; flex: 1; position: relative;">
+                <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
+                <input type="text" name="q" value="{{ search_query }}" class="form-control" placeholder="Search name, code, designation, email, phone..." style="padding-left: 2.5rem;">
+            </div>
+            <button type="submit" class="btn btn-secondary">Search</button>
+            {% if search_query %}
+            <a href="?tab=directory{% if dept_filter %}&dept={{ dept_filter }}{% endif %}" class="btn btn-secondary" title="Clear Search">
+                <i class="fa-solid fa-xmark"></i>
+            </a>
+            {% endif %}
+        </form>
+
+        <span style="font-size: 0.85rem; color: var(--text-muted);">
+            Showing {{ employees|length }} employee records
+        </span>
+    </div>
+
+    <!-- Employee Table -->
+    <div class="table-container">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th style="width: 120px;">Code</th>
+                    <th>Employee Details</th>
+                    <th>Department</th>
+                    <th>Designation</th>
+                    <th>Branch / Location</th>
+                    <th>Base Salary</th>
+                    <th>Status</th>
+                    <th style="text-align: right; width: 140px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for emp in employees %}
+                <tr>
+                    <td>
+                        <span class="url-box" style="font-size: 0.82rem; font-weight: 700; color: var(--color-accent);">{{ emp.employee_code }}</span>
+                    </td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <div class="emp-avatar">
+                                {{ emp.first_name|slice:":1" }}{{ emp.last_name|slice:":1" }}
+                            </div>
+                            <div>
+                                <strong style="color: #ffffff; font-size: 0.95rem;">{{ emp.first_name }} {{ emp.last_name }}</strong>
+                                <div style="font-size: 0.78rem; color: var(--text-muted); display: flex; gap: 0.6rem; margin-top: 0.15rem;">
+                                    {% if emp.phone %}<span><i class="fa-solid fa-phone" style="font-size: 0.7rem;"></i> {{ emp.phone }}</span>{% endif %}
+                                    {% if emp.email %}<span><i class="fa-solid fa-envelope" style="font-size: 0.7rem;"></i> {{ emp.email }}</span>{% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        {% if emp.department == 'QA' or emp.department == 'QC' %}
+                        <span class="badge" style="background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.4);">{{ emp.get_department_display }}</span>
+                        {% elif emp.department == 'PRODUCTION' %}
+                        <span class="badge" style="background: rgba(249, 115, 22, 0.2); color: #fb923c; border: 1px solid rgba(249, 115, 22, 0.4);">Manufacturing</span>
+                        {% elif emp.department == 'SALES' %}
+                        <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4);">Sales & MR</span>
+                        {% elif emp.department == 'WAREHOUSE' %}
+                        <span class="badge" style="background: rgba(14, 165, 233, 0.2); color: #38bdf8; border: 1px solid rgba(14, 165, 233, 0.4);">Warehouse</span>
+                        {% else %}
+                        <span class="badge badge-secondary">{{ emp.get_department_display }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span style="font-weight: 500; color: var(--text-primary);">{{ emp.designation }}</span>
+                    </td>
+                    <td>
+                        <span style="font-size: 0.85rem; color: var(--text-secondary);"><i class="fa-solid fa-building" style="font-size: 0.75rem; color: var(--text-muted);"></i> {{ emp.branch.name|truncatechars:26 }}</span>
+                    </td>
+                    <td>
+                        <strong style="color: #10b981; font-size: 0.9rem;">₹{{ emp.base_salary|floatformat:2 }}</strong>
+                    </td>
+                    <td>
+                        {% if emp.is_active %}
+                        <span class="badge badge-success"><i class="fa-solid fa-circle" style="font-size: 0.5rem; margin-right: 3px;"></i> Active</span>
+                        {% else %}
+                        <span class="badge badge-danger"><i class="fa-solid fa-circle" style="font-size: 0.5rem; margin-right: 3px;"></i> Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="action-btn-group" style="justify-content: flex-end;">
+                            <!-- Edit Button -->
+                            <button class="action-btn edit" title="Edit Employee Profile"
+                                onclick="openEditEmployeeModal('{{ emp.id }}', '{{ emp.employee_code }}', '{{ emp.first_name|escapejs }}', '{{ emp.last_name|escapejs }}', '{{ emp.department }}', '{{ emp.designation|escapejs }}', '{{ emp.branch.id }}', '{{ emp.base_salary }}', '{{ emp.phone|escapejs }}', '{{ emp.email|escapejs }}', '{{ emp.bank_account_no|escapejs }}', '{{ emp.bank_ifsc|escapejs }}')">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                            <!-- Toggle Status Form -->
+                            <form action="{% url 'dashboard_employee_toggle_status' emp.id %}" method="POST" style="margin: 0;">
+                                {% csrf_token %}
+                                <button type="submit" class="action-btn" title="{% if emp.is_active %}Deactivate Employee{% else %}Activate Employee{% endif %}"
+                                    style="color: {% if emp.is_active %}var(--color-warning){% else %}var(--color-success){% endif %};">
+                                    <i class="fa-solid {% if emp.is_active %}fa-user-slash{% else %}fa-user-check{% endif %}"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                        <i class="fa-solid fa-users-slash" style="font-size: 2.5rem; margin-bottom: 0.75rem; display: block; opacity: 0.4;"></i>
+                        No employee profiles found matching your query.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- ========================================== -->
+<!-- TAB 2: FIELD FORCE & MR SALES CRM          -->
+<!-- ========================================== -->
+{% if active_tab == 'fieldforce' %}
+<div class="panel">
+    <div class="panel-header" style="margin-bottom: 1.25rem;">
+        <div>
+            <h2 class="panel-title">Pharma Commercial Sales & Medical Representatives (MR) Force</h2>
+            <p class="panel-subtitle">Dedicated desk monitoring medical detailing reps, hospital institutional liaisons, and territory coverage.</p>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.25rem;">
+        {% for mr in field_force %}
+        <div class="emp-field-card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                <div style="display: flex; gap: 0.75rem; align-items: center;">
+                    <div class="emp-avatar" style="background: linear-gradient(135deg, #10b981, #059669);">
+                        {{ mr.first_name|slice:":1" }}{{ mr.last_name|slice:":1" }}
+                    </div>
+                    <div>
+                        <h4 style="margin: 0; color: #ffffff; font-size: 1rem;">{{ mr.first_name }} {{ mr.last_name }}</h4>
+                        <span style="font-size: 0.8rem; color: var(--color-accent); font-weight: 600;">{{ mr.employee_code }}</span>
+                    </div>
+                </div>
+                <span class="badge badge-success">Field Active</span>
+            </div>
+
+            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
+                <div style="margin-bottom: 0.35rem;">
+                    <strong style="color: var(--text-primary);"><i class="fa-solid fa-id-badge" style="width: 18px; color: var(--text-muted);"></i> Role:</strong> {{ mr.designation }}
+                </div>
+                <div style="margin-bottom: 0.35rem;">
+                    <strong style="color: var(--text-primary);"><i class="fa-solid fa-location-dot" style="width: 18px; color: var(--text-muted);"></i> Base:</strong> {{ mr.branch.name }}
+                </div>
+                <div style="margin-bottom: 0.35rem;">
+                    <strong style="color: var(--text-primary);"><i class="fa-solid fa-phone" style="width: 18px; color: var(--text-muted);"></i> Contact:</strong> {{ mr.phone|default:"Not specified" }}
+                </div>
+            </div>
+
+            <div style="border-top: 1px solid var(--border-color); padding-top: 0.75rem; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">Base Compensation</span>
+                    <strong style="color: #10b981; font-size: 0.95rem;">₹{{ mr.base_salary|floatformat:2 }}</strong>
+                </div>
+                <a href="{% url 'dashboard_crm' %}?q={{ mr.first_name }}" class="btn btn-secondary" style="font-size: 0.78rem; padding: 0.35rem 0.75rem;">
+                    <i class="fa-solid fa-address-book"></i> View CRM Leads
+                </a>
+            </div>
+        </div>
+        {% empty %}
+        <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: var(--text-muted);">
+            <i class="fa-solid fa-user-xmark" style="font-size: 2.5rem; opacity: 0.4; margin-bottom: 0.75rem; display: block;"></i>
+            No dedicated sales or field representatives enrolled currently.
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- ========================================== -->
+<!-- TAB 3: DAILY ATTENDANCE & SHIFTS           -->
+<!-- ========================================== -->
+{% if active_tab == 'attendance' %}
+<div class="panel">
+    <div class="panel-header" style="margin-bottom: 1.25rem;">
+        <div>
+            <h2 class="panel-title">Daily Plant & Field Attendance Log ({{ today|date:"F d, Y" }})</h2>
+            <p class="panel-subtitle">Real-time attendance punch records, factory production shifts, and overtime tracking.</p>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('markAttendanceModal')" style="font-size: 0.85rem;">
+            <i class="fa-solid fa-plus"></i> Mark Employee Attendance
+        </button>
+    </div>
+
+    <div class="table-container">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Employee</th>
+                    <th>Department</th>
+                    <th>Date</th>
+                    <th>In-Time</th>
+                    <th>Out-Time</th>
+                    <th>Attendance Status</th>
+                    <th>Overtime (Hours)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for att in attendance_records %}
+                <tr>
+                    <td>
+                        <strong style="color: #ffffff;">{{ att.employee.first_name }} {{ att.employee.last_name }}</strong>
+                        <div style="font-size: 0.75rem; color: var(--color-accent);">{{ att.employee.employee_code }}</div>
+                    </td>
+                    <td>
+                        <span class="badge badge-secondary">{{ att.employee.get_department_display }}</span>
+                    </td>
+                    <td>{{ att.date|date:"M d, Y" }}</td>
+                    <td>{{ att.in_time|time:"H:i"|default:"--" }}</td>
+                    <td>{{ att.out_time|time:"H:i"|default:"--" }}</td>
+                    <td>
+                        {% if att.status == 'PRESENT' %}
+                        <span class="badge badge-success"><i class="fa-solid fa-check"></i> Present</span>
+                        {% elif att.status == 'ABSENT' %}
+                        <span class="badge badge-danger"><i class="fa-solid fa-xmark"></i> Absent</span>
+                        {% elif att.status == 'HALF_DAY' %}
+                        <span class="badge badge-warning">Half Day</span>
+                        {% else %}
+                        <span class="badge badge-info">On Leave</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if att.overtime_hours > 0 %}
+                        <strong style="color: #f59e0b;">{{ att.overtime_hours }} hrs</strong>
+                        {% else %}
+                        <span style="color: var(--text-muted);">0.00</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                        <i class="fa-regular fa-calendar-xmark" style="font-size: 2.5rem; opacity: 0.4; margin-bottom: 0.75rem; display: block;"></i>
+                        No attendance records logged for today ({{ today|date:"M d, Y" }}). Use the "Mark Attendance" button above to record entries.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- ========================================== -->
+<!-- TAB 4: LEAVE REQUESTS & APPROVALS         -->
+<!-- ========================================== -->
+{% if active_tab == 'leaves' %}
+<div class="panel">
+    <div class="panel-header" style="margin-bottom: 1.25rem;">
+        <div>
+            <h2 class="panel-title">Employee Leave Applications & Dispositions</h2>
+            <p class="panel-subtitle">Formal leave review workflow compliant with corporate HR guidelines and factory production shifts.</p>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('applyLeaveModal')" style="font-size: 0.85rem;">
+            <i class="fa-solid fa-plus"></i> Submit Leave Application
+        </button>
+    </div>
+
+    <div class="table-container">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Doc #</th>
+                    <th>Employee</th>
+                    <th>Leave Type</th>
+                    <th>Period</th>
+                    <th>Days</th>
+                    <th>Reason</th>
+                    <th>Status</th>
+                    <th style="text-align: right; width: 140px;">Dispositions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for leave in leaves %}
+                <tr>
+                    <td>
+                        <span class="url-box" style="font-size: 0.8rem; font-weight: 700;">{{ leave.document_no }}</span>
+                    </td>
+                    <td>
+                        <strong style="color: #ffffff;">{{ leave.employee.first_name }} {{ leave.employee.last_name }}</strong>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">{{ leave.employee.employee_code }} • {{ leave.employee.department }}</div>
+                    </td>
+                    <td>
+                        <span class="badge badge-secondary">{{ leave.get_leave_type_display }}</span>
+                    </td>
+                    <td>
+                        <span style="font-size: 0.85rem; color: var(--text-primary);">{{ leave.from_date|date:"M d" }} - {{ leave.to_date|date:"M d, Y" }}</span>
+                    </td>
+                    <td>
+                        <strong>{{ leave.days_count }}</strong>
+                    </td>
+                    <td>
+                        <span style="font-size: 0.85rem; color: var(--text-secondary);" title="{{ leave.reason }}">{{ leave.reason|truncatechars:35 }}</span>
+                    </td>
+                    <td>
+                        {% if leave.status == 'APPROVED' %}
+                        <span class="badge badge-success"><i class="fa-solid fa-circle-check"></i> Approved</span>
+                        {% elif leave.status == 'REJECTED' %}
+                        <span class="badge badge-danger"><i class="fa-solid fa-circle-xmark"></i> Rejected</span>
+                        {% else %}
+                        <span class="badge badge-warning"><i class="fa-solid fa-hourglass-half"></i> Submitted</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if leave.status == 'SUBMITTED' %}
+                        <div class="action-btn-group" style="justify-content: flex-end;">
+                            <form action="{% url 'dashboard_leave_action' leave.id 'approve' %}" method="POST" style="margin: 0;">
+                                {% csrf_token %}
+                                <button type="submit" class="action-btn" title="Approve Leave" style="color: var(--color-success); border-color: rgba(16, 185, 129, 0.4);">
+                                    <i class="fa-solid fa-check"></i>
+                                </button>
+                            </form>
+                            <form action="{% url 'dashboard_leave_action' leave.id 'reject' %}" method="POST" style="margin: 0;">
+                                {% csrf_token %}
+                                <button type="submit" class="action-btn delete" title="Reject Leave">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                            </form>
+                        </div>
+                        {% else %}
+                        <span style="font-size: 0.75rem; color: var(--text-muted); float: right;">Reviewed</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                        <i class="fa-solid fa-calendar-check" style="font-size: 2.5rem; opacity: 0.4; margin-bottom: 0.75rem; display: block;"></i>
+                        No leave applications on record.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- ========================================== -->
+<!-- MODAL 1: ONBOARD EMPLOYEE MODAL            -->
+<!-- ========================================== -->
+<div id="addEmployeeModal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 650px;">
+        <div class="modal-header">
+            <h3 class="modal-title"><i class="fa-solid fa-user-plus" style="color: var(--color-accent);"></i> Onboard New Employee</h3>
+            <button type="button" class="modal-close" onclick="closeModal('addEmployeeModal')">&times;</button>
+        </div>
+        <form method="POST" action="{% url 'dashboard_employee_create' %}">
+            {% csrf_token %}
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="first_name">First Name *</label>
+                    <input type="text" id="first_name" name="first_name" class="form-control" required placeholder="e.g. Ramesh">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="last_name">Last Name *</label>
+                    <input type="text" id="last_name" name="last_name" class="form-control" required placeholder="e.g. Sharma">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="department">Department *</label>
+                    <select id="department" name="department" class="form-control" required>
+                        {% for code, label in departments %}
+                        <option value="{{ code }}" {% if code == 'SALES' %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="designation">Designation *</label>
+                    <input type="text" id="designation" name="designation" class="form-control" required placeholder="e.g. Area Sales Manager (ASM)">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="branch">Plant / Branch Location *</label>
+                    <select id="branch" name="branch" class="form-control" required>
+                        {% for b in branches %}
+                        <option value="{{ b.id }}">{{ b.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="joining_date">Joining Date *</label>
+                    <input type="date" id="joining_date" name="joining_date" class="form-control" value="{{ today|date:'Y-m-d' }}" required>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="base_salary">Base Monthly Salary (₹) *</label>
+                    <input type="number" id="base_salary" name="base_salary" class="form-control" step="0.01" required placeholder="e.g. 65000">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="employee_code">Employee Code (Optional)</label>
+                    <input type="text" id="employee_code" name="employee_code" class="form-control" placeholder="Auto-generated if empty">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="phone">Phone Number</label>
+                    <input type="text" id="phone" name="phone" class="form-control" placeholder="+91 98765 43210">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="email">Work Email Address</label>
+                    <input type="email" id="email" name="email" class="form-control" placeholder="employee@cellduspharma.com">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="bank_account_no">Bank Account Number</label>
+                    <input type="text" id="bank_account_no" name="bank_account_no" class="form-control" placeholder="Account for payroll disbursement">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="bank_ifsc">Bank IFSC Code</label>
+                    <input type="text" id="bank_ifsc" name="bank_ifsc" class="form-control" placeholder="e.g. HDFC0001234">
+                </div>
+            </div>
+
+            <div class="modal-footer" style="padding-top: 1rem; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 0.75rem;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('addEmployeeModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> Onboard Employee</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- MODAL 2: EDIT EMPLOYEE MODAL              -->
+<!-- ========================================== -->
+<div id="editEmployeeModal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 650px;">
+        <div class="modal-header">
+            <h3 class="modal-title"><i class="fa-solid fa-user-pen" style="color: var(--color-accent);"></i> Edit Employee Profile (<span id="edit_emp_code_display" style="color: var(--color-accent);"></span>)</h3>
+            <button type="button" class="modal-close" onclick="closeModal('editEmployeeModal')">&times;</button>
+        </div>
+        <form id="editEmployeeForm" method="POST" action="">
+            {% csrf_token %}
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="edit_first_name">First Name *</label>
+                    <input type="text" id="edit_first_name" name="first_name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="edit_last_name">Last Name *</label>
+                    <input type="text" id="edit_last_name" name="last_name" class="form-control" required>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="edit_department">Department *</label>
+                    <select id="edit_department" name="department" class="form-control" required>
+                        {% for code, label in departments %}
+                        <option value="{{ code }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="edit_designation">Designation *</label>
+                    <input type="text" id="edit_designation" name="designation" class="form-control" required>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="edit_branch">Branch Location *</label>
+                    <select id="edit_branch" name="branch" class="form-control" required>
+                        {% for b in branches %}
+                        <option value="{{ b.id }}">{{ b.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="edit_base_salary">Base Monthly Salary (₹) *</label>
+                    <input type="number" id="edit_base_salary" name="base_salary" class="form-control" step="0.01" required>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="edit_phone">Phone Number</label>
+                    <input type="text" id="edit_phone" name="phone" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="edit_email">Work Email Address</label>
+                    <input type="email" id="edit_email" name="email" class="form-control">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="edit_bank_account_no">Bank Account Number</label>
+                    <input type="text" id="edit_bank_account_no" name="bank_account_no" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="edit_bank_ifsc">Bank IFSC Code</label>
+                    <input type="text" id="edit_bank_ifsc" name="bank_ifsc" class="form-control">
+                </div>
+            </div>
+
+            <div class="modal-footer" style="padding-top: 1rem; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 0.75rem;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('editEmployeeModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-save"></i> Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- MODAL 3: MARK ATTENDANCE MODAL            -->
+<!-- ========================================== -->
+<div id="markAttendanceModal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 500px;">
+        <div class="modal-header">
+            <h3 class="modal-title"><i class="fa-solid fa-clock" style="color: var(--color-accent);"></i> Mark Employee Attendance</h3>
+            <button type="button" class="modal-close" onclick="closeModal('markAttendanceModal')">&times;</button>
+        </div>
+        <form method="POST" action="{% url 'dashboard_attendance_mark' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label" for="att_employee">Select Employee *</label>
+                <select id="att_employee" name="employee" class="form-control" required>
+                    {% for emp in all_employees %}
+                    <option value="{{ emp.id }}">{{ emp.employee_code }} - {{ emp.first_name }} {{ emp.last_name }} ({{ emp.department }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="att_date">Date *</label>
+                    <input type="date" id="att_date" name="date" class="form-control" value="{{ today|date:'Y-m-d' }}" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="att_status">Attendance Status *</label>
+                    <select id="att_status" name="status" class="form-control" required>
+                        <option value="PRESENT" selected>Present</option>
+                        <option value="HALF_DAY">Half Day</option>
+                        <option value="ON_LEAVE">On Leave</option>
+                        <option value="ABSENT">Absent</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="att_in_time">In Time</label>
+                    <input type="time" id="att_in_time" name="in_time" class="form-control" value="09:00">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="att_out_time">Out Time</label>
+                    <input type="time" id="att_out_time" name="out_time" class="form-control" value="18:00">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="att_overtime">Overtime Hours (if applicable)</label>
+                <input type="number" id="att_overtime" name="overtime_hours" class="form-control" step="0.5" value="0.00" min="0">
+            </div>
+
+            <div class="modal-footer" style="padding-top: 1rem; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 0.75rem;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('markAttendanceModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> Record Punch</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- MODAL 4: APPLY LEAVE MODAL                -->
+<!-- ========================================== -->
+<div id="applyLeaveModal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 520px;">
+        <div class="modal-header">
+            <h3 class="modal-title"><i class="fa-solid fa-calendar-check" style="color: var(--color-accent);"></i> Submit Leave Application</h3>
+            <button type="button" class="modal-close" onclick="closeModal('applyLeaveModal')">&times;</button>
+        </div>
+        <form method="POST" action="{% url 'dashboard_leave_create' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label" for="leave_employee">Employee *</label>
+                <select id="leave_employee" name="employee" class="form-control" required>
+                    {% for emp in all_employees %}
+                    <option value="{{ emp.id }}">{{ emp.employee_code }} - {{ emp.first_name }} {{ emp.last_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="leave_type">Leave Type *</label>
+                <select id="leave_type" name="leave_type" class="form-control" required>
+                    <option value="CASUAL">Casual Leave (CL)</option>
+                    <option value="SICK">Medical / Sick Leave (SL)</option>
+                    <option value="EARNED">Earned / Paid Leave (EL)</option>
+                    <option value="UNPAID">Leave Without Pay (LWP)</option>
+                </select>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="leave_from">From Date *</label>
+                    <input type="date" id="leave_from" name="from_date" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="leave_to">To Date *</label>
+                    <input type="date" id="leave_to" name="to_date" class="form-control" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="days_count">Total Days Count *</label>
+                <input type="number" id="days_count" name="days_count" class="form-control" step="0.5" value="1.0" min="0.5" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="leave_reason">Reason for Leave *</label>
+                <textarea id="leave_reason" name="reason" rows="3" class="form-control" required placeholder="Specify purpose of leave..."></textarea>
+            </div>
+
+            <div class="modal-footer" style="padding-top: 1rem; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 0.75rem;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('applyLeaveModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-paper-plane"></i> Submit Application</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openEditEmployeeModal(id, code, first, last, dept, desig, branchId, salary, phone, email, bankAcc, bankIfsc) {
+    document.getElementById('edit_emp_code_display').innerText = code;
+    document.getElementById('edit_first_name').value = first;
+    document.getElementById('edit_last_name').value = last;
+    document.getElementById('edit_department').value = dept;
+    document.getElementById('edit_designation').value = desig;
+    document.getElementById('edit_branch').value = branchId;
+    document.getElementById('edit_base_salary').value = salary;
+    document.getElementById('edit_phone').value = phone;
+    document.getElementById('edit_email').value = email;
+    document.getElementById('edit_bank_account_no').value = bankAcc;
+    document.getElementById('edit_bank_ifsc').value = bankIfsc;
+    document.getElementById('editEmployeeForm').action = `/dashboard/employee/edit/${id}/`;
+    openModal('editEmployeeModal');
+}
+</script>
+{% endblock %}

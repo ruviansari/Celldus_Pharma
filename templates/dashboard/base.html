@@ -161,6 +161,12 @@
                         <span>CRM Leads & Pipeline</span>
                     </a>
                 </li>
+                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_employee' %}active{% endif %}">
+                    <a href="{% url 'dashboard_employee' %}">
+                        <i class="fa-solid fa-users-gear"></i>
+                        <span>Employee</span>
+                    </a>
+                </li>
                 <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_customers' %}active{% endif %}">
                     <a href="{% url 'dashboard_customers' %}">
                         <i class="fa-solid fa-users-viewfinder"></i>

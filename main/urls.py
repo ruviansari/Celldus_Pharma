@@ -99,6 +99,15 @@ urlpatterns = [
     path('dashboard/crm/task/delete/<uuid:task_id>/', dashboard_erp_views.dashboard_task_delete, name='dashboard_task_delete'),
     path('dashboard/crm/import/', dashboard_erp_views.dashboard_crm_bulk_import, name='dashboard_crm_bulk_import'),
     path('dashboard/crm/sample-csv/', dashboard_erp_views.dashboard_crm_sample_csv, name='dashboard_crm_sample_csv'),
+
+    # Employee CRM & Workforce Operations
+    path('dashboard/employee/', dashboard_erp_views.dashboard_employee, name='dashboard_employee'),
+    path('dashboard/employee/add/', dashboard_erp_views.dashboard_employee_create, name='dashboard_employee_create'),
+    path('dashboard/employee/edit/<uuid:employee_id>/', dashboard_erp_views.dashboard_employee_edit, name='dashboard_employee_edit'),
+    path('dashboard/employee/toggle/<uuid:employee_id>/', dashboard_erp_views.dashboard_employee_toggle_status, name='dashboard_employee_toggle_status'),
+    path('dashboard/employee/attendance/mark/', dashboard_erp_views.dashboard_attendance_mark, name='dashboard_attendance_mark'),
+    path('dashboard/employee/leave/add/', dashboard_erp_views.dashboard_leave_create, name='dashboard_leave_create'),
+    path('dashboard/employee/leave/<uuid:leave_id>/<str:action>/', dashboard_erp_views.dashboard_leave_action, name='dashboard_leave_action'),
     path('dashboard/audit-trail/', dashboard_erp_views.dashboard_audit_trail, name='dashboard_audit_trail'),
     path('dashboard/procurement/po/<uuid:po_id>/print/', dashboard_erp_views.dashboard_po_view, name='dashboard_po_view'),
     path('dashboard/invoices/', dashboard_erp_views.dashboard_invoices, name='dashboard_invoices'),

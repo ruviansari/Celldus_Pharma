@@ -423,11 +423,11 @@
         function closeModal(modalId) {
             document.getElementById(modalId).style.display = 'none';
         }
-        window.onclick = function (event) {
-            if (event.target.classList.contains('modal-overlay')) {
+        window.addEventListener('click', function (event) {
+            if (event.target && event.target.classList && event.target.classList.contains('modal-overlay')) {
                 event.target.style.display = 'none';
             }
-        }
+        });
 
         // Sidebar Collapse/Expand Toggle on Icon Click
         (function () {

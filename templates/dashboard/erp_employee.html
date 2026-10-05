@@ -6,18 +6,23 @@
 {% block page_subtitle %}Comprehensive 360° management of pharmaceutical field representatives, plant technical chemists, QA/QC staff, attendance records, and leave approvals.{% endblock %}
 
 {% block top_actions %}
-<div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-    <button class="btn btn-primary" onclick="openModal('addEmployeeModal')" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+<div style="display: grid; grid-template-columns: repeat(2, minmax(160px, auto)); gap: 0.5rem; align-items: center;">
+    <button class="btn btn-primary" onclick="openModal('addEmployeeModal')" style="display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; height: 38px; white-space: nowrap;">
         <i class="fa-solid fa-user-plus"></i> Onboard Employee
     </button>
-    <button class="btn btn-secondary" onclick="openModal('markAttendanceModal')" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+    <button class="btn btn-secondary" onclick="openModal('markAttendanceModal')" style="display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; height: 38px; white-space: nowrap;">
         <i class="fa-solid fa-clock"></i> Mark Attendance
     </button>
-    <button class="btn btn-secondary" onclick="openModal('applyLeaveModal')" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+    <button class="btn btn-secondary" onclick="openModal('applyLeaveModal')" style="display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; height: 38px; white-space: nowrap;">
         <i class="fa-solid fa-calendar-check"></i> Apply Leave
+    </button>
+    <button id="themeToggleBtn" class="theme-toggle-btn" type="button" title="Switch Theme (Dark / Light)" aria-label="Toggle theme" style="display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; height: 38px; padding: 0 1rem; border-radius: var(--radius-md, 8px); margin: 0; box-sizing: border-box; white-space: nowrap;">
+        <i id="themeToggleIcon" class="fa-solid fa-sun"></i>
+        <span id="themeToggleText">Light Mode</span>
     </button>
 </div>
 {% endblock %}
+{% block theme_toggle_block %}{% endblock %}
 
 {% block extra_css %}
 <style>

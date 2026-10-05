@@ -291,10 +291,12 @@
                 </div>
                 <div class="top-bar-actions" style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
                     {% block top_actions %}{% endblock %}
+                    {% block theme_toggle_block %}
                     <button id="themeToggleBtn" class="theme-toggle-btn" type="button" title="Switch Theme (Dark / Light)" aria-label="Toggle theme">
                         <i id="themeToggleIcon" class="fa-solid fa-sun"></i>
                         <span id="themeToggleText">Light Mode</span>
                     </button>
+                    {% endblock %}
                 </div>
             </header>
 

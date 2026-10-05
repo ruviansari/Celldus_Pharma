@@ -108,44 +108,40 @@
                 <i class="fa-solid fa-shield-halved" style="color: #10b981;"></i>
                 <h2 class="panel-title">Attributable Audit Trail (21 CFR Part 11)</h2>
             </div>
-            <a href="/admin/erp_core/auditlog/" target="_blank" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">View Detailed Log</a>
+            <a href="/admin/erp_core/auditlog/" target="_blank" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; text-decoration: none;">View Detailed Log</a>
         </div>
         <div class="table-container">
             <table class="custom-table">
                 <thead>
                     <tr>
-                        <th>Time (UTC)</th>
-                        <th>User</th>
-                        <th>Action</th>
-                        <th>Entity & Ref</th>
-                        <th>Reason / Rationale</th>
+                        <th style="width: 18%;">Time (UTC)</th>
+                        <th style="width: 14%;">User</th>
+                        <th style="width: 16%;">Action</th>
+                        <th style="width: 26%;">Entity & Ref</th>
+                        <th style="width: 26%;">Reason / Rationale</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for log in recent_audits %}
                     <tr>
-                        <td style="color: var(--text-secondary); font-size: 0.75rem; white-space: nowrap;">
+                        <td style="color: var(--text-secondary); font-size: 0.76rem; font-weight: 500; white-space: nowrap;">
                             {{ log.timestamp|date:"M d, H:i:s" }}
                         </td>
                         <td>
-                            <strong style="color: #fff; font-size: 0.8rem;">{{ log.user.username|default:"System" }}</strong>
+                            <strong style="color: var(--text-primary); font-size: 0.82rem; font-weight: 700;">{{ log.user.username|default:"System" }}</strong>
                         </td>
                         <td>
-                            <span style="font-size: 0.7rem; font-weight: 600; padding: 2px 6px; border-radius: 4px;
-                                {% if log.action == 'APPROVE' or log.action == 'QA_RELEASE' %}background: rgba(16, 185, 129, 0.2); color: #10b981;
-                                {% elif log.action == 'REJECT' or log.action == 'QA_REJECT' or log.action == 'RECALL' %}background: rgba(239, 68, 68, 0.2); color: #ef4444;
-                                {% elif log.action == 'POST' or log.action == 'DISPATCH' %}background: rgba(99, 102, 241, 0.2); color: #818cf8;
-                                {% else %}background: rgba(148, 163, 184, 0.2); color: #cbd5e1;{% endif %}">
+                            <span class="audit-badge audit-badge-{{ log.action|lower|default:'default' }}">
                                 {{ log.action }}
                             </span>
                         </td>
                         <td>
-                            <span style="font-size: 0.8rem; color: #e2e8f0;">{{ log.entity_name }}</span>
+                            <div style="font-size: 0.82rem; font-weight: 600; color: var(--text-primary);">{{ log.entity_name }}</div>
                             {% if log.document_no %}
-                            <div style="font-size: 0.7rem; color: #94a3b8; font-family: monospace;">{{ log.document_no }}</div>
+                            <div style="font-size: 0.72rem; color: #4f46e5; font-weight: 600; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; margin-top: 2px;">{{ log.document_no }}</div>
                             {% endif %}
                         </td>
-                        <td style="font-size: 0.75rem; color: var(--text-secondary); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        <td style="font-size: 0.78rem; color: var(--text-secondary); max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ log.reason }}">
                             {{ log.reason|default:"System state transition" }}
                         </td>
                     </tr>
@@ -164,31 +160,51 @@
     <!-- Recent Website Inquiries -->
     <div class="panel">
         <div class="panel-header">
-            <h2 class="panel-title">Recent Website Inquiries</h2>
-            <a href="{% url 'dashboard_customers' %}" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">View Inquiries</a>
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fa-solid fa-inbox" style="color: var(--color-accent);"></i>
+                <h2 class="panel-title">Recent Website Inquiries</h2>
+            </div>
+            <a href="{% url 'dashboard_customers' %}" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; text-decoration: none;">View All</a>
         </div>
         <div class="table-container">
-            <table class="custom-table">
+            <table class="custom-table" style="table-layout: fixed; width: 100%;">
                 <thead>
                     <tr>
-                        <th>Sender</th>
-                        <th>Subject</th>
-                        <th>Date</th>
+                        <th style="width: 48%; padding: 0.75rem 0.6rem;">Sender</th>
+                        <th style="width: 52%; padding: 0.75rem 0.6rem;">Subject & Date</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for inquiry in recent_inquiries %}
                     <tr>
-                        <td>
-                            <strong style="color: #fff;">{{ inquiry.name }}</strong>
-                            <div style="font-size: 0.75rem; color: var(--text-secondary);">{{ inquiry.email }}</div>
+                        <td style="padding: 0.85rem 0.6rem; overflow: hidden;">
+                            <div style="display: flex; align-items: center; gap: 0.6rem; min-width: 0;">
+                                <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: #ffffff; font-weight: 700; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 6px rgba(79, 70, 229, 0.25);">
+                                    {{ inquiry.name|slice:":1"|upper|default:"?" }}
+                                </div>
+                                <div style="min-width: 0; flex: 1;">
+                                    <div style="font-weight: 700; font-size: 0.82rem; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ inquiry.name }}">
+                                        {{ inquiry.name }}
+                                    </div>
+                                    <div style="font-size: 0.72rem; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ inquiry.email }}">
+                                        {{ inquiry.email }}
+                                    </div>
+                                </div>
+                            </div>
                         </td>
-                        <td>{{ inquiry.subject }}</td>
-                        <td style="color: var(--text-secondary); font-size: 0.8rem;">{{ inquiry.created_at|date:"M d, Y" }}</td>
+                        <td style="padding: 0.85rem 0.6rem; overflow: hidden;">
+                            <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ inquiry.subject }}">
+                                {{ inquiry.subject }}
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.35rem; font-size: 0.72rem; color: var(--text-muted); margin-top: 3px; white-space: nowrap;">
+                                <i class="fa-regular fa-calendar-check" style="color: var(--color-accent); font-size: 0.7rem;"></i>
+                                <span>{{ inquiry.created_at|date:"M d, Y" }}</span>
+                            </div>
+                        </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="3" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                        <td colspan="2" style="text-align: center; color: var(--text-muted); padding: 2rem;">
                             No recent inquiries found.
                         </td>
                     </tr>

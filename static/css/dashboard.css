@@ -642,8 +642,14 @@ select.form-control option {
 /* Dynamic Grid layouts for pages */
 .dashboard-grid-2 {
     display: grid;
-    grid-template-columns: 2fr 1fr;
+    grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
     gap: 1.5rem;
+}
+
+@media (max-width: 1180px) {
+    .dashboard-grid-2 {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* User Login Modifications */
@@ -931,6 +937,114 @@ select.form-control option {
 
 .theme-toggle-btn:hover i {
     transform: rotate(30deg) scale(1.15);
+}
+
+/* =========================================================
+   21 CFR PART 11 AUDIT TRAIL BADGES & HIGH-CONTRAST SYSTEM
+   ========================================================= */
+.audit-badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+    display: inline-block;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    line-height: 1.2;
+}
+
+/* Default (Dark Mode) Badge Colors */
+.audit-badge-approve,
+.audit-badge-qa_release {
+    background: rgba(16, 185, 129, 0.2);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.35);
+}
+.audit-badge-reject,
+.audit-badge-qa_reject,
+.audit-badge-recall {
+    background: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.35);
+}
+.audit-badge-create {
+    background: rgba(6, 182, 212, 0.2);
+    color: #22d3ee;
+    border: 1px solid rgba(6, 182, 212, 0.35);
+}
+.audit-badge-update {
+    background: rgba(99, 102, 241, 0.2);
+    color: #a5b4fc;
+    border: 1px solid rgba(99, 102, 241, 0.35);
+}
+.audit-badge-post,
+.audit-badge-dispatch {
+    background: rgba(139, 92, 246, 0.2);
+    color: #c4b5fd;
+    border: 1px solid rgba(139, 92, 246, 0.35);
+}
+.audit-badge-default {
+    background: rgba(100, 116, 139, 0.25);
+    color: #cbd5e1;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+/* Light Mode Badges - High-Contrast Pharmaceutical Styling */
+[data-theme="light"] .audit-badge-approve,
+[data-theme="light"] .audit-badge-qa_release {
+    background: #d1fae5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+}
+[data-theme="light"] .audit-badge-reject,
+[data-theme="light"] .audit-badge-qa_reject,
+[data-theme="light"] .audit-badge-recall {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+[data-theme="light"] .audit-badge-create {
+    background: #cffafe;
+    color: #0e7490;
+    border: 1px solid #a5f3fc;
+}
+[data-theme="light"] .audit-badge-update {
+    background: #e0e7ff;
+    color: #3730a3;
+    border: 1px solid #c7d2fe;
+}
+[data-theme="light"] .audit-badge-post,
+[data-theme="light"] .audit-badge-dispatch {
+    background: #ede9fe;
+    color: #5b21b6;
+    border: 1px solid #ddd6fe;
+}
+[data-theme="light"] .audit-badge-default {
+    background: #f1f5f9;
+    color: #334155;
+    border: 1px solid #cbd5e1;
+}
+
+/* Universal Light Mode Contrast Fixes for Inline Colors (eliminates invisible text) */
+[data-theme="light"] [style*="color: #e2e8f0"],
+[data-theme="light"] [style*="color: #cbd5e1"],
+[data-theme="light"] [style*="color: rgb(226, 232, 240)"],
+[data-theme="light"] [style*="color: rgb(203, 213, 225)"] {
+    color: #0f172a !important;
+}
+
+[data-theme="light"] strong[style*="color: #fff"],
+[data-theme="light"] strong[style*="color: #ffffff"],
+[data-theme="light"] strong[style*="color: rgb(255, 255, 255)"] {
+    color: #0f172a !important;
+}
+
+[data-theme="light"] [style*="color: #94a3b8"] {
+    color: #475569 !important;
+}
+
+[data-theme="light"] [style*="color: var(--text-secondary)"] {
+    color: #475569 !important;
 }
 
 

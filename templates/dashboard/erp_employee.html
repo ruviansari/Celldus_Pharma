@@ -7,16 +7,16 @@
 
 {% block top_actions %}
 <div style="display: grid; grid-template-columns: repeat(2, minmax(160px, auto)); gap: 0.5rem; align-items: center;">
-    <button class="btn btn-primary" onclick="openModal('addEmployeeModal')" style="display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; height: 38px; white-space: nowrap;">
+    <button class="btn btn-primary" onclick="openModal('addEmployeeModal')" style="display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; height: 38px; padding: 0 1.25rem; border-radius: 9999px; white-space: nowrap;">
         <i class="fa-solid fa-user-plus"></i> Onboard Employee
     </button>
-    <button class="btn btn-secondary" onclick="openModal('markAttendanceModal')" style="display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; height: 38px; white-space: nowrap;">
+    <button class="btn btn-secondary" onclick="openModal('markAttendanceModal')" style="display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; height: 38px; padding: 0 1.25rem; border-radius: 9999px; white-space: nowrap;">
         <i class="fa-solid fa-clock"></i> Mark Attendance
     </button>
-    <button class="btn btn-secondary" onclick="openModal('applyLeaveModal')" style="display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; height: 38px; white-space: nowrap;">
+    <button class="btn btn-secondary" onclick="openModal('applyLeaveModal')" style="display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; height: 38px; padding: 0 1.25rem; border-radius: 9999px; white-space: nowrap;">
         <i class="fa-solid fa-calendar-check"></i> Apply Leave
     </button>
-    <button id="themeToggleBtn" class="theme-toggle-btn" type="button" title="Switch Theme (Dark / Light)" aria-label="Toggle theme" style="display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; height: 38px; padding: 0 1rem; border-radius: var(--radius-md, 8px); margin: 0; box-sizing: border-box; white-space: nowrap;">
+    <button id="themeToggleBtn" class="theme-toggle-btn" type="button" title="Switch Theme (Dark / Light)" aria-label="Toggle theme" style="display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; height: 38px; padding: 0 1.25rem; border-radius: 9999px; margin: 0; box-sizing: border-box; white-space: nowrap;">
         <i id="themeToggleIcon" class="fa-solid fa-sun"></i>
         <span id="themeToggleText">Light Mode</span>
     </button>

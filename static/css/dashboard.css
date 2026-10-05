@@ -520,7 +520,7 @@ body {
 /* Primary Form buttons */
 .btn {
     padding: 0.6rem 1.25rem;
-    border-radius: 8px;
+    border-radius: 9999px;
     font-weight: 600;
     font-size: 0.9rem;
     cursor: pointer;

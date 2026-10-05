@@ -493,6 +493,61 @@
         color: #3730a3;
         border-color: #c7d2fe;
     }
+
+    /* Executive Premium Delete Modal */
+    #premiumDeleteModal .modal-content {
+        max-width: 440px;
+        padding: 2.2rem 2rem;
+        border-radius: 22px;
+        text-align: center;
+        background: #0f172a;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 35px -8px rgba(239, 68, 68, 0.2);
+    }
+    [data-theme="light"] #premiumDeleteModal .modal-content {
+        background: #ffffff;
+        border: 1px solid #fecaca;
+        box-shadow: 0 20px 45px -10px rgba(239, 68, 68, 0.15), 0 10px 25px -5px rgba(0, 0, 0, 0.06);
+    }
+    .del-modal-icon-badge {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        margin: 0 auto 1.15rem auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(239, 68, 68, 0.12);
+        border: 1.5px solid rgba(239, 68, 68, 0.35);
+        color: #ef4444;
+        font-size: 1.65rem;
+        box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
+        animation: pulseSubtle 2s infinite ease-in-out;
+    }
+    @keyframes pulseSubtle {
+        0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(239, 68, 68, 0.2); }
+        50% { transform: scale(1.04); box-shadow: 0 0 30px rgba(239, 68, 68, 0.35); }
+    }
+    .del-modal-target-card {
+        background: rgba(239, 68, 68, 0.06);
+        border: 1px dashed rgba(239, 68, 68, 0.3);
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
+        margin: 1.1rem 0 1.25rem 0;
+        font-size: 0.92rem;
+        font-weight: 600;
+        color: #ef4444;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        word-break: break-all;
+    }
+    [data-theme="light"] .del-modal-target-card {
+        background: #fff1f2;
+        border-color: #fecdd3;
+        color: #e11d48;
+    }
 </style>
 {% endblock %}
 
@@ -690,11 +745,11 @@
                                     title="View Full Inquiry">
                                     <i class="fa-regular fa-eye"></i>
                                 </button>
-                                <form action="{% url 'dashboard_inquiry_delete' item.id %}" method="POST"
-                                    onsubmit="return handleInquiryDelete(this, '{{ item.name|escapejs }}');"
-                                    style="margin: 0; display: inline;">
+                                <form id="delForm_inquiry_{{ item.id }}" action="{% url 'dashboard_inquiry_delete' item.id %}" method="POST" style="margin: 0; display: inline;">
                                     {% csrf_token %}
-                                    <button type="submit" class="action-btn-custom delete" title="Delete Inquiry">
+                                    <button type="button" class="action-btn-custom delete"
+                                        onclick="triggerDeleteModal('delForm_inquiry_{{ item.id }}', '{{ item.name|default:'Anonymous Sender'|escapejs }}', 'Inquiry Message');"
+                                        title="Delete Inquiry">
                                         <i class="fa-solid fa-trash-can"></i>
                                     </button>
                                 </form>
@@ -774,11 +829,11 @@
                             </div>
                         </td>
                         <td style="text-align: right; white-space: nowrap;">
-                            <form action="{% url 'dashboard_subscriber_delete' sub.id %}" method="POST"
-                                onsubmit="return handleSubscriberDelete(this, '{{ sub.email|escapejs }}');"
-                                style="margin: 0; display: inline;">
+                            <form id="delForm_sub_{{ sub.id }}" action="{% url 'dashboard_subscriber_delete' sub.id %}" method="POST" style="margin: 0; display: inline;">
                                 {% csrf_token %}
-                                <button type="submit" class="action-btn-custom delete" title="Remove Subscriber">
+                                <button type="button" class="action-btn-custom delete"
+                                    onclick="triggerDeleteModal('delForm_sub_{{ sub.id }}', '{{ sub.email|escapejs }}', 'Newsletter Subscriber');"
+                                    title="Remove Subscriber">
                                     <i class="fa-solid fa-trash-can"></i>
                                 </button>
                             </form>
@@ -860,6 +915,50 @@
         </div>
     </div>
 </div>
+
+<!-- Executive Premium Delete Confirmation Modal -->
+<div id="premiumDeleteModal" class="modal-overlay">
+    <div class="modal-content" style="position: relative;">
+        <!-- Close button -->
+        <button type="button" onclick="closeModal('premiumDeleteModal');" style="position: absolute; right: 1.25rem; top: 1.25rem; background: transparent; border: none; font-size: 1.2rem; color: var(--text-muted); cursor: pointer; padding: 0.25rem; transition: color 0.15s ease;" title="Cancel">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+
+        <!-- Danger Pulsing Icon Badge -->
+        <div class="del-modal-icon-badge">
+            <i class="fa-solid fa-trash-can"></i>
+        </div>
+
+        <h3 id="delModalTitle" style="font-size: 1.28rem; font-weight: 800; margin: 0 0 0.45rem 0; color: var(--text-primary); letter-spacing: -0.01em;">
+            Confirm Deletion
+        </h3>
+        
+        <p style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5; margin: 0;">
+            Are you sure you want to permanently delete this <span id="delModalTargetType">record</span>?
+        </p>
+
+        <!-- Target item preview box -->
+        <div class="del-modal-target-card">
+            <i class="fa-solid fa-triangle-exclamation" style="font-size: 0.95rem; flex-shrink: 0;"></i>
+            <span id="delModalTargetItem" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Item Details</span>
+        </div>
+
+        <p style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.45; margin: 0 0 1.6rem 0;">
+            <i class="fa-solid fa-shield-halved" style="margin-right: 0.3rem;"></i> This action cannot be reversed and will remove the item from all records.
+        </p>
+
+        <!-- Action Buttons -->
+        <div style="display: flex; gap: 0.75rem; align-items: center;">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('premiumDeleteModal');" style="flex: 1; height: 42px; border-radius: 9999px; font-weight: 600; font-size: 0.88rem;">
+                Cancel
+            </button>
+            <button type="button" id="confirmDeleteSubmitBtn" onclick="submitActiveDeleteForm();" class="btn btn-danger" style="flex: 1; height: 42px; border-radius: 9999px; font-weight: 600; font-size: 0.88rem; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); border: none; box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35); display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem; color: #ffffff; cursor: pointer;">
+                <i class="fa-solid fa-trash-can"></i>
+                <span>Yes, Delete</span>
+            </button>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -917,28 +1016,41 @@
             }, 150);
         }
     }
-    function handleInquiryDelete(form, name) {
-        if (confirm('Confirm deletion of inquiry from ' + (name || 'sender') + '?')) {
-            const btn = form.querySelector('button');
-            if (btn) {
-                btn.disabled = true;
-                btn.style.opacity = '0.5';
-            }
-            return true;
+
+    let activeDeleteFormId = null;
+
+    function triggerDeleteModal(formId, targetName, targetType) {
+        activeDeleteFormId = formId;
+        const titleEl = document.getElementById('delModalTitle');
+        const itemEl = document.getElementById('delModalTargetItem');
+        const typeEl = document.getElementById('delModalTargetType');
+
+        if (titleEl) titleEl.innerText = 'Delete ' + (targetType || 'Record');
+        if (itemEl) itemEl.innerText = targetName || 'Selected Item';
+        if (typeEl) typeEl.innerText = (targetType || 'record').toLowerCase();
+
+        const submitBtn = document.getElementById('confirmDeleteSubmitBtn');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fa-solid fa-trash-can"></i> <span>Yes, Delete</span>';
+            submitBtn.style.opacity = '1';
         }
-        return false;
+
+        openModal('premiumDeleteModal');
     }
 
-    function handleSubscriberDelete(form, email) {
-        if (confirm('Remove subscriber ' + (email || 'email') + ' from newsletter list?')) {
-            const btn = form.querySelector('button');
-            if (btn) {
-                btn.disabled = true;
-                btn.style.opacity = '0.5';
+    function submitActiveDeleteForm() {
+        if (!activeDeleteFormId) return;
+        const form = document.getElementById(activeDeleteFormId);
+        if (form) {
+            const submitBtn = document.getElementById('confirmDeleteSubmitBtn');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Deleting...</span>';
+                submitBtn.style.opacity = '0.7';
             }
-            return true;
+            form.submit();
         }
-        return false;
     }
 
     function openInquiryModal(name, email, phone, subject, message, date) {

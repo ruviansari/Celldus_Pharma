@@ -691,7 +691,7 @@
                                     <i class="fa-regular fa-eye"></i>
                                 </button>
                                 <form action="{% url 'dashboard_inquiry_delete' item.id %}" method="POST"
-                                    onsubmit="return confirm('Confirm deletion of inquiry from {{ item.name|escapejs }}?')"
+                                    onsubmit="return handleInquiryDelete(this, '{{ item.name|escapejs }}');"
                                     style="margin: 0; display: inline;">
                                     {% csrf_token %}
                                     <button type="submit" class="action-btn-custom delete" title="Delete Inquiry">
@@ -775,7 +775,7 @@
                         </td>
                         <td style="text-align: right; white-space: nowrap;">
                             <form action="{% url 'dashboard_subscriber_delete' sub.id %}" method="POST"
-                                onsubmit="return confirm('Remove subscriber {{ sub.email|escapejs }} from newsletter list?')"
+                                onsubmit="return handleSubscriberDelete(this, '{{ sub.email|escapejs }}');"
                                 style="margin: 0; display: inline;">
                                 {% csrf_token %}
                                 <button type="submit" class="action-btn-custom delete" title="Remove Subscriber">
@@ -922,6 +922,28 @@
                 resetHorizontalScroll();
             }, 100);
         }
+    function handleInquiryDelete(form, name) {
+        if (confirm('Confirm deletion of inquiry from ' + (name || 'sender') + '?')) {
+            const btn = form.querySelector('button');
+            if (btn) {
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+            }
+            return true;
+        }
+        return false;
+    }
+
+    function handleSubscriberDelete(form, email) {
+        if (confirm('Remove subscriber ' + (email || 'email') + ' from newsletter list?')) {
+            const btn = form.querySelector('button');
+            if (btn) {
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+            }
+            return true;
+        }
+        return false;
     }
 
     function openInquiryModal(name, email, phone, subject, message, date) {

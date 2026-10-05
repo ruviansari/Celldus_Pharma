@@ -270,9 +270,12 @@ def dashboard_category_edit(request, id):
 @staff_required
 def dashboard_category_delete(request, id):
     if request.method == "POST":
-        category = get_object_or_404(Category, id=id)
-        category.delete()
-        messages.success(request, "Category deleted successfully!")
+        category = Category.objects.filter(id=id).first()
+        if category:
+            category.delete()
+            messages.success(request, "Category deleted successfully!")
+        else:
+            messages.info(request, "Category has already been deleted or does not exist.")
     return redirect('dashboard_categories')
 
 @staff_required
@@ -371,9 +374,12 @@ def dashboard_product_edit(request, id):
 @staff_required
 def dashboard_product_delete(request, id):
     if request.method == "POST":
-        product = get_object_or_404(Product, id=id)
-        product.delete()
-        messages.success(request, "Product deleted successfully!")
+        product = Product.objects.filter(id=id).first()
+        if product:
+            product.delete()
+            messages.success(request, "Product deleted successfully!")
+        else:
+            messages.info(request, "Product has already been deleted or does not exist.")
     return redirect('dashboard_products')
 
 @staff_required
@@ -406,17 +412,23 @@ def dashboard_customers(request):
 @staff_required
 def dashboard_inquiry_delete(request, id):
     if request.method == "POST":
-        inquiry = get_object_or_404(Contact, id=id)
-        inquiry.delete()
-        messages.success(request, "Inquiry message deleted successfully!")
+        inquiry = Contact.objects.filter(id=id).first()
+        if inquiry:
+            inquiry.delete()
+            messages.success(request, "Inquiry message deleted successfully!")
+        else:
+            messages.info(request, "Inquiry has already been deleted or does not exist.")
     return redirect('dashboard_customers')
 
 @staff_required
 def dashboard_subscriber_delete(request, id):
     if request.method == "POST":
-        sub = get_object_or_404(Subscriber, id=id)
-        sub.delete()
-        messages.success(request, "Subscriber removed successfully!")
+        sub = Subscriber.objects.filter(id=id).first()
+        if sub:
+            sub.delete()
+            messages.success(request, "Subscriber removed successfully!")
+        else:
+            messages.info(request, "Subscriber has already been deleted or does not exist.")
     return redirect('dashboard_customers')
 
 @staff_required

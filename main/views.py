@@ -411,24 +411,38 @@ def dashboard_customers(request):
 
 @staff_required
 def dashboard_inquiry_delete(request, id):
+    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('ajax') == '1'
     if request.method == "POST":
         inquiry = Contact.objects.filter(id=id).first()
         if inquiry:
             inquiry.delete()
+            if is_ajax:
+                return JsonResponse({'status': 'success', 'message': 'Inquiry message deleted successfully!'})
             messages.success(request, "Inquiry message deleted successfully!")
         else:
+            if is_ajax:
+                return JsonResponse({'status': 'info', 'message': 'Inquiry has already been deleted or does not exist.'})
             messages.info(request, "Inquiry has already been deleted or does not exist.")
+    if is_ajax:
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)
     return redirect('dashboard_customers')
 
 @staff_required
 def dashboard_subscriber_delete(request, id):
+    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('ajax') == '1'
     if request.method == "POST":
         sub = Subscriber.objects.filter(id=id).first()
         if sub:
             sub.delete()
+            if is_ajax:
+                return JsonResponse({'status': 'success', 'message': 'Subscriber removed successfully!'})
             messages.success(request, "Subscriber removed successfully!")
         else:
+            if is_ajax:
+                return JsonResponse({'status': 'info', 'message': 'Subscriber has already been deleted or does not exist.'})
             messages.info(request, "Subscriber has already been deleted or does not exist.")
+    if is_ajax:
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)
     return redirect('dashboard_customers')
 
 @staff_required

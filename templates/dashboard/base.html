@@ -12,6 +12,9 @@
             try {
                 const savedTheme = localStorage.getItem('celldus_theme') || 'dark';
                 document.documentElement.setAttribute('data-theme', savedTheme);
+                if (localStorage.getItem('celldus_sidebar_collapsed') === 'true') {
+                    document.documentElement.classList.add('sidebar-collapsed');
+                }
             } catch (e) {}
         })();
     </script>
@@ -39,6 +42,7 @@
             height: 100vh !important;
             z-index: 100 !important;
             box-sizing: border-box !important;
+            transition: width 0.28s cubic-bezier(0.4, 0, 0.2, 1), padding 0.28s cubic-bezier(0.4, 0, 0.2, 1) !important;
         }
         .main-content {
             margin-left: 275px !important;
@@ -47,10 +51,74 @@
             width: auto !important;
             max-width: none !important;
             padding: 2rem 2.5rem !important;
+            transition: margin-left 0.28s cubic-bezier(0.4, 0, 0.2, 1) !important;
         }
         .stats-grid {
             width: 100% !important;
             box-sizing: border-box !important;
+        }
+
+        /* Sidebar Logo Clickable */
+        .sidebar-logo {
+            cursor: pointer;
+            user-select: none;
+            transition: opacity 0.2s ease, transform 0.15s ease;
+        }
+        .sidebar-logo:hover {
+            opacity: 0.88;
+        }
+        .sidebar-logo:active {
+            transform: scale(0.96);
+        }
+
+        /* Collapsed Sidebar Styles */
+        html.sidebar-collapsed .sidebar,
+        body.sidebar-collapsed .sidebar {
+            width: 78px !important;
+            padding-left: 0.6rem !important;
+            padding-right: 0.6rem !important;
+        }
+        html.sidebar-collapsed .main-content,
+        body.sidebar-collapsed .main-content {
+            margin-left: 78px !important;
+        }
+        html.sidebar-collapsed .sidebar-logo,
+        body.sidebar-collapsed .sidebar-logo {
+            justify-content: center !important;
+            padding: 0.25rem 0 !important;
+        }
+        html.sidebar-collapsed .sidebar-logo h2,
+        body.sidebar-collapsed .sidebar-logo h2 {
+            display: none !important;
+        }
+        html.sidebar-collapsed .sidebar-menu-header,
+        body.sidebar-collapsed .sidebar-menu-header {
+            display: none !important;
+        }
+        html.sidebar-collapsed .sidebar-menu-item a,
+        body.sidebar-collapsed .sidebar-menu-item a {
+            justify-content: center !important;
+            padding: 0.75rem 0 !important;
+        }
+        html.sidebar-collapsed .sidebar-menu-item a span,
+        body.sidebar-collapsed .sidebar-menu-item a span {
+            display: none !important;
+        }
+        html.sidebar-collapsed .sidebar-menu-item a i,
+        body.sidebar-collapsed .sidebar-menu-item a i {
+            margin: 0 !important;
+            font-size: 1.2rem !important;
+        }
+        html.sidebar-collapsed .sidebar-footer,
+        body.sidebar-collapsed .sidebar-footer {
+            padding: 0.6rem 0 !important;
+            justify-content: center !important;
+        }
+        html.sidebar-collapsed .sidebar-user-info,
+        body.sidebar-collapsed .sidebar-user-info,
+        html.sidebar-collapsed .logout-btn,
+        body.sidebar-collapsed .logout-btn {
+            display: none !important;
         }
     </style>
     {% block extra_css %}{% endblock %}
@@ -75,7 +143,7 @@
     <div class="dashboard-wrapper">
         <!-- Sidebar -->
         <aside class="sidebar">
-            <div class="sidebar-logo">
+            <div class="sidebar-logo" id="sidebarLogoToggle" title="Click to collapse / expand sidebar">
                 <i class="fa-solid fa-flask-vial"></i>
                 <h2>Celldus Admin</h2>
             </div>
@@ -298,6 +366,20 @@
                 event.target.style.display = 'none';
             }
         }
+
+        // Sidebar Collapse/Expand Toggle on Logo Click
+        (function () {
+            const logoToggle = document.getElementById('sidebarLogoToggle');
+            if (logoToggle) {
+                logoToggle.addEventListener('click', function () {
+                    const isCollapsed = document.documentElement.classList.toggle('sidebar-collapsed');
+                    document.body.classList.toggle('sidebar-collapsed', isCollapsed);
+                    try {
+                        localStorage.setItem('celldus_sidebar_collapsed', isCollapsed ? 'true' : 'false');
+                    } catch (e) {}
+                });
+            }
+        })();
     </script>
     {% block extra_js %}{% endblock %}
 </body>

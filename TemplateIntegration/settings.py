@@ -26,19 +26,14 @@ SECRET_KEY = 'django-insecure-#&xp&joad*mad)m043vexw9fjltcp=m(e620f6d+g#pi5vx+8b
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [
-    'cellduspharma.com',
-    'www.cellduspharma.com',
-    'localhost',
-    '127.0.0.1',
-    'testserver',
-]
+ALLOWED_HOSTS = ['*']
 
 CSRF_TRUSTED_ORIGINS = [
     'https://cellduspharma.com',
     'https://www.cellduspharma.com',
     'http://cellduspharma.com:8096',
     'http://www.cellduspharma.com:8096',
+    'https://*.loca.lt',
 ]
 
 # Application definition

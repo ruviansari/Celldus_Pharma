@@ -134,7 +134,7 @@
                 {% for sup in suppliers %}
                 <tr>
                     <td><strong style="color: #60a5fa; font-family: monospace;">{{ sup.supplier_code }}</strong></td>
-                    <td style="color: #fff; font-weight: 500;">{{ sup.legal_name }}</td>
+                    <td style="color: var(--text-primary); font-weight: 500;">{{ sup.legal_name }}</td>
                     <td style="font-family: monospace; font-size: 0.8rem;">{{ sup.gstin }}</td>
                     <td style="font-size: 0.8rem; color: var(--text-secondary);">{{ sup.city }}, {{ sup.state }}</td>
                     <td>
@@ -175,18 +175,72 @@
                     <th>Drug License 20-B/21-B</th>
                     <th>GSTIN</th>
                     <th>Credit Limit</th>
+                    <th>Status</th>
+                    <th style="text-align: right;">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for cust in customers %}
                 <tr>
                     <td><strong style="color: #60a5fa; font-family: monospace;">{{ cust.customer_code }}</strong></td>
-                    <td style="color: #fff; font-weight: 600;">{{ cust.name }}</td>
+                    <td style="color: var(--text-primary); font-weight: 600;">{{ cust.name }}</td>
                     <td><span style="background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem;">{{ cust.get_customer_type_display }}</span></td>
                     <td style="font-size: 0.8rem; color: var(--text-secondary);">{{ cust.city }}, {{ cust.state }}</td>
                     <td style="font-family: monospace; font-size: 0.8rem; color: #10b981;">{{ cust.drug_license_20b|default:"Verified" }}</td>
                     <td style="font-family: monospace; font-size: 0.8rem;">{{ cust.gstin|default:"-" }}</td>
                     <td><strong style="color: #38bdf8;">₹{{ cust.credit_limit }}</strong></td>
+                    <td>
+                        {% if cust.is_active %}
+                        <span style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); font-size: 0.72rem; padding: 2px 8px; border-radius: 9999px; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem;">
+                            <i class="fa-solid fa-circle-check" style="font-size: 0.65rem;"></i> Active
+                        </span>
+                        {% else %}
+                        <span style="background: rgba(244, 63, 94, 0.15); color: #f43f5e; border: 1px solid rgba(244, 63, 94, 0.3); font-size: 0.72rem; padding: 2px 8px; border-radius: 9999px; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem;">
+                            <i class="fa-solid fa-circle-xmark" style="font-size: 0.65rem;"></i> Deactivated
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td style="text-align: right;">
+                        <div class="action-btn-group" style="justify-content: flex-end; display: inline-flex; gap: 0.35rem;">
+                            <!-- Edit Button -->
+                            <button type="button" class="action-btn edit" title="Edit Customer Details"
+                                onclick="openEditCustomerModal('{{ cust.id }}', '{{ cust.customer_code|escapejs }}', '{{ cust.name|escapejs }}', '{{ cust.customer_type|escapejs }}', '{{ cust.billing_address|escapejs }}', '{{ cust.city|escapejs }}', '{{ cust.state|escapejs }}', '{{ cust.gstin|escapejs }}', '{{ cust.drug_license_20b|escapejs }}', '{{ cust.contact_person|escapejs }}', '{{ cust.phone|escapejs }}', '{{ cust.email|escapejs }}', '{{ cust.credit_limit }}')">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+
+                            <!-- Deactivate / Reactivate Toggle -->
+                            <form id="toggleCustomerForm_{{ cust.id }}" action="{% url 'dashboard_customer_toggle_status' cust.id %}" method="POST" style="margin: 0; display: inline;">
+                                {% csrf_token %}
+                                {% if cust.is_active %}
+                                <button type="button" class="action-btn" title="Deactivate Customer" style="color: #f43f5e;"
+                                    onclick="triggerGlobalDelete({
+                                        formId: 'toggleCustomerForm_{{ cust.id }}',
+                                        title: 'Deactivate Customer?',
+                                        itemName: '{{ cust.name|escapejs }} ({{ cust.customer_code }})',
+                                        itemType: 'Licensed Customer',
+                                        warning: 'Deactivating will prevent this customer from being selected in new sales orders and dispatches. Historical invoices remain intact.',
+                                        actionBtnHtml: '<i class=\'fa-solid fa-ban\'></i> <span>Yes, Deactivate</span>',
+                                        processingText: 'Deactivating...'
+                                    });">
+                                    <i class="fa-solid fa-ban"></i>
+                                </button>
+                                {% else %}
+                                <button type="button" class="action-btn" title="Reactivate Customer" style="color: #10b981;"
+                                    onclick="triggerGlobalDelete({
+                                        formId: 'toggleCustomerForm_{{ cust.id }}',
+                                        title: 'Reactivate Customer?',
+                                        itemName: '{{ cust.name|escapejs }} ({{ cust.customer_code }})',
+                                        itemType: 'Licensed Customer',
+                                        warning: 'This will restore the customer to Active status for new sales orders and invoicing.',
+                                        actionBtnHtml: '<i class=\'fa-solid fa-rotate-left\'></i> <span>Yes, Reactivate</span>',
+                                        processingText: 'Reactivating...'
+                                    });">
+                                    <i class="fa-solid fa-rotate-left"></i>
+                                </button>
+                                {% endif %}
+                            </form>
+                        </div>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -593,6 +647,92 @@
     </div>
 </div>
 
+<!-- ============================================================== -->
+<!-- MODAL: EDIT CUSTOMER MASTER                                      -->
+<!-- ============================================================== -->
+<div id="editCustomerModal" class="modal-overlay">
+    <div class="modal-box large">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-pen-to-square" style="color: #60a5fa;"></i> Edit Licensed Customer Account</h3>
+            <button type="button" class="modal-close-btn" onclick="closeModal('editCustomerModal')">&times;</button>
+        </div>
+
+        <form id="editCustomerForm" action="" method="POST">
+            {% csrf_token %}
+
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label class="form-label">Customer Code</label>
+                    <input type="text" id="edit_customer_code" class="form-control" readonly style="opacity: 0.7; cursor: not-allowed; font-family: monospace;">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Hospital / Organization Name *</label>
+                    <input type="text" name="name" id="edit_customer_name" class="form-control" required placeholder="e.g. Ruby Hall Clinic & Medical Institute">
+                </div>
+            </div>
+
+            <div class="form-grid-3">
+                <div class="form-group">
+                    <label class="form-label">Customer Type *</label>
+                    <select name="customer_type" id="edit_customer_type" class="form-control" required>
+                        {% for code, label in customer_type_choices %}
+                        <option value="{{ code }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Drug License No (Form 20-B/21-B)</label>
+                    <input type="text" name="drug_license_20b" id="edit_drug_license" class="form-control" placeholder="e.g. DL-MH-PUN-98765">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">GSTIN</label>
+                    <input type="text" name="gstin" id="edit_gstin" class="form-control" placeholder="e.g. 27AABCR5678C1ZY">
+                </div>
+            </div>
+
+            <div class="form-grid-3">
+                <div class="form-group">
+                    <label class="form-label">City *</label>
+                    <input type="text" name="city" id="edit_city" class="form-control" required placeholder="e.g. Pune">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">State *</label>
+                    <input type="text" name="state" id="edit_state" class="form-control" required placeholder="e.g. Maharashtra">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Credit Limit (₹)</label>
+                    <input type="number" step="0.01" name="credit_limit" id="edit_credit_limit" class="form-control" placeholder="500000.00">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Billing & Registered Address</label>
+                <textarea name="billing_address" id="edit_billing_address" class="form-control" rows="2" placeholder="Street, landmark, pincode..."></textarea>
+            </div>
+
+            <div class="form-grid-3">
+                <div class="form-group">
+                    <label class="form-label">Contact Person</label>
+                    <input type="text" name="contact_person" id="edit_contact_person" class="form-control" placeholder="e.g. Purchase Manager">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Phone Number</label>
+                    <input type="tel" name="phone" id="edit_phone" class="form-control" placeholder="e.g. 9822334455">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" name="email" id="edit_email" class="form-control" placeholder="purchase@rubyhall.com">
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('editCustomerModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary" style="background: linear-gradient(135deg, #2563eb, #3b82f6);"><i class="fa-solid fa-save"></i> Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 
 <!-- ============================================================== -->
 <!-- MODAL: ADD WAREHOUSE                                           -->
@@ -790,5 +930,39 @@ window.addEventListener('DOMContentLoaded', function() {
         }
     }
 });
+
+// Open Edit Customer Modal
+function openEditCustomerModal(id, code, name, type, address, city, state, gstin, drugLicense, contact, phone, email, creditLimit) {
+    const form = document.getElementById('editCustomerForm');
+    if (form) {
+        form.action = '/dashboard/masters/customer/' + id + '/edit/';
+    }
+    const codeEl = document.getElementById('edit_customer_code');
+    if (codeEl) codeEl.value = code || '';
+    const nameEl = document.getElementById('edit_customer_name');
+    if (nameEl) nameEl.value = name || '';
+    const typeEl = document.getElementById('edit_customer_type');
+    if (typeEl) typeEl.value = type || 'HOSPITAL';
+    const addrEl = document.getElementById('edit_billing_address');
+    if (addrEl) addrEl.value = address || '';
+    const cityEl = document.getElementById('edit_city');
+    if (cityEl) cityEl.value = city || '';
+    const stateEl = document.getElementById('edit_state');
+    if (stateEl) stateEl.value = state || '';
+    const gstEl = document.getElementById('edit_gstin');
+    if (gstEl) gstEl.value = gstin || '';
+    const dlEl = document.getElementById('edit_drug_license');
+    if (dlEl) dlEl.value = drugLicense || '';
+    const contactEl = document.getElementById('edit_contact_person');
+    if (contactEl) contactEl.value = contact || '';
+    const phoneEl = document.getElementById('edit_phone');
+    if (phoneEl) phoneEl.value = phone || '';
+    const emailEl = document.getElementById('edit_email');
+    if (emailEl) emailEl.value = email || '';
+    const clEl = document.getElementById('edit_credit_limit');
+    if (clEl) clEl.value = creditLimit || '0.00';
+
+    openModal('editCustomerModal');
+}
 </script>
 {% endblock %}

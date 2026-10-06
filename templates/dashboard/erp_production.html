@@ -1,37 +1,277 @@
 {% extends 'dashboard/base.html' %}
 
 {% block title %}Manufacturing & BMR Batch Records | Celldus Pharma{% endblock %}
-{% block page_title %}Manufacturing & Electronic BMR{% endblock %}
+{% block page_title %}Manufacturing &amp; Electronic BMR{% endblock %}
 {% block page_subtitle %}Formulation batch tracking, material dispensing, yield reconciliation, and quarantine hand-off.{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Clickable Stat Cards */
+    .prod-stat-card-link {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+        transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .prod-stat-card-link:hover {
+        transform: translateY(-4px);
+    }
+    .prod-stat-card {
+        cursor: pointer;
+        position: relative;
+        transition: all 0.25s ease;
+        border: 1px solid var(--border-color);
+        background: var(--card-bg);
+        border-radius: 12px;
+        padding: 1.25rem 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .prod-stat-card:hover {
+        border-color: var(--border-hover);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+    }
+    .prod-stat-card.active-indigo {
+        border-color: #6366f1 !important;
+        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3), 0 10px 20px -5px rgba(99, 102, 241, 0.15) !important;
+        background: rgba(99, 102, 241, 0.04) !important;
+    }
+    .prod-stat-card.active-emerald {
+        border-color: #10b981 !important;
+        box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3), 0 10px 20px -5px rgba(16, 185, 129, 0.15) !important;
+        background: rgba(16, 185, 129, 0.04) !important;
+    }
+
+    .prod-active-badge {
+        position: absolute;
+        top: 10px;
+        right: 12px;
+        font-size: 0.68rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 2px 7px;
+        border-radius: 12px;
+    }
+
+    /* Light mode adjustments */
+    [data-theme="light"] .prod-stat-card {
+        background: #ffffff !important;
+        border-color: #e2e8f0 !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    [data-theme="light"] .prod-stat-card:hover {
+        border-color: #cbd5e1 !important;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08) !important;
+    }
+
+    /* Filter Toolbar & Pills */
+    .prod-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.45rem 0.9rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-decoration: none;
+        color: var(--text-secondary);
+        background: rgba(148, 163, 184, 0.1);
+        border: 1px solid var(--border-color);
+        transition: var(--transition);
+    }
+    .prod-chip:hover {
+        color: var(--text-primary);
+        border-color: var(--color-primary);
+        background: rgba(79, 70, 229, 0.08);
+    }
+    .prod-chip.active {
+        color: #fff;
+        background: var(--color-primary);
+        border-color: var(--color-primary);
+        box-shadow: 0 2px 8px var(--color-primary-glow);
+    }
+
+    .prod-search-box {
+        position: relative;
+        min-width: 260px;
+    }
+    .prod-search-input {
+        width: 100%;
+        padding: 0.55rem 1rem 0.55rem 2.25rem;
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        color: var(--text-primary);
+        font-size: 0.85rem;
+        outline: none;
+        box-sizing: border-box;
+        transition: var(--transition);
+    }
+    .prod-search-input:focus {
+        border-color: var(--color-primary);
+        box-shadow: 0 0 0 3px var(--color-primary-glow);
+    }
+    .prod-search-icon {
+        position: absolute;
+        left: 0.8rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        pointer-events: none;
+    }
+    [data-theme="light"] .prod-search-input {
+        background: #ffffff !important;
+        border-color: #cbd5e1 !important;
+        color: #0f172a !important;
+    }
+
+    /* Modal Light & Dark Adaptivity */
+    .prod-modal-box {
+        background: #111827;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 14px;
+        width: 90%;
+        max-width: 500px;
+        padding: 2rem;
+        box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.6);
+        animation: prodModalScale 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes prodModalScale {
+        from { transform: scale(0.96); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+    }
+    [data-theme="light"] .prod-modal-box {
+        background: #ffffff !important;
+        border-color: #e2e8f0 !important;
+        box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.2) !important;
+    }
+    [data-theme="light"] .prod-modal-box h3 {
+        color: #0f172a !important;
+    }
+    [data-theme="light"] .prod-modal-box label {
+        color: #334155 !important;
+    }
+    [data-theme="light"] .prod-modal-box input {
+        background: #f8fafc !important;
+        border-color: #cbd5e1 !important;
+        color: #0f172a !important;
+    }
+    [data-theme="light"] .prod-modal-box input:focus {
+        border-color: var(--color-primary) !important;
+        background: #ffffff !important;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 1.5rem;">
-    <div class="stats-card" style="border-left: 4px solid #6366f1;">
-        <div class="stats-info">
-            <h3 style="color: #6366f1;">Active Manufacturing Batches</h3>
-            <div class="stats-number">{{ active_batches }}</div>
+<!-- Quick KPI Cards (Clickable Filter Controls) -->
+<div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); margin-bottom: 1.5rem; gap: 1rem;">
+    <!-- Card 1: Active Batches -->
+    <a href="{% if status_filter == 'ACTIVE' %}{% url 'dashboard_production' %}{% else %}{% url 'dashboard_production' %}?status=ACTIVE{% endif %}" 
+       class="prod-stat-card-link" title="Click to filter Active Manufacturing Batches">
+        <div class="prod-stat-card {% if status_filter == 'ACTIVE' %}active-indigo{% endif %}" style="border-left: 5px solid #6366f1;">
+            <div class="stats-info">
+                <h3 style="color: #6366f1; font-size: 0.82rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 0.35rem;">
+                    Active Manufacturing Batches
+                </h3>
+                <div class="stats-number" style="font-size: 1.9rem; font-weight: 700; color: var(--text-primary);">{{ active_batches }}</div>
+                <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.25rem;">
+                    <i class="fa-solid fa-hand-pointer" style="font-size: 0.65rem;"></i> Click to filter
+                </div>
+            </div>
+            <div class="stats-icon-wrapper indigo" style="background: rgba(99, 102, 241, 0.15); color: #818cf8; width: 48px; height: 48px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">
+                <i class="fa-solid fa-industry"></i>
+            </div>
+            {% if status_filter == 'ACTIVE' %}
+            <span class="prod-active-badge" style="background: rgba(99, 102, 241, 0.2); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.4);">
+                Active
+            </span>
+            {% endif %}
         </div>
-        <div class="stats-icon-wrapper indigo"><i class="fa-solid fa-industry"></i></div>
-    </div>
-    <div class="stats-card" style="border-left: 4px solid #10b981;">
-        <div class="stats-info">
-            <h3 style="color: #10b981;">Completed Batches</h3>
-            <div class="stats-number">{{ completed_batches }}</div>
+    </a>
+
+    <!-- Card 2: Completed Batches -->
+    <a href="{% if status_filter == 'COMPLETED' %}{% url 'dashboard_production' %}{% else %}{% url 'dashboard_production' %}?status=COMPLETED{% endif %}" 
+       class="prod-stat-card-link" title="Click to filter Completed Batches">
+        <div class="prod-stat-card {% if status_filter == 'COMPLETED' %}active-emerald{% endif %}" style="border-left: 5px solid #10b981;">
+            <div class="stats-info">
+                <h3 style="color: #10b981; font-size: 0.82rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 0.35rem;">
+                    Completed Batches
+                </h3>
+                <div class="stats-number" style="font-size: 1.9rem; font-weight: 700; color: var(--text-primary);">{{ completed_batches }}</div>
+                <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.25rem;">
+                    <i class="fa-solid fa-hand-pointer" style="font-size: 0.65rem;"></i> Click to filter
+                </div>
+            </div>
+            <div class="stats-icon-wrapper emerald" style="background: rgba(16, 185, 129, 0.15); color: #10b981; width: 48px; height: 48px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">
+                <i class="fa-solid fa-check-circle"></i>
+            </div>
+            {% if status_filter == 'COMPLETED' %}
+            <span class="prod-active-badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4);">
+                Active
+            </span>
+            {% endif %}
         </div>
-        <div class="stats-icon-wrapper emerald"><i class="fa-solid fa-check-circle"></i></div>
-    </div>
+    </a>
 </div>
 
+<!-- Main Table Panel -->
 <div class="panel">
-    <div class="panel-header">
-        <h2 class="panel-title"><i class="fa-solid fa-mortar-pestle" style="color: #6366f1; margin-right: 0.5rem;"></i>Electronic Batch Production Records (BMR)</h2>
-        <span style="font-size: 0.8rem; color: var(--text-secondary);">Batch-level traceability and yield</span>
+    <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem;">
+        <div>
+            <h2 class="panel-title" style="display: flex; align-items: center; gap: 0.5rem; margin: 0; font-size: 1.15rem;">
+                <i class="fa-solid fa-mortar-pestle" style="color: #6366f1;"></i> Electronic Batch Production Records (BMR)
+            </h2>
+            <span style="font-size: 0.8rem; color: var(--text-secondary);">Batch-level traceability, actual yield reconciliation, and QC hand-off</span>
+        </div>
+
+        <!-- Search Form -->
+        <form method="GET" action="{% url 'dashboard_production' %}" style="display: flex; align-items: center; gap: 0.5rem;">
+            {% if status_filter %}
+            <input type="hidden" name="status" value="{{ status_filter }}">
+            {% endif %}
+            <div class="prod-search-box">
+                <i class="fa-solid fa-magnifying-glass prod-search-icon"></i>
+                <input type="text" name="q" value="{{ search_query }}" placeholder="Search Order, Batch, Product..." class="prod-search-input">
+            </div>
+            <button type="submit" class="btn btn-primary" style="padding: 0.55rem 0.9rem; font-size: 0.85rem;">
+                <i class="fa-solid fa-filter"></i>
+            </button>
+            {% if status_filter or search_query %}
+            <a href="{% url 'dashboard_production' %}" class="btn btn-secondary" style="padding: 0.55rem 0.9rem; font-size: 0.82rem;" title="Reset filters">
+                <i class="fa-solid fa-rotate-left"></i> Reset
+            </a>
+            {% endif %}
+        </form>
     </div>
+
+    <!-- Quick Status Filter Pills -->
+    <div style="padding: 1rem 1.5rem 0.5rem 1.5rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+        <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-right: 0.25rem;">
+            Filter By:
+        </span>
+        <a href="{% url 'dashboard_production' %}{% if search_query %}?q={{ search_query }}{% endif %}" 
+           class="prod-chip {% if not status_filter %}active{% endif %}">
+            All Batches ({{ total_batches }})
+        </a>
+        <a href="{% url 'dashboard_production' %}?status=ACTIVE{% if search_query %}&q={{ search_query }}{% endif %}" 
+           class="prod-chip {% if status_filter == 'ACTIVE' %}active{% endif %}">
+            <i class="fa-solid fa-industry" style="color: #818cf8;"></i> Active Batches ({{ active_batches }})
+        </a>
+        <a href="{% url 'dashboard_production' %}?status=COMPLETED{% if search_query %}&q={{ search_query }}{% endif %}" 
+           class="prod-chip {% if status_filter == 'COMPLETED' %}active{% endif %}">
+            <i class="fa-solid fa-circle-check" style="color: #10b981;"></i> Completed ({{ completed_batches }})
+        </a>
+    </div>
+
     <div class="table-container">
         <table class="custom-table">
             <thead>
                 <tr>
-                    <th>Order & Batch No</th>
+                    <th>Order &amp; Batch No</th>
                     <th>Product Formulation</th>
                     <th>BOM Version</th>
                     <th>Target Qty</th>
@@ -45,20 +285,22 @@
                 {% for order in orders %}
                 <tr>
                     <td>
-                        <strong style="color: #60a5fa; font-family: monospace;">{{ order.document_no }}</strong>
+                        <strong style="color: #60a5fa; font-family: monospace; font-size: 0.85rem;">{{ order.document_no }}</strong>
                         <div style="font-size: 0.75rem; color: #10b981; font-family: monospace; font-weight: 600;">Batch: {{ order.batch_no }}</div>
                     </td>
                     <td>
-                        <strong style="color: #fff;">{{ order.product.name }}</strong>
+                        <strong style="color: var(--text-primary); font-size: 0.85rem;">{{ order.product.name }}</strong>
                         <div style="font-size: 0.75rem; color: var(--text-secondary);">Code: {{ order.product.item_code }}</div>
                     </td>
-                    <td style="color: #e2e8f0; font-size: 0.8rem;">{{ order.bom.bom_code }}</td>
-                    <td style="color: #e2e8f0; font-size: 0.85rem;">{{ order.planned_qty }} {{ order.uom.code }}</td>
+                    <td style="color: var(--text-primary); font-size: 0.82rem; font-family: monospace;">{{ order.bom.bom_code }}</td>
+                    <td style="color: var(--text-primary); font-size: 0.85rem; font-weight: 600;">{{ order.planned_qty }} {{ order.uom.code }}</td>
                     <td>
                         {% if order.actual_produced_qty > 0 %}
-                        <strong style="color: #10b981;">{{ order.actual_produced_qty }}</strong> {{ order.uom.code }}
+                        <strong style="color: #10b981; font-size: 0.88rem;">{{ order.actual_produced_qty }}</strong> {{ order.uom.code }}
                         {% else %}
-                        <span style="color: var(--text-muted);">-</span>
+                        <span style="font-size: 0.75rem; color: #818cf8; background: rgba(99, 102, 241, 0.12); padding: 3px 8px; border-radius: 5px; border: 1px solid rgba(99, 102, 241, 0.25); display: inline-flex; align-items: center; gap: 5px; font-weight: 600;">
+                            <i class="fa-solid fa-gear fa-spin" style="font-size: 0.7rem;"></i> In Production
+                        </span>
                         {% endif %}
                     </td>
                     <td>
@@ -67,31 +309,38 @@
                             {{ order.yield_percentage }}%
                         </span>
                         {% else %}
-                        <span style="color: var(--text-muted);">-</span>
+                        <span style="font-size: 0.73rem; color: var(--text-muted); font-style: italic;">
+                            Pending Output
+                        </span>
                         {% endif %}
                     </td>
                     <td>
-                        <span style="padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 600;
-                            {% if order.status == 'COMPLETED' %}background: rgba(16, 185, 129, 0.2); color: #10b981;
-                            {% elif order.status == 'RELEASED' or order.status == 'IN_PROGRESS' %}background: rgba(99, 102, 241, 0.2); color: #818cf8;
-                            {% else %}background: rgba(148, 163, 184, 0.2); color: #cbd5e1;{% endif %}">
+                        <span style="padding: 3px 8px; border-radius: 4px; font-size: 0.72rem; font-weight: 600; display: inline-block;
+                            {% if order.status == 'COMPLETED' %}background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);
+                            {% elif order.status == 'RELEASED' or order.status == 'IN_PROGRESS' %}background: rgba(99, 102, 241, 0.15); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.3);
+                            {% else %}background: rgba(148, 163, 184, 0.15); color: var(--text-secondary); border: 1px solid rgba(148, 163, 184, 0.3);{% endif %}">
                             {{ order.status }}
                         </span>
                     </td>
                     <td>
                         {% if order.status != 'COMPLETED' and order.status != 'CLOSED' %}
-                        <button type="button" class="btn btn-primary" style="padding: 0.35rem 0.7rem; font-size: 0.75rem;" 
+                        <button type="button" class="btn btn-primary" style="padding: 0.4rem 0.85rem; font-size: 0.78rem; display: inline-flex; align-items: center; gap: 0.4rem;" 
                                 onclick="openBatchCompleteModal('{{ order.id }}', '{{ order.batch_no }}', '{{ order.planned_qty }}', '{{ order.uom.code }}');">
                             <i class="fa-solid fa-flag-checkered"></i> Complete Batch
                         </button>
                         {% else %}
-                        <span style="color: var(--text-muted); font-size: 0.75rem;"><i class="fa-solid fa-check"></i> QC Handed-Off</span>
+                        <span style="color: #10b981; font-size: 0.78rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.3rem;">
+                            <i class="fa-solid fa-check"></i> QC Handed-Off
+                        </span>
                         {% endif %}
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 2rem;">No production orders logged.</td>
+                    <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 3rem;">
+                        <i class="fa-solid fa-industry" style="font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.5; display: block;"></i>
+                        No production orders found matching your filter criteria.
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -100,28 +349,44 @@
 </div>
 
 <!-- Complete Batch Modal -->
-<div id="batchCompleteModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); z-index: 999; align-items: center; justify-content: center;">
-    <div style="background: #111827; border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; width: 90%; max-width: 480px; padding: 2rem; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
-        <h3 style="margin-top: 0; color: #fff; font-size: 1.2rem; display: flex; align-items: center; gap: 0.5rem;">
-            <i class="fa-solid fa-check-to-slot" style="color: #6366f1;"></i> Complete Formulation Batch
-        </h3>
-        <p style="color: var(--text-secondary); font-size: 0.85rem;" id="batchModalSubtitle">Reconciling output for batch</p>
+<div id="batchCompleteModal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.72); backdrop-filter: blur(8px); z-index: 1000; align-items: center; justify-content: center; padding: 1rem;">
+    <div class="prod-modal-box">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <div style="width: 36px; height: 36px; border-radius: 8px; background: rgba(99, 102, 241, 0.15); color: #818cf8; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+                    <i class="fa-solid fa-check-to-slot"></i>
+                </div>
+                <div>
+                    <h3 style="margin: 0; color: var(--text-primary); font-size: 1.15rem; font-weight: 700;">Complete Formulation Batch</h3>
+                    <p style="margin: 0; color: var(--text-muted); font-size: 0.75rem;" id="batchModalSubtitle">Reconciling output for batch</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeBatchCompleteModal();" style="background: transparent; border: none; font-size: 1.5rem; color: var(--text-muted); cursor: pointer; line-height: 1;">&times;</button>
+        </div>
 
         <form id="batchCompleteForm" method="POST" action="">
             {% csrf_token %}
             <div style="margin-bottom: 1rem;">
-                <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.3rem;">Actual Produced Quantity *</label>
-                <input type="number" step="0.0001" min="0.0001" name="actual_produced_qty" id="modalActualQty" required style="width: 100%; padding: 0.6rem; background: #1f2937; border: 1px solid var(--border-color); border-radius: 6px; color: #fff;">
+                <label style="display: block; font-size: 0.82rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.4rem;">
+                    Actual Produced Quantity *
+                </label>
+                <input type="number" step="0.0001" min="0.0001" name="actual_produced_qty" id="modalActualQty" required 
+                       style="width: 100%; padding: 0.65rem 0.9rem; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-size: 0.88rem; box-sizing: border-box; outline: none;">
             </div>
 
             <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.3rem;">Scrap / Rejection Quantity</label>
-                <input type="number" step="0.0001" min="0.0000" name="scrap_qty" value="0.0000" style="width: 100%; padding: 0.6rem; background: #1f2937; border: 1px solid var(--border-color); border-radius: 6px; color: #fff;">
+                <label style="display: block; font-size: 0.82rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.4rem;">
+                    Scrap / Rejection Quantity
+                </label>
+                <input type="number" step="0.0001" min="0.0000" name="scrap_qty" value="0.0000" 
+                       style="width: 100%; padding: 0.65rem 0.9rem; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-size: 0.88rem; box-sizing: border-box; outline: none;">
             </div>
 
             <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
-                <button type="button" class="btn btn-secondary" onclick="closeBatchCompleteModal();">Cancel</button>
-                <button type="submit" class="btn btn-primary" style="background: #6366f1; border-color: #6366f1;">Submit to QC</button>
+                <button type="button" class="btn btn-secondary" onclick="closeBatchCompleteModal();" style="padding: 0.65rem 1.2rem;">Cancel</button>
+                <button type="submit" class="btn btn-primary" style="background: #6366f1; border-color: #6366f1; padding: 0.65rem 1.4rem; font-weight: 600;">
+                    <i class="fa-solid fa-flag-checkered"></i> Submit to QC
+                </button>
             </div>
         </form>
     </div>
@@ -137,5 +402,16 @@ function openBatchCompleteModal(orderId, batchNo, plannedQty, uom) {
 function closeBatchCompleteModal() {
     document.getElementById('batchCompleteModal').style.display = 'none';
 }
+
+document.addEventListener("DOMContentLoaded", function() {
+    const modal = document.getElementById('batchCompleteModal');
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeBatchCompleteModal();
+            }
+        });
+    }
+});
 </script>
 {% endblock %}

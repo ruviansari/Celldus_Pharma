@@ -38,7 +38,7 @@
                         <img src="{% static prod.image %}" alt="{{ prod.name }}" class="table-product-img">
                     </td>
                     <td>
-                        <strong style="color: #fff; font-size: 0.95rem;">{{ prod.name }}</strong>
+                        <strong style="color: var(--text-primary); font-size: 0.95rem;">{{ prod.name }}</strong>
                         {% if prod.size %}
                         <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.15rem;">
                             Size: {{ prod.size }}
@@ -49,11 +49,16 @@
                         <span class="badge badge-primary">{{ prod.category.name }}</span>
                     </td>
                     <td>
-                        {% if prod.selling_price < prod.price and prod.selling_price > 0 %}
-                        <span style="color: #10b981; font-weight: 600;">₹{{ prod.selling_price }}</span>
-                        <span style="text-decoration: line-through; color: var(--text-muted); font-size: 0.8rem; margin-left: 0.25rem;">₹{{ prod.price }}</span>
+                        {% if prod.selling_price > 0 and prod.selling_price < prod.price %}
+                        <div style="font-weight: 700; color: #10b981; font-size: 0.92rem;">₹{{ prod.selling_price }}</div>
+                        <div style="text-decoration: line-through; color: var(--text-muted); font-size: 0.75rem;">₹{{ prod.price }}</div>
+                        {% elif prod.selling_price > 0 and prod.price > 0 and prod.selling_price != prod.price %}
+                        <div style="font-weight: 700; color: var(--text-primary); font-size: 0.92rem;">₹{{ prod.selling_price }}</div>
+                        <div style="color: var(--text-muted); font-size: 0.75rem;">MRP: ₹{{ prod.price }}</div>
+                        {% elif prod.selling_price > 0 %}
+                        <span style="color: var(--text-primary); font-weight: 700; font-size: 0.92rem;">₹{{ prod.selling_price }}</span>
                         {% else %}
-                        <span style="color: #fff; font-weight: 600;">₹{{ prod.price }}</span>
+                        <span style="color: var(--text-primary); font-weight: 700; font-size: 0.92rem;">₹{{ prod.price }}</span>
                         {% endif %}
                     </td>
                     <td>

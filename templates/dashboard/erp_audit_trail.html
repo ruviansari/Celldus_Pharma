@@ -4,48 +4,98 @@
 {% block page_title %}21 CFR Part 11 Attributable Audit Trail{% endblock %}
 {% block page_subtitle %}Immutable, chronologically ordered record of all master edits, batch dispositions, approvals, and physical stock movements.{% endblock %}
 
+{% block extra_css %}
+<style>
+    .audit-filter-input, .audit-filter-select {
+        width: 100%;
+        padding: 0.65rem 1rem;
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        color: var(--text-primary);
+        font-size: 0.88rem;
+        transition: var(--transition);
+        outline: none;
+        box-sizing: border-box;
+    }
+    .audit-filter-input:focus, .audit-filter-select:focus {
+        border-color: var(--color-primary);
+        box-shadow: 0 0 0 3px var(--color-primary-glow);
+    }
+    .audit-filter-select option {
+        background: #0f172a;
+        color: #f8fafc;
+    }
+    [data-theme="light"] .audit-filter-input,
+    [data-theme="light"] .audit-filter-select {
+        background: #ffffff !important;
+        border-color: #cbd5e1 !important;
+        color: #0f172a !important;
+    }
+    [data-theme="light"] .audit-filter-select option {
+        background: #ffffff !important;
+        color: #0f172a !important;
+    }
+    [data-theme="light"] .audit-filter-input:focus,
+    [data-theme="light"] .audit-filter-select:focus {
+        border-color: var(--color-primary) !important;
+        background: #ffffff !important;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <!-- Filter Controls -->
 <div class="panel" style="margin-bottom: 1.5rem; padding: 1.25rem 1.5rem;">
     <form method="GET" style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
         <div style="flex: 1; min-width: 250px;">
-            <input type="text" name="q" value="{{ search_query }}" placeholder="Search by Document No, User, Reason..." 
-                   style="width: 100%; padding: 0.6rem 1rem; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); border-radius: 8px; color: #fff;">
+            <input type="text" name="q" value="{{ search_query }}" placeholder="Search by Document No, User, Reason, Entity..." 
+                   class="audit-filter-input" autocomplete="off">
         </div>
         <div style="width: 200px;">
-            <select name="action" style="width: 100%; padding: 0.6rem 1rem; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); border-radius: 8px; color: #fff;">
+            <select name="action" class="audit-filter-select">
                 <option value="">All Actions</option>
                 <option value="APPROVE" {% if action_filter == 'APPROVE' %}selected{% endif %}>APPROVE</option>
-                <option value="QA_RELEASE" {% if action_filter == 'QA_RELEASE' %}selected{% endif %}>QA_RELEASE</option>
-                <option value="QA_REJECT" {% if action_filter == 'QA_REJECT' %}selected{% endif %}>QA_REJECT</option>
-                <option value="POST" {% if action_filter == 'POST' %}selected{% endif %}>POST</option>
-                <option value="DISPATCH" {% if action_filter == 'DISPATCH' %}selected{% endif %}>DISPATCH</option>
-                <option value="RECALL" {% if action_filter == 'RECALL' %}selected{% endif %}>RECALL</option>
                 <option value="CREATE" {% if action_filter == 'CREATE' %}selected{% endif %}>CREATE</option>
                 <option value="UPDATE" {% if action_filter == 'UPDATE' %}selected{% endif %}>UPDATE</option>
+                <option value="DELETE" {% if action_filter == 'DELETE' %}selected{% endif %}>DELETE</option>
+                <option value="DISPATCH" {% if action_filter == 'DISPATCH' %}selected{% endif %}>DISPATCH</option>
+                <option value="POST" {% if action_filter == 'POST' %}selected{% endif %}>POST</option>
+                <option value="QA_RELEASE" {% if action_filter == 'QA_RELEASE' %}selected{% endif %}>QA_RELEASE</option>
+                <option value="QA_REJECT" {% if action_filter == 'QA_REJECT' %}selected{% endif %}>QA_REJECT</option>
+                <option value="RECALL" {% if action_filter == 'RECALL' %}selected{% endif %}>RECALL</option>
             </select>
         </div>
-        <button type="submit" class="btn btn-primary" style="padding: 0.6rem 1.2rem;"><i class="fa-solid fa-filter"></i> Search</button>
+        <button type="submit" class="btn btn-primary" style="padding: 0.65rem 1.3rem; display: inline-flex; align-items: center; gap: 0.5rem;">
+            <i class="fa-solid fa-filter"></i> Search
+        </button>
         {% if action_filter or search_query %}
-        <a href="{% url 'dashboard_audit_trail' %}" class="btn btn-secondary" style="padding: 0.6rem 1rem;">Reset</a>
+        <a href="{% url 'dashboard_audit_trail' %}" class="btn btn-secondary" style="padding: 0.65rem 1.1rem; display: inline-flex; align-items: center; gap: 0.4rem;">
+            <i class="fa-solid fa-rotate-left"></i> Reset
+        </a>
         {% endif %}
     </form>
 </div>
 
 <!-- Audit Trail Table -->
 <div class="panel">
-    <div class="panel-header">
-        <h2 class="panel-title"><i class="fa-solid fa-shield-halved" style="color: #10b981; margin-right: 0.5rem;"></i>Immutable Regulatory Event Log</h2>
-        <span style="font-size: 0.8rem; color: var(--text-secondary);">Strictly permanent & tamper-proof</span>
+    <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h2 class="panel-title"><i class="fa-solid fa-shield-halved" style="color: #10b981; margin-right: 0.5rem;"></i>Immutable Regulatory Event Log</h2>
+            <span style="font-size: 0.8rem; color: var(--text-secondary);">Strictly permanent &amp; tamper-proof (21 CFR Part 11 compliant)</span>
+        </div>
+        <span style="font-size: 0.82rem; font-weight: 600; color: var(--text-secondary); background: var(--border-color); padding: 4px 10px; border-radius: 6px;">
+            Showing {{ audit_logs|length }} of {{ total_logs }} records
+        </span>
     </div>
     <div class="table-container">
         <table class="custom-table">
             <thead>
                 <tr>
-                    <th>Timestamp (UTC)</th>
+                    <th>Timestamp (IST)</th>
                     <th>Attributable User</th>
                     <th>Action</th>
-                    <th>Entity & Reference</th>
+                    <th>Entity &amp; Reference</th>
                     <th>Client IP</th>
                     <th>Regulatory Rationale / Reason</th>
                 </tr>
@@ -53,39 +103,42 @@
             <tbody>
                 {% for log in audit_logs %}
                 <tr>
-                    <td style="color: var(--text-secondary); font-size: 0.75rem; white-space: nowrap;">
-                        {{ log.timestamp|date:"Y-m-d H:i:s" }}
+                    <td style="font-size: 0.8rem; white-space: nowrap;">
+                        <div style="font-weight: 600; color: var(--text-primary);">{{ log.timestamp|date:"d M Y" }}</div>
+                        <div style="font-size: 0.72rem; color: var(--text-muted); font-family: monospace;">{{ log.timestamp|date:"h:i:s A" }} IST</div>
                     </td>
                     <td>
-                        <strong style="color: #fff; font-size: 0.8rem;">{{ log.user.username|default:"System" }}</strong>
+                        <strong style="color: var(--text-primary); font-size: 0.82rem;">{{ log.user.username|default:"System" }}</strong>
                         <div style="font-size: 0.7rem; color: var(--text-muted);">{{ log.user.email|default:"" }}</div>
                     </td>
                     <td>
-                        <span style="font-size: 0.7rem; font-weight: 700; padding: 2px 6px; border-radius: 4px;
-                            {% if log.action == 'APPROVE' or log.action == 'QA_RELEASE' %}background: rgba(16, 185, 129, 0.2); color: #10b981;
-                            {% elif log.action == 'REJECT' or log.action == 'QA_REJECT' or log.action == 'RECALL' %}background: rgba(239, 68, 68, 0.2); color: #ef4444;
-                            {% elif log.action == 'POST' or log.action == 'DISPATCH' %}background: rgba(99, 102, 241, 0.2); color: #818cf8;
-                            {% else %}background: rgba(148, 163, 184, 0.2); color: #cbd5e1;{% endif %}">
+                        <span style="font-size: 0.72rem; font-weight: 700; padding: 3px 8px; border-radius: 5px; display: inline-block;
+                            {% if log.action == 'APPROVE' or log.action == 'QA_RELEASE' %}background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);
+                            {% elif log.action == 'REJECT' or log.action == 'QA_REJECT' or log.action == 'RECALL' or log.action == 'DELETE' %}background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);
+                            {% elif log.action == 'POST' or log.action == 'DISPATCH' %}background: rgba(99, 102, 241, 0.15); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.3);
+                            {% elif log.action == 'CREATE' %}background: rgba(14, 165, 233, 0.15); color: #38bdf8; border: 1px solid rgba(14, 165, 233, 0.3);
+                            {% elif log.action == 'UPDATE' %}background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3);
+                            {% else %}background: rgba(148, 163, 184, 0.15); color: var(--text-secondary); border: 1px solid rgba(148, 163, 184, 0.3);{% endif %}">
                             {{ log.action }}
                         </span>
                     </td>
                     <td>
-                        <strong style="font-size: 0.8rem; color: #e2e8f0;">{{ log.entity_name }}</strong>
+                        <strong style="font-size: 0.82rem; color: var(--text-primary);">{{ log.entity_name }}</strong>
                         {% if log.document_no %}
-                        <div style="font-size: 0.7rem; color: #60a5fa; font-family: monospace;">{{ log.document_no }}</div>
+                        <div style="font-size: 0.72rem; color: #60a5fa; font-family: monospace; font-weight: 600;">{{ log.document_no }}</div>
                         {% endif %}
                     </td>
                     <td style="font-family: monospace; font-size: 0.75rem; color: var(--text-muted);">
                         {{ log.ip_address|default:"127.0.0.1" }}
                     </td>
-                    <td style="font-size: 0.8rem; color: #cbd5e1; max-width: 300px;">
+                    <td style="font-size: 0.8rem; color: var(--text-secondary); max-width: 320px; line-height: 1.4;">
                         {{ log.reason|default:"System state transition" }}
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
                     <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 3rem;">
-                        No audit trail events captured matching your search.
+                        No audit trail events captured matching your search criteria.
                     </td>
                 </tr>
                 {% endfor %}

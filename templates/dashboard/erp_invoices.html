@@ -11,57 +11,136 @@
 </a>
 {% endblock %}
 
+{% block extra_css %}
+<style>
+    .stats-card-link {
+        text-decoration: none !important;
+        color: inherit !important;
+        display: block !important;
+        height: 100%;
+        outline: none;
+    }
+    .stats-card-link .stat-card {
+        background: #0f172a;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.25rem;
+        transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+        height: 100%;
+        box-sizing: border-box;
+        position: relative;
+        overflow: hidden;
+    }
+    .stats-card-link:hover .stat-card {
+        transform: translateY(-4px);
+    }
+    .stats-card-link:hover .card-arrow {
+        transform: translate(2px, -2px);
+        opacity: 1 !important;
+    }
+    .card-arrow {
+        transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+
+    [data-theme="light"] .stats-card-link .stat-card {
+        background: #ffffff;
+        border-color: #e2e8f0;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+    [data-theme="light"] .stats-card-link:hover .stat-card {
+        background: #ffffff;
+        box-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.08);
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<!-- KPI Stats Row -->
+<!-- KPI Stats Row (Clickable Cards) -->
 <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-bottom: 2rem;">
-    <div class="stat-card" style="background: #0f172a; border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem; position: relative; overflow: hidden;">
-        <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
-            Total Revenue Invoiced
+    <!-- 1. Total Revenue Invoiced -->
+    <a href="{% url 'dashboard_invoices' %}#invoicesTable" class="stats-card-link" title="Click to view all commercial invoices">
+        <div class="stat-card" style="border-left: 4px solid #10b981; cursor: pointer;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
+                    Total Revenue Invoiced
+                </div>
+                <i class="fa-solid fa-arrow-up-right-from-square card-arrow" style="font-size: 0.75rem; color: #10b981; opacity: 0.6;"></i>
+            </div>
+            <div style="font-size: 1.6rem; font-weight: 800; color: #10b981; font-family: monospace;">
+                ₹{{ total_invoiced_value|floatformat:2 }}
+            </div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.35rem;">
+                Commercial dispatches cleared
+            </div>
         </div>
-        <div style="font-size: 1.6rem; font-weight: 800; color: #10b981; font-family: monospace;">
-            ₹{{ total_invoiced_value|floatformat:2 }}
-        </div>
-        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.35rem;">
-            Commercial dispatches cleared
-        </div>
-    </div>
+    </a>
 
-    <div class="stat-card" style="background: #0f172a; border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem;">
-        <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
-            Tax Invoices Generated
+    <!-- 2. Tax Invoices Generated -->
+    <a href="{% url 'dashboard_invoices' %}#invoicesTable" class="stats-card-link" title="Click to view all sequential GST tax invoices">
+        <div class="stat-card" style="border-left: 4px solid #3b82f6; cursor: pointer;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
+                    Tax Invoices Generated
+                </div>
+                <i class="fa-solid fa-arrow-up-right-from-square card-arrow" style="font-size: 0.75rem; color: #3b82f6; opacity: 0.6;"></i>
+            </div>
+            <div style="font-size: 1.6rem; font-weight: 800; color: #3b82f6;">
+                {{ total_invoices_count }}
+            </div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.35rem;">
+                Sequential GST invoices
+            </div>
         </div>
-        <div style="font-size: 1.6rem; font-weight: 800; color: #3b82f6;">
-            {{ total_invoices_count }}
-        </div>
-        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.35rem;">
-            Sequential GST invoices
-        </div>
-    </div>
+    </a>
 
-    <div class="stat-card" style="background: #0f172a; border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem;">
-        <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
-            Government E-Way Bills
+    <!-- 3. Government E-Way Bills -->
+    <a href="{% url 'dashboard_invoices' %}?eway=1#invoicesTable" class="stats-card-link" title="Click to filter invoices with active Government E-Way Bills">
+        <div class="stat-card" style="border-left: 4px solid #06b6d4; cursor: pointer; {% if eway_filter == '1' %}border-color: #06b6d4; background: rgba(6, 182, 212, 0.12);{% endif %}">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
+                    Government E-Way Bills
+                </div>
+                <i class="fa-solid fa-arrow-up-right-from-square card-arrow" style="font-size: 0.75rem; color: #06b6d4; opacity: 0.6;"></i>
+            </div>
+            <div style="font-size: 1.6rem; font-weight: 800; color: #06b6d4;">
+                {{ active_eway_count }}
+            </div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.35rem;">
+                Active transit passes
+            </div>
         </div>
-        <div style="font-size: 1.6rem; font-weight: 800; color: #06b6d4;">
-            {{ active_eway_count }}
-        </div>
-        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.35rem;">
-            Active transit passes
-        </div>
-    </div>
+    </a>
 
-    <div class="stat-card" style="background: #0f172a; border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem;">
-        <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
-            System Compliance
+    <!-- 4. System Compliance -->
+    <a href="{% url 'dashboard_audit_trail' %}" class="stats-card-link" title="Click to view 21 CFR Part 11 Audit Trail & Security Logs">
+        <div class="stat-card" style="border-left: 4px solid #a855f7; cursor: pointer;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
+                    System Compliance
+                </div>
+                <i class="fa-solid fa-arrow-up-right-from-square card-arrow" style="font-size: 0.75rem; color: #a855f7; opacity: 0.6;"></i>
+            </div>
+            <div style="font-size: 1.3rem; font-weight: 800; color: #a855f7;">
+                21 CFR Part 11
+            </div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.35rem;">
+                Audit trail verified
+            </div>
         </div>
-        <div style="font-size: 1.3rem; font-weight: 800; color: #a855f7;">
-            21 CFR Part 11
-        </div>
-        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.35rem;">
-            Audit trail verified
-        </div>
-    </div>
+    </a>
 </div>
+
+<!-- Active E-Way Filter Notification (if filtered) -->
+{% if eway_filter == '1' %}
+<div style="background: rgba(6, 182, 212, 0.12); border: 1px solid rgba(6, 182, 212, 0.3); border-radius: 10px; padding: 0.75rem 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
+    <div style="font-size: 0.85rem; color: #06b6d4; display: flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+        <i class="fa-solid fa-barcode"></i> Filtering: Showing invoices with active Government E-Way Bills ({{ invoices|length }} records)
+    </div>
+    <a href="{% url 'dashboard_invoices' %}#invoicesTable" class="btn btn-secondary" style="padding: 0.35rem 0.85rem; font-size: 0.78rem; text-decoration: none;">
+        <i class="fa-solid fa-xmark"></i> Show All Invoices
+    </a>
+</div>
+{% endif %}
 
 <!-- Search and Filter Bar -->
 <div class="panel" style="margin-bottom: 1.5rem; padding: 1rem 1.25rem;">
@@ -70,19 +149,22 @@
             <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
             <input type="text" name="q" value="{{ search_query }}" class="form-control" placeholder="Search by Invoice No, Customer, Transporter, E-Way Bill..." style="padding-left: 2.5rem;">
         </div>
+        {% if eway_filter %}
+        <input type="hidden" name="eway" value="{{ eway_filter }}">
+        {% endif %}
         <button type="submit" class="btn btn-primary" style="padding: 0.5rem 1.25rem;">
             <i class="fa-solid fa-filter"></i> Filter Invoices
         </button>
-        {% if search_query %}
+        {% if search_query or eway_filter %}
         <a href="{% url 'dashboard_invoices' %}" class="btn btn-secondary" style="padding: 0.5rem 1rem; text-decoration: none;">
-            <i class="fa-solid fa-xmark"></i> Clear
+            <i class="fa-solid fa-xmark"></i> Clear Filters
         </a>
         {% endif %}
     </form>
 </div>
 
 <!-- Invoices Main Table Panel -->
-<div class="panel">
+<div class="panel" id="invoicesTable">
     <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
         <h2 class="panel-title" style="display: flex; align-items: center; gap: 0.5rem;">
             <i class="fa-solid fa-receipt" style="color: #10b981;"></i>
@@ -120,13 +202,13 @@
                         <div style="font-size: 0.7rem; color: var(--text-muted);">{{ inv.branch.name|default:"Central Site" }}</div>
                     </td>
                     <td>
-                        <strong style="color: #fff; font-size: 0.9rem;">{{ inv.customer.name }}</strong>
+                        <strong style="color: var(--text-primary); font-size: 0.9rem;">{{ inv.customer.name }}</strong>
                         <div style="font-size: 0.72rem; color: var(--text-secondary);">
                             DL: {{ inv.customer.drug_license_20b|default:"Verified" }} | GST: {{ inv.customer.gstin|default:"Unregistered" }}
                         </div>
                     </td>
                     <td>
-                        <div style="color: #e2e8f0; font-size: 0.82rem; font-weight: 500;">
+                        <div style="color: var(--text-primary); font-size: 0.82rem; font-weight: 500;">
                             <i class="fa-solid fa-truck" style="color: #06b6d4; font-size: 0.75rem;"></i> {{ inv.transporter_name }}
                         </div>
                         <div style="font-size: 0.72rem; color: var(--text-muted); font-family: monospace;">

@@ -54,9 +54,18 @@ class Warehouse(ERPBaseModel):
     """
     Warehouse location scoped to a branch with pharmaceutical zoning.
     """
+    WAREHOUSE_TYPE_CHOICES = (
+        ('GENERAL', 'General Ambient Warehouse'),
+        ('COLD_CHAIN', 'Cold Chain (2°C - 8°C)'),
+        ('QUARANTINE', 'Quarantine Holding Area'),
+        ('FINISHED_GOODS', 'Finished Goods Central'),
+        ('RAW_MATERIALS', 'Raw Materials / Active Ingredients Bay'),
+    )
+
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='warehouses')
     code = models.CharField(max_length=30, unique=True)
     name = models.CharField(max_length=150)
+    warehouse_type = models.CharField(max_length=30, choices=WAREHOUSE_TYPE_CHOICES, default='GENERAL')
     controlled_access = models.BooleanField(default=False, help_text="Requires specialized authorization (e.g. Narcotic/High-value)")
     temperature_min = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, help_text="Min Temp °C")
     temperature_max = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, help_text="Max Temp °C")
@@ -236,6 +245,9 @@ class CustomerMaster(ERPBaseModel):
     current_balance = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
     payment_terms_days = models.PositiveIntegerField(default=30)
     credit_hold = models.BooleanField(default=False, help_text="Hold orders if invoices overdue or limit exceeded")
+
+    class Meta:
+        ordering = ['-created_at']
 
     def __str__(self):
         return f"[{self.customer_code}] {self.name}"

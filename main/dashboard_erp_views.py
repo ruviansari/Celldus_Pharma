@@ -69,7 +69,7 @@ def dashboard_inventory_lots(request):
 
 @staff_required
 def dashboard_lot_action(request, lot_id):
-    """Admin / QA Block or Unblock Lot with mandatory attributable reason."""
+    """Admin / QA Regulatory Action: Release, Block, Unblock, or Reject Lot with 21 CFR Part 11 rationale."""
     lot = get_object_or_404(InventoryLot, id=lot_id)
     if request.method == "POST":
         action = request.POST.get('action')
@@ -82,13 +82,20 @@ def dashboard_lot_action(request, lot_id):
         if action == "BLOCK":
             lot.status = 'BLOCKED'
             lot.save(update_fields=['status', 'updated_at'])
-            audit_log_event(request.user, 'UPDATE', 'InventoryLot', lot.id, lot.lot_number, reason=f"Lot administratively blocked: {reason}")
+            audit_log_event(request.user, 'UPDATE', 'InventoryLot', lot.id, lot.lot_number, reason=f"Lot placed on quarantine/blocked hold: {reason}")
             messages.warning(request, f"Lot {lot.lot_number} has been placed on BLOCKED hold.")
-        elif action == "UNBLOCK" and request.user.is_superuser:
+        elif action in ["UNBLOCK", "RELEASE"]:
             lot.status = 'AVAILABLE'
+            lot.released_at = timezone.now()
+            lot.released_by = request.user
+            lot.save(update_fields=['status', 'released_at', 'released_by', 'updated_at'])
+            audit_log_event(request.user, 'UPDATE', 'InventoryLot', lot.id, lot.lot_number, reason=f"Regulatory Release authorized by {request.user.username}: {reason}")
+            messages.success(request, f"Lot {lot.lot_number} authorized & released to AVAILABLE status.")
+        elif action == "REJECT":
+            lot.status = 'REJECTED'
             lot.save(update_fields=['status', 'updated_at'])
-            audit_log_event(request.user, 'UPDATE', 'InventoryLot', lot.id, lot.lot_number, reason=f"Lot hold released: {reason}")
-            messages.success(request, f"Lot {lot.lot_number} released back to AVAILABLE status.")
+            audit_log_event(request.user, 'UPDATE', 'InventoryLot', lot.id, lot.lot_number, reason=f"Lot rejected by QA: {reason}")
+            messages.error(request, f"Lot {lot.lot_number} has been rejected & quarantined for material disposal.")
 
     return redirect('dashboard_inventory_lots')
 
@@ -98,7 +105,27 @@ def dashboard_lot_action(request, lot_id):
 # ==========================================
 @staff_required
 def dashboard_quality(request):
+    status_filter = request.GET.get('status', '').strip()
+    search = request.GET.get('q', '').strip()
+
     inspections = QCInspectionRequest.objects.select_related('lot', 'item', 'specification', 'sampler', 'analyst').order_by('-created_at')
+    
+    pending_sampling_count = QCInspectionRequest.objects.filter(status='PENDING_SAMPLING').count()
+    testing_count = QCInspectionRequest.objects.filter(status='SAMPLED').count()
+    dispositioned_count = QCInspectionRequest.objects.filter(status='DISPOSITIONED').count()
+    total_count = QCInspectionRequest.objects.count()
+
+    if status_filter:
+        inspections = inspections.filter(status=status_filter)
+    if search:
+        inspections = inspections.filter(
+            Q(document_no__icontains=search) |
+            Q(item__name__icontains=search) |
+            Q(item__item_code__icontains=search) |
+            Q(lot__lot_number__icontains=search) |
+            Q(lot__batch_no__icontains=search)
+        )
+
     dispositions = QADispositionRecord.objects.select_related('lot', 'inspection', 'authorized_qa_person').order_by('-disposition_date')[:20]
     deviations = QualityDeviation.objects.select_related('affected_lot').order_by('-created_at')[:20]
 
@@ -106,9 +133,12 @@ def dashboard_quality(request):
         'inspections': inspections[:50],
         'dispositions': dispositions,
         'deviations': deviations,
-        'pending_sampling_count': QCInspectionRequest.objects.filter(status='PENDING_SAMPLING').count(),
-        'testing_count': QCInspectionRequest.objects.filter(status='SAMPLED').count(),
-        'dispositioned_count': QCInspectionRequest.objects.filter(status='DISPOSITIONED').count(),
+        'pending_sampling_count': pending_sampling_count,
+        'testing_count': testing_count,
+        'dispositioned_count': dispositioned_count,
+        'total_count': total_count,
+        'status_filter': status_filter,
+        'search_query': search,
     }
     return render(request, 'dashboard/erp_quality.html', context)
 
@@ -355,7 +385,31 @@ def dashboard_po_approve(request, po_id):
 # ==========================================
 @staff_required
 def dashboard_production(request):
+    status_filter = request.GET.get('status', '').strip()
+    search = request.GET.get('q', '').strip()
+
     orders = ProductionOrder.objects.select_related('product', 'bom', 'uom', 'target_warehouse', 'finished_lot').order_by('-created_at')
+    
+    active_count = ProductionOrder.objects.filter(status__in=['RELEASED', 'IN_PROGRESS']).count()
+    completed_count = ProductionOrder.objects.filter(status='COMPLETED').count()
+    total_count = ProductionOrder.objects.count()
+
+    if status_filter == 'ACTIVE':
+        orders = orders.filter(status__in=['RELEASED', 'IN_PROGRESS'])
+    elif status_filter == 'COMPLETED':
+        orders = orders.filter(status='COMPLETED')
+    elif status_filter:
+        orders = orders.filter(status=status_filter)
+
+    if search:
+        orders = orders.filter(
+            Q(document_no__icontains=search) |
+            Q(batch_no__icontains=search) |
+            Q(product__name__icontains=search) |
+            Q(product__item_code__icontains=search) |
+            Q(bom__bom_code__icontains=search)
+        )
+
     boms = BOMHeader.objects.filter(status='APPROVED').select_related('product')
     warehouses = Warehouse.objects.all()
 
@@ -363,8 +417,11 @@ def dashboard_production(request):
         'orders': orders[:50],
         'boms': boms,
         'warehouses': warehouses,
-        'active_batches': ProductionOrder.objects.filter(status__in=['RELEASED', 'IN_PROGRESS']).count(),
-        'completed_batches': ProductionOrder.objects.filter(status='COMPLETED').count(),
+        'active_batches': active_count,
+        'completed_batches': completed_count,
+        'total_batches': total_count,
+        'status_filter': status_filter,
+        'search_query': search,
     }
     return render(request, 'dashboard/erp_production.html', context)
 
@@ -609,6 +666,7 @@ def dashboard_crm(request):
     conversion_rate = round((converted_count / total_leads * 100), 1) if total_leads > 0 else 0
     tasks_due_today = FollowUpTask.objects.filter(due_date=today, status='PENDING').count()
     tasks_overdue = FollowUpTask.objects.filter(due_date__lt=today, status='PENDING').count()
+    total_tasks = FollowUpTask.objects.count()
 
     # Stage funnel counts for badges and quick filter
     stage_counts = {
@@ -685,6 +743,7 @@ def dashboard_crm(request):
         'conversion_rate': conversion_rate,
         'tasks_due_today': tasks_due_today,
         'tasks_overdue': tasks_overdue,
+        'total_tasks': total_tasks,
         'stage_counts': stage_counts,
         # Current active states
         'today': today,
@@ -963,7 +1022,7 @@ def dashboard_lead_delete(request, lead_id):
             reason=f"Deleted Lead record: {org_name}",
             request=request
         )
-        messages.success(request, f"Lead [{doc_no}] '{org_name}' deleted successfully.")
+        messages.success(request, f"Lead '{org_name}' deleted successfully!")
     return redirect('/dashboard/crm/?tab=leads')
 
 
@@ -1060,7 +1119,7 @@ def dashboard_task_delete(request, task_id):
             reason=f"Deleted follow-up task for {lead_name}",
             request=request
         )
-        messages.success(request, "Follow-up task deleted.")
+        messages.success(request, f"Follow-up task for '{lead_name}' deleted successfully!")
     return redirect('/dashboard/crm/?tab=tasks')
 
 
@@ -1130,7 +1189,12 @@ def dashboard_audit_trail(request):
     if entity_filter:
         qs = qs.filter(entity_name__icontains=entity_filter)
     if search:
-        qs = qs.filter(document_no__icontains=search) | qs.filter(reason__icontains=search) | qs.filter(user__username__icontains=search)
+        qs = qs.filter(
+            Q(document_no__icontains=search) |
+            Q(reason__icontains=search) |
+            Q(user__username__icontains=search) |
+            Q(entity_name__icontains=search)
+        )
 
     context = {
         'audit_logs': qs[:150],
@@ -1149,7 +1213,7 @@ def dashboard_audit_trail(request):
 def dashboard_masters(request):
     items = ItemMaster.objects.select_related('base_uom').order_by('item_code')
     suppliers = SupplierMaster.objects.order_by('supplier_code')
-    customers = CustomerMaster.objects.order_by('customer_code')
+    customers = CustomerMaster.objects.order_by('-created_at')
     boms = BOMHeader.objects.select_related('product', 'batch_uom').order_by('bom_code')
     specs = QualitySpecification.objects.select_related('item').order_by('spec_code')
     warehouses = Warehouse.objects.select_related('branch').prefetch_related('bins').order_by('code')
@@ -1341,7 +1405,86 @@ def dashboard_customer_create(request):
         except Exception as e:
             messages.error(request, f"Error registering customer: {str(e)}")
 
-    return redirect('dashboard_masters')
+    return redirect('/dashboard/masters/?tab=customers')
+
+
+@staff_required
+def dashboard_customer_edit(request, customer_id):
+    customer = get_object_or_404(CustomerMaster, id=customer_id)
+    if request.method == "POST":
+        name = request.POST.get('name', '').strip()
+        cust_type = request.POST.get('customer_type', customer.customer_type)
+        address = request.POST.get('billing_address', '').strip()
+        city = request.POST.get('city', '').strip()
+        state = request.POST.get('state', '').strip()
+        gstin = request.POST.get('gstin', '').strip().upper()
+        drug_license = request.POST.get('drug_license_20b', '').strip()
+        contact = request.POST.get('contact_person', '').strip()
+        phone = request.POST.get('phone', '').strip()
+        email = request.POST.get('email', '').strip()
+        try:
+            credit_limit = Decimal(request.POST.get('credit_limit', customer.credit_limit) or '0.00')
+        except Exception:
+            credit_limit = customer.credit_limit
+
+        if not name:
+            messages.error(request, "Customer Name is required.")
+            return redirect('/dashboard/masters/?tab=customers')
+
+        try:
+            customer.name = name
+            customer.customer_type = cust_type
+            customer.billing_address = address
+            customer.city = city
+            customer.state = state
+            customer.gstin = gstin
+            customer.drug_license_20b = drug_license
+            customer.contact_person = contact
+            customer.phone = phone
+            customer.email = email
+            customer.credit_limit = credit_limit
+            customer.updated_by = request.user
+            customer.save()
+
+            audit_log_event(
+                user=request.user,
+                action='UPDATE',
+                entity_name='CustomerMaster',
+                entity_id=customer.id,
+                document_no=customer.customer_code,
+                reason=f"Updated Licensed Customer [{customer.customer_code}] {customer.name}",
+                request=request
+            )
+            messages.success(request, f"Customer [{customer.customer_code}] updated successfully!")
+        except Exception as e:
+            messages.error(request, f"Error updating customer: {str(e)}")
+
+    return redirect('/dashboard/masters/?tab=customers')
+
+
+@staff_required
+def dashboard_customer_toggle_status(request, customer_id):
+    customer = get_object_or_404(CustomerMaster, id=customer_id)
+    if request.method == "POST":
+        new_status = not customer.is_active
+        customer.is_active = new_status
+        customer.updated_by = request.user
+        customer.save(update_fields=['is_active', 'updated_by', 'updated_at'])
+
+        action_verb = "Reactivated" if new_status else "Deactivated"
+
+        audit_log_event(
+            user=request.user,
+            action='UPDATE',
+            entity_name='CustomerMaster',
+            entity_id=customer.id,
+            document_no=customer.customer_code,
+            reason=f"{action_verb} Licensed Customer [{customer.customer_code}] {customer.name}",
+            request=request
+        )
+        messages.success(request, f"Customer [{customer.customer_code}] '{customer.name}' {action_verb.lower()} successfully!")
+
+    return redirect('/dashboard/masters/?tab=customers')
 
 
 @staff_required
@@ -1354,15 +1497,23 @@ def dashboard_warehouse_create(request):
 
         if not code or not name:
             messages.error(request, "Warehouse Code and Name are required.")
-            return redirect('dashboard_masters')
+            return redirect('/dashboard/masters/?tab=warehouses')
 
         branch = Branch.objects.filter(id=branch_id).first() or Branch.objects.first()
+
+        if wh_type == 'COLD_CHAIN':
+            t_min, t_max = Decimal('2.00'), Decimal('8.00')
+        else:
+            t_min, t_max = Decimal('15.00'), Decimal('25.00')
 
         try:
             wh = Warehouse.objects.create(
                 code=code,
                 name=name,
                 warehouse_type=wh_type,
+                temperature_min=t_min,
+                temperature_max=t_max,
+                humidity_max=Decimal('65.00'),
                 branch=branch,
                 created_by=request.user
             )
@@ -1370,7 +1521,7 @@ def dashboard_warehouse_create(request):
         except Exception as e:
             messages.error(request, f"Error creating warehouse: {str(e)}")
 
-    return redirect('dashboard_masters')
+    return redirect('/dashboard/masters/?tab=warehouses')
 
 
 @staff_required
@@ -1492,7 +1643,11 @@ def dashboard_po_view(request, po_id):
 @staff_required
 def dashboard_invoices(request):
     search = request.GET.get('q', '').strip()
+    eway_filter = request.GET.get('eway', '').strip()
     invoices_qs = SalesDispatchInvoice.objects.select_related('order', 'customer', 'branch', 'created_by').order_by('-invoice_date')
+
+    if eway_filter == '1':
+        invoices_qs = invoices_qs.exclude(eway_bill_no__isnull=True).exclude(eway_bill_no='')
 
     if search:
         invoices_qs = invoices_qs.filter(
@@ -1511,6 +1666,7 @@ def dashboard_invoices(request):
     context = {
         'invoices': invoices_qs[:100],
         'search_query': search,
+        'eway_filter': eway_filter,
         'total_invoiced_value': total_invoiced_value,
         'total_invoices_count': total_invoices_count,
         'active_eway_count': active_eway_count,
@@ -1731,7 +1887,7 @@ def dashboard_attendance_mark(request):
 
         emp = get_object_or_404(Employee, id=employee_id)
         try:
-            record, created = AttendanceRecord.objects.update_or_create(
+            record, created = AttendanceRecord.objects.get_or_create(
                 employee=emp,
                 date=date_str,
                 defaults={
@@ -1739,10 +1895,18 @@ def dashboard_attendance_mark(request):
                     'in_time': in_time,
                     'out_time': out_time,
                     'overtime_hours': Decimal(overtime or '0.00'),
-                    'created_by': request.user if created else emp.created_by,
-                    'updated_by': request.user if not created else None
+                    'created_by': request.user,
+                    'updated_by': request.user,
                 }
             )
+            if not created:
+                record.status = status
+                record.in_time = in_time
+                record.out_time = out_time
+                record.overtime_hours = Decimal(overtime or '0.00')
+                record.updated_by = request.user
+                record.save()
+
             audit_log_event(
                 user=request.user,
                 action='CREATE' if created else 'UPDATE',

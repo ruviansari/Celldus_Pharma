@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <title>Celldus Pharma ERP - Complete Testing SOP & Flow Guide</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 14mm 14mm 16mm 14mm;
+            @bottom-right {
+                content: "Page " counter(page) " of " counter(pages);
+                font-size: 8pt;
+                color: #64748b;
+            }
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+        }
+        body {
+            color: #1e293b;
+            background: #ffffff;
+            font-size: 9.5pt;
+            line-height: 1.5;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #4f46e5;
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+        }
+        .header-left h1 {
+            font-size: 17pt;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.5px;
+        }
+        .header-left p {
+            font-size: 8.5pt;
+            color: #64748b;
+            margin-top: 2px;
+        }
+        .header-badge {
+            background: #eef2ff;
+            color: #4f46e5;
+            border: 1px solid #c7d2fe;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 8pt;
+            font-weight: 700;
+            text-align: right;
+        }
+        .meta-strip {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin-bottom: 16px;
+            font-size: 8pt;
+        }
+        .meta-item strong {
+            display: block;
+            color: #475569;
+            font-size: 7.5pt;
+            text-transform: uppercase;
+        }
+        .meta-item span {
+            color: #0f172a;
+            font-weight: 600;
+        }
+        .section {
+            margin-bottom: 16px;
+            page-break-inside: avoid;
+        }
+        .section-title {
+            font-size: 11pt;
+            font-weight: 700;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-left: 4px solid #4f46e5;
+            padding-left: 8px;
+            margin-bottom: 10px;
+            background: #f8fafc;
+            padding-top: 4px;
+            padding-bottom: 4px;
+        }
+        .step-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin-bottom: 10px;
+            background: #ffffff;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+        }
+        .step-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        .step-num {
+            display: inline-block;
+            background: #4f46e5;
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 8pt;
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin-right: 6px;
+        }
+        .step-title {
+            font-weight: 700;
+            font-size: 9.5pt;
+            color: #0f172a;
+        }
+        .step-url {
+            font-family: monospace;
+            font-size: 8pt;
+            color: #2563eb;
+            background: #eff6ff;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .action-list {
+            margin-left: 18px;
+            margin-top: 4px;
+            font-size: 8.5pt;
+        }
+        .action-list li {
+            margin-bottom: 3px;
+        }
+        .expected-box {
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            color: #065f46;
+            padding: 6px 10px;
+            border-radius: 6px;
+            margin-top: 6px;
+            font-size: 8pt;
+        }
+        .expected-box strong {
+            color: #047857;
+        }
+        .badge {
+            display: inline-block;
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-size: 7.5pt;
+            font-weight: 700;
+        }
+        .badge-green { background: #dcfce7; color: #15803d; }
+        .badge-blue { background: #dbeafe; color: #1d4ed8; }
+        .badge-amber { background: #fef3c7; color: #b45309; }
+        .badge-purple { background: #f3e8ff; color: #7e22ce; }
+        .footer-note {
+            margin-top: 14px;
+            padding: 10px;
+            background: #f1f5f9;
+            border-radius: 6px;
+            font-size: 8pt;
+            color: #475569;
+            text-align: center;
+        }
+        .flow-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #f8fafc;
+            border: 1px dashed #cbd5e1;
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin-bottom: 14px;
+            font-size: 7.8pt;
+            font-weight: 600;
+            text-align: center;
+        }
+        .flow-node {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            padding: 4px 8px;
+            border-radius: 6px;
+            color: #0f172a;
+        }
+        .flow-arrow {
+            color: #6366f1;
+            font-weight: 800;
+            font-size: 9pt;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <div class="header">
+        <div class="header-left">
+            <h1>CELLDUS PHARMA &bull; ERP TESTING SOP</h1>
+            <p>21 CFR Part 11 Compliant Pharmaceutical Manufacturing, Quality &amp; Sales Lifecycle Guide</p>
+        </div>
+        <div class="header-badge">
+            STATUS: READY TO TEST<br>
+            VERSION: 2.4 (IST TIMEZONE)
+        </div>
+    </div>
+
+    <!-- Meta Information Strip -->
+    <div class="meta-strip">
+        <div class="meta-item">
+            <strong>System URL</strong>
+            <span>http://127.0.0.1:8000/</span>
+        </div>
+        <div class="meta-item">
+            <strong>Compliance Standard</strong>
+            <span>US-FDA 21 CFR Part 11 &amp; WHO-GMP</span>
+        </div>
+        <div class="meta-item">
+            <strong>Timezone Tracking</strong>
+            <span>Asia/Kolkata (IST Official)</span>
+        </div>
+        <div class="meta-item">
+            <strong>Audit Policy</strong>
+            <span>Strictly Immutable &amp; Tamper-Proof</span>
+        </div>
+    </div>
+
+    <!-- Complete Lifecycle Flow Diagram -->
+    <div class="flow-diagram">
+        <div class="flow-node">1. Procurement &amp; GRN</div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-node">2. QC Quarantined</div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-node">3. QA Electronic Release</div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-node">4. Manufacturing BMR</div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-node">5. FEFO Sales Dispatch</div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-node">6. Audit Inspector</div>
+    </div>
+
+    <!-- Section 1: Quality & 21 CFR Release -->
+    <div class="section">
+        <div class="section-title">PHASE 1: QC TESTING &amp; QA ELECTRONIC DISPOSITION (21 CFR PART 11)</div>
+        
+        <div class="step-card">
+            <div class="step-header">
+                <span class="step-title"><span class="step-num">STEP 1</span> Quality Dashboard &amp; Interactive Filters Test</span>
+                <span class="step-url">/dashboard/quality/</span>
+            </div>
+            <ol class="action-list">
+                <li>Browser me <strong>/dashboard/quality/</strong> URL open karein.</li>
+                <li>Top KPI Cards check karein: <strong>Pending Sampling (2)</strong>, <strong>Under Analytical Testing (2)</strong>, <strong>QA Dispositioned (1)</strong> show hone chahiye.</li>
+                <li><strong>Card Click Test:</strong> "Pending Sampling / Tests" card par click karein &rarr; Table automatically filter hokar sirf pending requests show karegi.</li>
+                <li>"Under Analytical Testing" card par click karein &rarr; Sirf testing-in-progress batch show hoga.</li>
+                <li>Table ke upar bane search box me <strong>Paracetamol</strong> ya <strong>B-SOL-2601</strong> type karke filter test karein.</li>
+            </ol>
+            <div class="expected-box">
+                <strong>Expected Output:</strong> Sabhi cards smoothly clickable hain, active state me green/amber/cyan glow hota hai aur table instant filter hoti hai bina page crash ke.
+            </div>
+        </div>
+
+        <div class="step-card">
+            <div class="step-header">
+                <span class="step-title"><span class="step-num">STEP 2</span> 21 CFR Part 11 Electronic Batch Release Modal Test</span>
+                <span class="step-url">/dashboard/quality/</span>
+            </div>
+            <ol class="action-list">
+                <li>Kisi bhi pending request (jaise <strong>LOT-EXC-2026-001</strong>) ke samne <strong>"QA Action"</strong> button dabayein.</li>
+                <li>Naya redesigned modal open hoga jisme Inspection No, Material, Batch, aur Lot card clearly dikhega.</li>
+                <li><strong>QA Decision:</strong> "AUTHORIZE RELEASE" chunein &rarr; System Certificate of Analysis (COA) number ko mandatory karega.</li>
+                <li><strong>COA No:</strong> Enter karein <code>COA-2026-MCC-0104</code>.</li>
+                <li><strong>Rationale:</strong> Regulatory reason likhein (min 5 chars) jaise: <code>Pharmacopoeial monograph testing verified, complies with IP standard.</code></li>
+                <li><strong>"Sign &amp; Authorize Release"</strong> button par click karein.</li>
+            </ol>
+            <div class="expected-box">
+                <strong>Expected Output:</strong> Batch successfully RELEASED ho jayega, stock QUARANTINE se AVAILABLE me move ho jayega, aur green success alert show hoga.
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 2: Manufacturing & Electronic BMR -->
+    <div class="section">
+        <div class="section-title">PHASE 2: MANUFACTURING &amp; ELECTRONIC BMR BATCH PRODUCTION</div>
+
+        <div class="step-card">
+            <div class="step-header">
+                <span class="step-title"><span class="step-num">STEP 3</span> Manufacturing Batches &amp; Yield Reconciliation Test</span>
+                <span class="step-url">/dashboard/production/</span>
+            </div>
+            <ol class="action-list">
+                <li>Browser me <strong>/dashboard/production/</strong> open karein.</li>
+                <li>KPI Cards check karein: <strong>Active Manufacturing Batches (2)</strong> aur <strong>Completed Batches (1)</strong>.</li>
+                <li><strong>Clickable Cards:</strong> "Active Batches" card par click karein &rarr; Sirf <code>B-CPT-2026-003</code> aur <code>B-CPT-2026-004</code> show honge. "Completed" card click karne par sirf completed batch aayega.</li>
+                <li><strong>Batch Completion Action:</strong> In-Progress batch ke aage <strong>"Complete Batch"</strong> button par click karein.</li>
+                <li>Modal me Actual Produced Qty (e.g. <code>4950</code>) aur Scrap Qty (e.g. <code>50</code>) enter karke <strong>"Submit to QC"</strong> dabayein.</li>
+            </ol>
+            <div class="expected-box">
+                <strong>Expected Output:</strong> Batch status "COMPLETED" ban jayega, Yield percentage automatically calculate hogi (99.00%), aur raw material inventory deduct hokar naya finished lot QC Quarantine me hand-off ho jayega.
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 3: CRM & HR Workforce -->
+    <div class="section">
+        <div class="section-title">PHASE 3: CRM LEADS PIPELINE &amp; HR ATTENDANCE PUNCHING</div>
+
+        <div class="step-card">
+            <div class="step-header">
+                <span class="step-title"><span class="step-num">STEP 4</span> Daily Attendance Punch Logging Test</span>
+                <span class="step-url">/dashboard/employee/?tab=attendance</span>
+            </div>
+            <ol class="action-list">
+                <li>Browser me <strong>/dashboard/employee/</strong> open karein aur <strong>"Daily Attendance &amp; Shifts"</strong> tab par jayein.</li>
+                <li>Top par <strong>"+ Mark Employee Attendance"</strong> button par click karein.</li>
+                <li>Employee select karein, Status "Present" chunein, In-Time (09:00) aur Out-Time (18:00) check karein.</li>
+                <li><strong>"Record Punch"</strong> button click karein.</li>
+            </ol>
+            <div class="expected-box">
+                <strong>Expected Output:</strong> Bina kisi "created variable" error ke success notification aayega: <em>"Attendance marked for [Employee Name] (PRESENT)!"</em> aur attendance table me instant record show hoga.
+            </div>
+        </div>
+
+        <div class="step-card">
+            <div class="step-header">
+                <span class="step-title"><span class="step-num">STEP 5</span> Pharma CRM Lead Lifecycle &amp; Customer Conversion</span>
+                <span class="step-url">/dashboard/crm/</span>
+            </div>
+            <ol class="action-list">
+                <li><strong>/dashboard/crm/</strong> par Kanban Board dekhein (New &rarr; Contacted &rarr; Sampling &rarr; Commercial Quotation &rarr; Converted).</li>
+                <li>Kisi bhi Lead card ke "Move to Next Stage" button par click karein &rarr; Stage smoothly advance hoga.</li>
+                <li>Lead convert karne par automatic licensed <strong>Customer Master</strong> create ho jata hai drug license verification ke sath.</li>
+            </ol>
+            <div class="expected-box">
+                <strong>Expected Output:</strong> Lead successfully convert ho jayegi aur customer desk me visible hogi.
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 4: Audit Trail Inspector -->
+    <div class="section">
+        <div class="section-title">PHASE 4: 21 CFR PART 11 AUDIT TRAIL INSPECTOR &amp; VERIFICATION</div>
+
+        <div class="step-card">
+            <div class="step-header">
+                <span class="step-title"><span class="step-num">STEP 6</span> Complete Regulatory Audit Inspection Test</span>
+                <span class="step-url">/dashboard/audit-trail/</span>
+            </div>
+            <ol class="action-list">
+                <li>Browser me <strong>/dashboard/audit-trail/</strong> open karein.</li>
+                <li>Total 116+ real regulatory audit records verify karein. Sabhi timestamps me <strong>IST (Indian Standard Time)</strong> show hona chahiye.</li>
+                <li><strong>Keyword Search Test:</strong> Search box me <code>Ashirwad</code> likhkar Search dabayein &rarr; Ashirwad Hospital ke 7 records aayenge.</li>
+                <li><strong>Dropdown Action Test:</strong> Dropdown me <strong>"UPDATE"</strong> select karein &rarr; 44 records filter honge. <strong>"DELETE"</strong> chunein &rarr; 7 records red badge ke sath aayenge.</li>
+                <li><strong>Combined Test:</strong> Search me <code>Lead</code> likhein + Dropdown me <code>UPDATE</code> chunein &rarr; Sirf 10 matching records aayenge.</li>
+                <li><strong>Reset Test:</strong> "Reset" button dabane par sabhi 116+ records restore ho jayenge.</li>
+            </ol>
+            <div class="expected-box">
+                <strong>Expected Output:</strong> Phase 1, 2 aur 3 me perform kiye gaye sabhi events (QA Release, Attendance Punch, Batch Completion) attributable username, IP aur regulatory reason ke sath permanent log me darz milenge.
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Checklist -->
+    <div class="footer-note">
+        <strong>&check; TESTING COMPLETION SIGN-OFF CHECKLIST:</strong><br>
+        Quality Filters &amp; 21 CFR Release &bull; BMR Production &amp; Yield Tracking &bull; FEFO Inventory Allocation &bull; Employee Attendance &bull; Attributable Audit Log
+    </div>
+
+</body>
+</html>

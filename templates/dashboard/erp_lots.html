@@ -4,6 +4,203 @@
 {% block page_title %}Inventory & FEFO Batch Monitor{% endblock %}
 {% block page_subtitle %}Real-time batch quantities, expiry dates, FEFO allocations, and controlled quality statuses.{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Premium 21 CFR Part 11 Regulatory Modal */
+    .lot-modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.75);
+        backdrop-filter: blur(8px);
+        z-index: 1050;
+        overflow-y: auto;
+        padding: 1.25rem 1rem;
+        box-sizing: border-box;
+        align-items: center;
+        justify-content: center;
+    }
+    .lot-modal-box {
+        background: #111827;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 14px;
+        width: 100%;
+        max-width: 560px;
+        max-height: calc(100vh - 2.5rem);
+        margin: auto;
+        box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.65);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        animation: lotModalScaleUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes lotModalScaleUp {
+        from { transform: scale(0.96); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+    }
+    .lot-modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.9rem 1.25rem;
+        border-bottom: 1px solid var(--border-color);
+        flex-shrink: 0;
+    }
+    .lot-modal-close {
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        font-size: 1.5rem;
+        cursor: pointer;
+        line-height: 1;
+        padding: 4px 8px;
+        border-radius: 6px;
+        transition: var(--transition);
+    }
+    .lot-modal-close:hover {
+        color: var(--text-primary);
+        background: rgba(255, 255, 255, 0.08);
+    }
+    .lot-modal-body {
+        overflow-y: auto;
+        padding: 1.15rem 1.35rem;
+        flex: 1 1 auto;
+        min-height: 0;
+        box-sizing: border-box;
+    }
+    .lot-modal-body::-webkit-scrollbar {
+        width: 6px;
+    }
+    .lot-modal-body::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+    }
+    [data-theme="light"] .lot-modal-body::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.2);
+    }
+    .lot-modal-footer {
+        padding: 0.85rem 1.35rem;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 0.75rem;
+        background: rgba(15, 23, 42, 0.5);
+        flex-shrink: 0;
+    }
+    .lot-summary-card {
+        background: rgba(15, 23, 42, 0.55);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 0.85rem 1rem;
+        margin-bottom: 1rem;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.65rem 1rem;
+    }
+    .lot-summary-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+    }
+    .lot-summary-label {
+        font-size: 0.67rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+        font-weight: 700;
+    }
+    .lot-summary-val {
+        font-size: 0.83rem;
+        color: var(--text-primary);
+        font-weight: 600;
+    }
+    .preset-chips-title {
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        margin-bottom: 0.4rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+    .preset-chips-wrap {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        margin-bottom: 1rem;
+    }
+    .preset-chip {
+        font-size: 0.72rem;
+        padding: 0.3rem 0.65rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-color);
+        color: var(--text-secondary);
+        border-radius: 20px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        user-select: none;
+    }
+    .preset-chip:hover {
+        background: rgba(99, 102, 241, 0.15);
+        border-color: rgba(99, 102, 241, 0.4);
+        color: #818cf8;
+        transform: translateY(-1px);
+    }
+    .lot-compliance-callout {
+        background: rgba(16, 185, 129, 0.08);
+        border: 1px solid rgba(16, 185, 129, 0.25);
+        border-radius: 8px;
+        padding: 0.65rem 0.85rem;
+        font-size: 0.72rem;
+        color: var(--text-secondary);
+        line-height: 1.4;
+        display: flex;
+        gap: 0.65rem;
+        align-items: flex-start;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Light Theme Adjustments */
+    [data-theme="light"] .lot-modal-box {
+        background: #ffffff !important;
+        border-color: #e2e8f0 !important;
+        box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.2) !important;
+    }
+    [data-theme="light"] .lot-modal-header {
+        border-bottom-color: #e2e8f0 !important;
+    }
+    [data-theme="light"] .lot-modal-header h3 {
+        color: #0f172a !important;
+    }
+    [data-theme="light"] .lot-modal-footer {
+        background: #f8fafc !important;
+        border-top-color: #e2e8f0 !important;
+    }
+    [data-theme="light"] .lot-summary-card {
+        background: #f8fafc !important;
+        border-color: #e2e8f0 !important;
+    }
+    [data-theme="light"] .lot-summary-val {
+        color: #0f172a !important;
+    }
+    [data-theme="light"] .preset-chip {
+        background: #f1f5f9 !important;
+        border-color: #cbd5e1 !important;
+        color: #334155 !important;
+    }
+    [data-theme="light"] .preset-chip:hover {
+        background: #e0e7ff !important;
+        border-color: #a5b4fc !important;
+        color: #4338ca !important;
+    }
+    [data-theme="light"] .lot-modal-close:hover {
+        background: #f1f5f9 !important;
+        color: #0f172a !important;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <!-- Quick KPI Cards -->
 <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 1.5rem;">
@@ -143,26 +340,43 @@
                             {{ lot.status }}
                         </span>
                     </td>
-                    <td>
-                        <div style="display: flex; gap: 0.5rem;">
-                            {% if lot.status == 'AVAILABLE' %}
-                            <form method="POST" action="{% url 'dashboard_lot_action' lot.id %}" style="display: inline;" onsubmit="return promptForReason(this, 'BLOCK');">
-                                {% csrf_token %}
-                                <input type="hidden" name="action" value="BLOCK">
-                                <input type="hidden" name="reason" value="">
-                                <button type="submit" class="btn btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; color: #f43f5e; border-color: rgba(244, 63, 94, 0.3);" title="Put on Quarantine Hold">
-                                    <i class="fa-solid fa-lock"></i> Hold
-                                </button>
-                            </form>
+                    <td style="white-space: nowrap;">
+                        <div style="display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap;">
+                            {% if lot.status == 'QUARANTINE' %}
+                            <a href="{% url 'dashboard_quality' %}?q={{ lot.lot_number }}" class="btn btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.73rem; color: #60a5fa; border-color: rgba(96, 165, 250, 0.4); text-decoration: none; display: inline-flex; align-items: center; gap: 0.3rem; border-radius: 6px; font-weight: 500;" title="Review QC Testing &amp; QA Disposition">
+                                <i class="fa-solid fa-microscope"></i> QC Review
+                            </a>
+                            <button type="button" class="btn btn-secondary" onclick="openLotModal('{{ lot.id }}', '{{ lot.lot_number }}', '{{ lot.item.name|escapejs }}', '{{ lot.status }}', 'RELEASE');" style="padding: 0.3rem 0.6rem; font-size: 0.73rem; color: #10b981; border-color: rgba(16, 185, 129, 0.4); border-radius: 6px; display: inline-flex; align-items: center; gap: 0.3rem; font-weight: 500;" title="Authorize Immediate Release to Available">
+                                <i class="fa-solid fa-circle-check"></i> Release
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="openLotModal('{{ lot.id }}', '{{ lot.lot_number }}', '{{ lot.item.name|escapejs }}', '{{ lot.status }}', 'BLOCK');" style="padding: 0.3rem 0.55rem; font-size: 0.73rem; color: #f43f5e; border-color: rgba(244, 63, 94, 0.35); border-radius: 6px; display: inline-flex; align-items: center; gap: 0.3rem; font-weight: 500;" title="Put on Quarantine Hold">
+                                <i class="fa-solid fa-lock"></i> Hold
+                            </button>
+
+                            {% elif lot.status == 'AVAILABLE' %}
+                            <a href="{% url 'dashboard_quality' %}?q={{ lot.lot_number }}" class="btn btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.73rem; color: #94a3b8; border-color: rgba(148, 163, 184, 0.3); text-decoration: none; display: inline-flex; align-items: center; gap: 0.3rem; border-radius: 6px; font-weight: 500;" title="View COA &amp; QC Inspection Records">
+                                <i class="fa-solid fa-certificate"></i> COA / QC
+                            </a>
+                            <button type="button" class="btn btn-secondary" onclick="openLotModal('{{ lot.id }}', '{{ lot.lot_number }}', '{{ lot.item.name|escapejs }}', '{{ lot.status }}', 'BLOCK');" style="padding: 0.3rem 0.55rem; font-size: 0.73rem; color: #f43f5e; border-color: rgba(244, 63, 94, 0.35); border-radius: 6px; display: inline-flex; align-items: center; gap: 0.3rem; font-weight: 500;" title="Put on Quarantine Hold">
+                                <i class="fa-solid fa-lock"></i> Hold
+                            </button>
+
                             {% elif lot.status == 'BLOCKED' %}
-                            <form method="POST" action="{% url 'dashboard_lot_action' lot.id %}" style="display: inline;" onsubmit="return promptForReason(this, 'UNBLOCK');">
-                                {% csrf_token %}
-                                <input type="hidden" name="action" value="UNBLOCK">
-                                <input type="hidden" name="reason" value="">
-                                <button type="submit" class="btn btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; color: #10b981; border-color: rgba(16, 185, 129, 0.3);" title="Release Hold">
-                                    <i class="fa-solid fa-lock-open"></i> Release
-                                </button>
-                            </form>
+                            <button type="button" class="btn btn-secondary" onclick="openLotModal('{{ lot.id }}', '{{ lot.lot_number }}', '{{ lot.item.name|escapejs }}', '{{ lot.status }}', 'UNBLOCK');" style="padding: 0.3rem 0.6rem; font-size: 0.73rem; color: #10b981; border-color: rgba(16, 185, 129, 0.4); border-radius: 6px; display: inline-flex; align-items: center; gap: 0.3rem; font-weight: 500;" title="Release Hold back to Available">
+                                <i class="fa-solid fa-lock-open"></i> Release
+                            </button>
+                            <a href="{% url 'dashboard_quality' %}?q={{ lot.lot_number }}" class="btn btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.73rem; color: #60a5fa; border-color: rgba(96, 165, 250, 0.4); text-decoration: none; display: inline-flex; align-items: center; gap: 0.3rem; border-radius: 6px; font-weight: 500;" title="View QC History">
+                                <i class="fa-solid fa-microscope"></i> QC Review
+                            </a>
+
+                            {% elif lot.status == 'REJECTED' %}
+                            <span style="font-size: 0.72rem; color: #f43f5e; font-weight: 600; display: inline-flex; align-items: center; gap: 0.3rem; padding: 2px 6px; background: rgba(244, 63, 94, 0.1); border-radius: 4px; border: 1px solid rgba(244, 63, 94, 0.3);">
+                                <i class="fa-solid fa-ban"></i> Segregated / Scrap
+                            </span>
+                            {% else %}
+                            <a href="{% url 'dashboard_quality' %}?q={{ lot.lot_number }}" class="btn btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.73rem; color: #94a3b8; border-color: rgba(148, 163, 184, 0.3); text-decoration: none; display: inline-flex; align-items: center; gap: 0.3rem; border-radius: 6px;" title="View Details">
+                                <i class="fa-solid fa-eye"></i> Details
+                            </a>
                             {% endif %}
                         </div>
                     </td>
@@ -179,15 +393,245 @@
     </div>
 </div>
 
+<!-- ============================================================== -->
+<!-- 21 CFR PART 11 REGULATORY LOT ACTION MODAL (PREMIUM UI) -->
+<!-- ============================================================== -->
+<div id="lotActionModal" class="lot-modal-overlay">
+    <div class="lot-modal-box">
+        <!-- Modal Header -->
+        <div class="lot-modal-header">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <div id="lotModalIconWrap" style="width: 38px; height: 38px; border-radius: 10px; background: rgba(16, 185, 129, 0.15); color: #10b981; display: flex; align-items: center; justify-content: center; font-size: 1.15rem;">
+                    <i id="lotModalIcon" class="fa-solid fa-stamp"></i>
+                </div>
+                <div>
+                    <h3 id="lotModalTitle" style="margin: 0; font-size: 1.05rem; font-weight: 700; color: var(--text-primary);">
+                        21 CFR Part 11 Regulatory Authorization
+                    </h3>
+                    <p style="margin: 0; font-size: 0.74rem; color: var(--text-muted);">
+                        Attributable compliance rationale mandatory under FDA / cGMP
+                    </p>
+                </div>
+            </div>
+            <button type="button" class="lot-modal-close" onclick="closeLotModal();" title="Close">&times;</button>
+        </div>
+
+        <!-- Modal Body & Form -->
+        <form id="lotActionForm" method="POST" action="" style="display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; margin: 0;">
+            {% csrf_token %}
+            <input type="hidden" name="action" id="lotActionType" value="">
+
+            <div class="lot-modal-body">
+                <!-- Lot Summary Card -->
+                <div class="lot-summary-card">
+                    <div class="lot-summary-item">
+                        <span class="lot-summary-label">Inventory Lot No</span>
+                        <span class="lot-summary-val" id="lotModalLotNo" style="font-family: monospace; color: #60a5fa;">--</span>
+                    </div>
+                    <div class="lot-summary-item">
+                        <span class="lot-summary-label">Material / Product</span>
+                        <span class="lot-summary-val" id="lotModalItemName" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">--</span>
+                    </div>
+                    <div class="lot-summary-item">
+                        <span class="lot-summary-label">Current Status</span>
+                        <span class="lot-summary-val" id="lotModalCurStatus">--</span>
+                    </div>
+                    <div class="lot-summary-item">
+                        <span class="lot-summary-label">Regulatory Target</span>
+                        <span class="lot-summary-val" id="lotModalTargetAction" style="font-weight: 700;">--</span>
+                    </div>
+                </div>
+
+                <!-- One-Click Preset Rationale Chips -->
+                <div class="preset-chips-title">
+                    <i class="fa-solid fa-bolt" style="color: #f59e0b;"></i> Quick Regulatory Rationale Templates:
+                </div>
+                <div class="preset-chips-wrap" id="presetChipsContainer">
+                    <!-- Populated dynamically via JS -->
+                </div>
+
+                <!-- Textarea: Mandatory Rationale -->
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: flex; justify-content: space-between; align-items: center; font-size: 0.79rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.35rem;">
+                        <span><i class="fa-solid fa-pen-fancy" style="color: var(--color-primary); margin-right: 0.35rem;"></i> Attributable Regulatory Rationale *</span>
+                        <span id="charCountBadge" style="font-size: 0.7rem; color: #f43f5e; font-weight: 600;">0 / 5 min chars</span>
+                    </label>
+                    <textarea name="reason" id="lotReasonInput" rows="3" required minlength="5"
+                              placeholder="Type reason or click one of the quick templates above..."
+                              style="width: 100%; padding: 0.65rem 0.85rem; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-size: 0.84rem; line-height: 1.4; outline: none; box-sizing: border-box; resize: vertical;"
+                              oninput="updateCharCount();"></textarea>
+                </div>
+
+                <!-- 21 CFR Part 11 Electronic Signature Notice -->
+                <div class="lot-compliance-callout">
+                    <i class="fa-solid fa-shield-halved" style="color: #10b981; font-size: 1.25rem; margin-top: 2px;"></i>
+                    <div>
+                        <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 2px;">
+                            Electronic Signature Attribution (21 CFR Part 11)
+                        </div>
+                        <div>
+                            Signing as: <strong style="color: var(--text-primary);">{{ request.user.get_full_name|default:request.user.username }}</strong> ({{ request.user.username }}) &bull; Authorized Officer. 
+                            This action executes an immutable ledger record in the system audit trail.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer Buttons -->
+            <div class="lot-modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeLotModal();" style="padding: 0.6rem 1.25rem; border-radius: 8px;">
+                    Cancel
+                </button>
+                <button type="submit" id="lotModalSubmitBtn" class="btn btn-primary" 
+                        style="background: #10b981; border-color: #10b981; padding: 0.6rem 1.4rem; border-radius: 8px; display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+                    <i class="fa-solid fa-file-signature"></i> <span id="lotModalSubmitLabel">Sign &amp; Authorize</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
-function promptForReason(form, action) {
-    var reason = prompt("Enter mandatory 21 CFR Part 11 Regulatory Reason for " + action + " (min 5 characters):");
-    if (!reason || reason.trim().length < 5) {
-        alert("Action aborted: A meaningful regulatory rationale (at least 5 characters) is mandatory under 21 CFR Part 11.");
-        return false;
+const RELEASE_PRESETS = [
+    "CoA verified. All pharmacopoeial assay & dissolution limits compliant with IP/BP specifications.",
+    "Material QC testing completed satisfactorily. Approved for commercial issue and dispatch.",
+    "Batch release authorized post QA analytical report review and GMP compliance verification."
+];
+
+const HOLD_PRESETS = [
+    "Batch placed on quarantine hold pending investigation into out-of-specification (OOS) assay result.",
+    "Quarantine hold executed due to visual packaging anomaly during staging verification.",
+    "Administrative hold initiated pending analytical re-test and QA supervisor review."
+];
+
+const UNBLOCK_PRESETS = [
+    "Investigation closed with root cause resolved. QA supervisor approved release back to AVAILABLE status.",
+    "Retest analytical testing verified compliant. Quarantine hold formally lifted."
+];
+
+function openLotModal(lotId, lotNumber, itemName, currentStatus, action) {
+    const modal = document.getElementById('lotActionModal');
+    const form = document.getElementById('lotActionForm');
+    const actionInput = document.getElementById('lotActionType');
+    const lotNoSpan = document.getElementById('lotModalLotNo');
+    const itemNameSpan = document.getElementById('lotModalItemName');
+    const curStatusSpan = document.getElementById('lotModalCurStatus');
+    const targetActionSpan = document.getElementById('lotModalTargetAction');
+    const titleEl = document.getElementById('lotModalTitle');
+    const iconWrap = document.getElementById('lotModalIconWrap');
+    const iconEl = document.getElementById('lotModalIcon');
+    const submitBtn = document.getElementById('lotModalSubmitBtn');
+    const submitLabel = document.getElementById('lotModalSubmitLabel');
+    const reasonInput = document.getElementById('lotReasonInput');
+    const chipsContainer = document.getElementById('presetChipsContainer');
+
+    form.action = "/dashboard/lots/action/" + lotId + "/";
+    actionInput.value = action;
+    lotNoSpan.innerText = lotNumber || '--';
+    itemNameSpan.innerText = itemName || '--';
+    itemNameSpan.title = itemName || '';
+    curStatusSpan.innerText = currentStatus || '--';
+
+    reasonInput.value = '';
+    updateCharCount();
+
+    // Populate chips and themes based on action
+    chipsContainer.innerHTML = '';
+    let presets = [];
+
+    if (action === 'RELEASE' || action === 'UNBLOCK') {
+        presets = (action === 'RELEASE') ? RELEASE_PRESETS : UNBLOCK_PRESETS;
+        titleEl.innerText = (action === 'RELEASE') ? '21 CFR Part 11 Regulatory Release Authorization' : 'Release Quarantine Hold to Available';
+        targetActionSpan.innerText = 'AVAILABLE (Approved for Use / Sale)';
+        targetActionSpan.style.color = '#10b981';
+        iconWrap.style.background = 'rgba(16, 185, 129, 0.15)';
+        iconWrap.style.color = '#10b981';
+        iconEl.className = (action === 'RELEASE') ? 'fa-solid fa-stamp' : 'fa-solid fa-lock-open';
+        submitBtn.style.background = '#10b981';
+        submitBtn.style.borderColor = '#10b981';
+        submitLabel.innerText = (action === 'RELEASE') ? 'Sign & Authorize Release' : 'Sign & Release Hold';
+    } else if (action === 'BLOCK') {
+        presets = HOLD_PRESETS;
+        titleEl.innerText = 'Regulatory Quarantine Hold / Block Order';
+        targetActionSpan.innerText = 'BLOCKED (Quarantine Hold)';
+        targetActionSpan.style.color = '#f43f5e';
+        iconWrap.style.background = 'rgba(244, 63, 94, 0.15)';
+        iconWrap.style.color = '#f43f5e';
+        iconEl.className = 'fa-solid fa-lock';
+        submitBtn.style.background = '#f43f5e';
+        submitBtn.style.borderColor = '#f43f5e';
+        submitLabel.innerText = 'Place on Quarantine Hold';
     }
-    form.querySelector('input[name="reason"]').value = reason.trim();
-    return true;
+
+    presets.forEach(text => {
+        const chip = document.createElement('div');
+        chip.className = 'preset-chip';
+        chip.innerText = text;
+        chip.onclick = function() {
+            setPresetReason(text);
+        };
+        chipsContainer.appendChild(chip);
+    });
+
+    modal.style.display = 'flex';
+    setTimeout(() => { reasonInput.focus(); }, 100);
 }
+
+function setPresetReason(text) {
+    const input = document.getElementById('lotReasonInput');
+    input.value = text;
+    updateCharCount();
+    input.focus();
+}
+
+function updateCharCount() {
+    const input = document.getElementById('lotReasonInput');
+    const badge = document.getElementById('charCountBadge');
+    const len = input.value.trim().length;
+
+    if (len >= 5) {
+        badge.innerText = len + ' chars (Compliant)';
+        badge.style.color = '#10b981';
+    } else {
+        badge.innerText = len + ' / 5 min chars';
+        badge.style.color = '#f43f5e';
+    }
+}
+
+function closeLotModal() {
+    const modal = document.getElementById('lotActionModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    const modal = document.getElementById('lotActionModal');
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeLotModal();
+            }
+        });
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeLotModal();
+        }
+    });
+
+    const form = document.getElementById('lotActionForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const reason = document.getElementById('lotReasonInput').value.trim();
+            if (reason.length < 5) {
+                e.preventDefault();
+                alert("Regulatory Compliance Alert: 21 CFR Part 11 requires a meaningful rationale of at least 5 characters.");
+                document.getElementById('lotReasonInput').focus();
+            }
+        });
+    }
+});
 </script>
 {% endblock %}

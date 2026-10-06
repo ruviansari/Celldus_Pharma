@@ -69,19 +69,19 @@
                         <div style="font-size: 0.7rem; color: var(--text-muted);">{{ order.branch.name|default:"Central Site" }}</div>
                     </td>
                     <td>
-                        <strong style="color: #fff;">{{ order.customer.name }}</strong>
+                        <strong style="color: var(--text-primary);">{{ order.customer.name }}</strong>
                         <div style="font-size: 0.75rem; color: var(--text-secondary);">Type: {{ order.customer.get_customer_type_display }}</div>
                     </td>
                     <td>
                         {% for line in order.lines.all %}
-                        <div style="font-size: 0.85rem; color: #fff; font-weight: 600;">{{ line.product.name }}</div>
+                        <div style="font-size: 0.85rem; color: var(--text-primary); font-weight: 600;">{{ line.product.name }}</div>
                         <div style="font-size: 0.75rem; color: var(--text-secondary);">{{ line.ordered_qty }} {{ line.uom.code }} @ ₹{{ line.unit_price }}/unit</div>
                         {% empty %}
                         <span style="color: var(--text-muted); font-size: 0.8rem;">No items listed</span>
                         {% endfor %}
                     </td>
                     <td style="color: var(--text-secondary); font-size: 0.8rem;">{{ order.order_date|date:"d M Y" }}</td>
-                    <td style="color: #e2e8f0; font-size: 0.8rem;">{{ order.requested_delivery_date|date:"d M Y" }}</td>
+                    <td style="color: var(--text-primary); font-size: 0.8rem;">{{ order.requested_delivery_date|date:"d M Y" }}</td>
                     <td>
                         <strong style="color: #10b981; font-size: 0.95rem;">₹{{ order.grand_total }}</strong>
                         <div style="font-size: 0.7rem; color: var(--text-muted);">Tax: ₹{{ order.tax_total }}</div>
@@ -153,9 +153,9 @@
                         <div style="font-size: 0.7rem; color: var(--text-muted);">{{ inv.invoice_date|date:"d M Y" }}</div>
                     </td>
                     <td style="color: #60a5fa; font-family: monospace; font-size: 0.8rem;">{{ inv.order.document_no }}</td>
-                    <td style="color: #fff; font-weight: 600;">{{ inv.customer.name }}</td>
+                    <td style="color: var(--text-primary); font-weight: 600;">{{ inv.customer.name|default:inv.order.customer.name }}</td>
                     <td>
-                        <div style="color: #e2e8f0; font-size: 0.8rem;">{{ inv.transporter_name }}</div>
+                        <div style="color: var(--text-primary); font-size: 0.82rem; font-weight: 500;">{{ inv.transporter_name }}</div>
                         <div style="color: var(--text-muted); font-size: 0.7rem;">LR: {{ inv.docket_no|default:"-" }}</div>
                     </td>
                     <td>

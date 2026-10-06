@@ -182,10 +182,10 @@
                 </li>
 
                 <li class="sidebar-menu-header">Master Data & Catalog</li>
-                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_categories' %}active{% endif %}">
-                    <a href="{% url 'dashboard_categories' %}">
-                        <i class="fa-solid fa-tags"></i>
-                        <span>Therapeutic Categories</span>
+                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_masters' %}active{% endif %}">
+                    <a href="{% url 'dashboard_masters' %}">
+                        <i class="fa-solid fa-layer-group"></i>
+                        <span>Master Data Admin Control</span>
                     </a>
                 </li>
                 <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_products' %}active{% endif %}">
@@ -194,20 +194,14 @@
                         <span>Products & Formulations</span>
                     </a>
                 </li>
-                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_masters' %}active{% endif %}">
-                    <a href="{% url 'dashboard_masters' %}">
-                        <i class="fa-solid fa-layer-group"></i>
-                        <span>Master Data Admin Control</span>
+                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_categories' %}active{% endif %}">
+                    <a href="{% url 'dashboard_categories' %}">
+                        <i class="fa-solid fa-tags"></i>
+                        <span>Therapeutic Categories</span>
                     </a>
                 </li>
 
                 <li class="sidebar-menu-header">Pharma Supply & Quality</li>
-                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_inventory_lots' %}active{% endif %}">
-                    <a href="{% url 'dashboard_inventory_lots' %}">
-                        <i class="fa-solid fa-boxes-stacked"></i>
-                        <span>Inventory Lots (FEFO)</span>
-                    </a>
-                </li>
                 <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_procurement' or request.resolver_match.url_name == 'dashboard_po_view' %}active{% endif %}">
                     <a href="{% url 'dashboard_procurement' %}">
                         <i class="fa-solid fa-file-invoice-dollar"></i>
@@ -220,6 +214,12 @@
                         <span>QC & QA Dispositions</span>
                     </a>
                 </li>
+                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_inventory_lots' %}active{% endif %}">
+                    <a href="{% url 'dashboard_inventory_lots' %}">
+                        <i class="fa-solid fa-boxes-stacked"></i>
+                        <span>Inventory Lots (FEFO)</span>
+                    </a>
+                </li>
                 <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_production' %}active{% endif %}">
                     <a href="{% url 'dashboard_production' %}">
                         <i class="fa-solid fa-industry"></i>
@@ -228,6 +228,12 @@
                 </li>
 
                 <li class="sidebar-menu-header">Commercial & Users</li>
+                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_crm' %}active{% endif %}">
+                    <a href="{% url 'dashboard_crm' %}">
+                        <i class="fa-solid fa-address-book"></i>
+                        <span>CRM Leads & Pipeline</span>
+                    </a>
+                </li>
                 <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_sales' %}active{% endif %}">
                     <a href="{% url 'dashboard_sales' %}">
                         <i class="fa-solid fa-truck-fast"></i>
@@ -238,12 +244,6 @@
                     <a href="{% url 'dashboard_invoices' %}">
                         <i class="fa-solid fa-receipt"></i>
                         <span>Tax Invoices System</span>
-                    </a>
-                </li>
-                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_crm' %}active{% endif %}">
-                    <a href="{% url 'dashboard_crm' %}">
-                        <i class="fa-solid fa-address-book"></i>
-                        <span>CRM Leads & Pipeline</span>
                     </a>
                 </li>
                 <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_employee' %}active{% endif %}">
@@ -411,18 +411,35 @@
             }
             
             const confirmBtn = document.getElementById('globalConfirmDeleteBtn');
+            confirmBtn.disabled = false;
+            confirmBtn.style.opacity = '1';
+            confirmBtn.innerHTML = options.actionBtnHtml || '<i class="fa-solid fa-trash-can"></i> <span>Yes, Delete</span>';
+
             confirmBtn.onclick = function() {
+                confirmBtn.disabled = true;
+                confirmBtn.style.opacity = '0.8';
+                confirmBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> <span>' + (options.processingText || 'Processing...') + '</span>';
                 if (typeof options.onConfirm === 'function') {
                     options.onConfirm();
+                    closeModal('globalDeleteModal');
                 } else if (options.formId) {
                     const form = document.getElementById(options.formId);
                     if (form) form.submit();
                 }
-                closeModal('globalDeleteModal');
             };
             
             openModal('globalDeleteModal');
         };
+
+        // ESC key dismiss modal
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('globalDeleteModal');
+                if (modal && modal.style.display === 'flex') {
+                    closeModal('globalDeleteModal');
+                }
+            }
+        });
 
         // Sidebar Collapse/Expand Toggle on Logo / Icon Click
         (function () {

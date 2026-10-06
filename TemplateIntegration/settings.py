@@ -34,6 +34,9 @@ CSRF_TRUSTED_ORIGINS = [
     'http://cellduspharma.com:8096',
     'http://www.cellduspharma.com:8096',
     'https://*.loca.lt',
+    'https://*.trycloudflare.com',
+    'https://*.pinggy.link',
+    'https://*.pinggy.net',
 ]
 
 # Application definition
@@ -136,7 +139,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Kolkata'
 
 USE_I18N = True
 

@@ -120,4 +120,9 @@ urlpatterns = [
     path('dashboard/masters/warehouse/add/', dashboard_erp_views.dashboard_warehouse_create, name='dashboard_warehouse_create'),
     path('dashboard/masters/bin/add/', dashboard_erp_views.dashboard_storage_bin_create, name='dashboard_storage_bin_create'),
     path('dashboard/masters/bom/add/', dashboard_erp_views.dashboard_bom_create, name='dashboard_bom_create'),
+
+    # Field Force Tracking & SFA Operations
+    path('dashboard/field/portal/', dashboard_erp_views.dashboard_field_portal, name='dashboard_field_portal'),
+    path('dashboard/field/tracking/', dashboard_erp_views.dashboard_field_tracking, name='dashboard_field_tracking'),
+    path('dashboard/field/reports/', dashboard_erp_views.dashboard_field_reports, name='dashboard_field_reports'),
 ]

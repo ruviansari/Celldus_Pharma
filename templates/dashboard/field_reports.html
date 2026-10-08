@@ -1,0 +1,396 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Field Force Reports & Compliance | Celldus Pharma{% endblock %}
+{% block page_title %}SFA Field Analytics & Compliance Reports{% endblock %}
+{% block page_subtitle %}Audit-Ready Field Force Performance: Doctor Coverage, Detailing POB, Geofence Deviations, and Working Hours Tracking{% endblock %}
+
+{% block top_actions %}
+<div class="top-actions-grid" style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+    <a href="{% url 'dashboard_field_tracking' %}" class="btn btn-secondary">
+        <i class="fa-solid fa-map-location-dot"></i> Live Cockpit
+    </a>
+    <a href="{% url 'dashboard_field_portal' %}" class="btn btn-secondary">
+        <i class="fa-solid fa-mobile-screen"></i> MR Mobile View
+    </a>
+    <button class="btn btn-secondary" onclick="exportActiveTableToCsv()">
+        <i class="fa-solid fa-file-csv"></i> Export CSV
+    </button>
+    <button id="themeToggleBtn" class="theme-toggle-btn" type="button" title="Switch Theme (Dark / Light)">
+        <i id="themeToggleIcon" class="fa-solid fa-sun"></i>
+        <span id="themeToggleText">Light Mode</span>
+    </button>
+</div>
+{% endblock %}
+{% block theme_toggle_block %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Report Navigation Tabs */
+    .report-tabs {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 0.75rem;
+        overflow-x: auto;
+    }
+    .report-tab-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.6rem 1.25rem;
+        border-radius: 9999px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border-color);
+        color: var(--text-secondary);
+        font-weight: 600;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: var(--transition);
+        text-decoration: none;
+        white-space: nowrap;
+    }
+    .report-tab-btn:hover {
+        color: var(--text-primary);
+        border-color: var(--border-hover);
+    }
+    .report-tab-btn.active {
+        background: var(--color-primary);
+        border-color: var(--color-primary);
+        color: #ffffff;
+        box-shadow: 0 4px 15px var(--color-primary-glow);
+    }
+
+    /* Filter Form Card */
+    .report-filter-panel {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 14px;
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+    .filter-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1rem;
+        align-items: flex-end;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="reports-container">
+    <!-- Tabs Header -->
+    <div class="report-tabs">
+        <a href="?tab=visits&start_date={{ start_date }}&end_date={{ end_date }}" class="report-tab-btn {% if active_tab == 'visits' %}active{% endif %}">
+            <i class="fa-solid fa-stethoscope"></i> Doctor Detailing & Visits
+            <span class="badge badge-info" style="font-size: 0.7rem; padding: 2px 6px;">{{ visits|length }}</span>
+        </a>
+        <a href="?tab=attendance&start_date={{ start_date }}&end_date={{ end_date }}" class="report-tab-btn {% if active_tab == 'attendance' %}active{% endif %}">
+            <i class="fa-solid fa-clock-rotate-left"></i> Duty Attendance & Hours
+            <span class="badge badge-success" style="font-size: 0.7rem; padding: 2px 6px;">{{ attendance_list|length }}</span>
+        </a>
+        <a href="?tab=exceptions&start_date={{ start_date }}&end_date={{ end_date }}" class="report-tab-btn {% if active_tab == 'exceptions' %}active{% endif %}">
+            <i class="fa-solid fa-triangle-exclamation"></i> GPS Geofence Exceptions
+            {% if exception_count > 0 %}
+            <span class="badge badge-warning" style="font-size: 0.7rem; padding: 2px 6px;">{{ exception_count }}</span>
+            {% endif %}
+        </a>
+    </div>
+
+    <!-- Date Range & Filters Panel -->
+    <div class="report-filter-panel">
+        <form method="GET" action="" class="filter-grid">
+            <input type="hidden" name="tab" value="{{ active_tab }}">
+            
+            <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" style="font-size: 0.8rem;">From Date:</label>
+                <input type="date" name="start_date" value="{{ start_date }}" class="form-control" style="font-size: 0.85rem;">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" style="font-size: 0.8rem;">To Date:</label>
+                <input type="date" name="end_date" value="{{ end_date }}" class="form-control" style="font-size: 0.85rem;">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" style="font-size: 0.8rem;">Territory:</label>
+                <select name="territory" class="form-control" style="font-size: 0.85rem;">
+                    <option value="">All Territories</option>
+                    {% for t in territories %}
+                    <option value="{{ t.id }}" {% if selected_territory == t.id|stringformat:"s" %}selected{% endif %}>{{ t.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="display: flex; gap: 0.5rem;">
+                <button type="submit" class="btn btn-primary" style="flex: 1;">
+                    <i class="fa-solid fa-filter"></i> Apply Filter
+                </button>
+                <a href="?tab={{ active_tab }}" class="btn btn-secondary" title="Reset Filters">
+                    <i class="fa-solid fa-xmark"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- TAB 1: DOCTOR DETAILING & VISITS REPORT                   -->
+    <!-- ======================================================== -->
+    {% if active_tab == 'visits' %}
+    <div class="panel">
+        <div class="table-responsive">
+            <table class="table" id="reportExportTable">
+                <thead>
+                    <tr>
+                        <th>Visit #</th>
+                        <th>Date & Time</th>
+                        <th>Representative</th>
+                        <th>Customer / Doctor</th>
+                        <th>Type</th>
+                        <th>Duration</th>
+                        <th>Doctor Feedback</th>
+                        <th>POB Amount</th>
+                        <th>Geofence</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for v in visits %}
+                    <tr>
+                        <td><strong>{{ v.visit_no }}</strong></td>
+                        <td>
+                            <div>{{ v.visit_date }}</div>
+                            <span style="font-size: 0.75rem; color: var(--text-muted);">{{ v.start_time|time:"H:i" }} - {{ v.end_time|time:"H:i"|default:"Active" }}</span>
+                        </td>
+                        <td>
+                            <strong>{{ v.employee.first_name }} {{ v.employee.last_name }}</strong>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">{{ v.employee.employee_code }}</div>
+                        </td>
+                        <td>
+                            <strong style="color: var(--text-primary);">{{ v.customer.name }}</strong>
+                            <div style="font-size: 0.75rem; color: var(--text-secondary);">{{ v.customer.city|default:"Delhi NCR" }}</div>
+                        </td>
+                        <td><span class="badge badge-info" style="font-size: 0.7rem;">{{ v.customer.customer_type }}</span></td>
+                        <td>
+                            {% if v.duration_minutes %}
+                            <strong style="color: #10b981;">{{ v.duration_minutes }} min</strong>
+                            {% else %}
+                            <span style="color: var(--text-muted);">In Progress</span>
+                            {% endif %}
+                        </td>
+                        <td style="max-width: 200px; font-size: 0.8rem; color: var(--text-secondary); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+                            {{ v.doctor_response|default:"Promoted cardiovascular & antibiotic portfolio." }}
+                        </td>
+                        <td>
+                            {% with orders=v.orders_booked.all %}
+                            {% if orders %}
+                                <strong>₹{{ orders.0.booked_amount|floatformat:2 }}</strong>
+                            {% else %}
+                                <span style="color: var(--text-muted);">₹0.00</span>
+                            {% endif %}
+                            {% endwith %}
+                        </td>
+                        <td>
+                            {% if v.geofence_status == 'VALID' %}
+                            <span class="badge badge-success"><i class="fa-solid fa-shield-check"></i> VALID ({{ v.distance_to_target_meters|floatformat:0 }}m)</span>
+                            {% elif v.geofence_status == 'REQUIRES_REVIEW' %}
+                            <span class="badge badge-warning"><i class="fa-solid fa-triangle-exclamation"></i> REVIEW ({{ v.distance_to_target_meters|floatformat:0 }}m)</span>
+                            {% else %}
+                            <span class="badge badge-danger">OUTSIDE</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge {% if v.visit_status == 'COMPLETED' %}badge-success{% else %}badge-info{% endif %}">
+                                {{ v.visit_status }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="10" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">
+                            No detailing visits match the selected date range.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- TAB 2: DUTY ATTENDANCE & HOURS REPORT                     -->
+    <!-- ======================================================== -->
+    {% elif active_tab == 'attendance' %}
+    <div class="panel">
+        <div class="table-responsive">
+            <table class="table" id="reportExportTable">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Representative</th>
+                        <th>Designation</th>
+                        <th>Work Mode</th>
+                        <th>Check-In</th>
+                        <th>Check-Out</th>
+                        <th>Duration</th>
+                        <th>GPS Accuracy</th>
+                        <th>Validation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for att in attendance_list %}
+                    <tr>
+                        <td><strong>{{ att.date }}</strong></td>
+                        <td>
+                            <strong>{{ att.employee.first_name }} {{ att.employee.last_name }}</strong>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">{{ att.employee.employee_code }}</div>
+                        </td>
+                        <td>{{ att.employee.designation|default:"MR" }}</td>
+                        <td><span class="badge badge-info" style="font-size: 0.7rem;">{{ att.work_mode }}</span></td>
+                        <td>
+                            {% if att.check_in_time %}
+                            <strong>{{ att.check_in_time|time:"H:i" }}</strong>
+                            <div style="font-size: 0.72rem; color: var(--text-muted);">Lat: {{ att.check_in_lat|floatformat:4 }}</div>
+                            {% else %}
+                            --:--
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if att.check_out_time %}
+                            <strong>{{ att.check_out_time|time:"H:i" }}</strong>
+                            {% else %}
+                            <span style="color: var(--text-muted);">Active / Not Punched</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if att.total_working_hours %}
+                            <strong style="color: #10b981;">{{ att.total_working_hours|floatformat:1 }} hrs</strong>
+                            {% else %}
+                            <span style="color: var(--text-muted);">--</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if att.check_in_accuracy %}
+                            ±{{ att.check_in_accuracy|floatformat:0 }}m
+                            {% else %}
+                            --
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if att.check_in_status == 'VALID' %}
+                            <span class="badge badge-success"><i class="fa-solid fa-circle-check"></i> Validated</span>
+                            {% elif att.check_in_status == 'REQUIRES_REVIEW' %}
+                            <span class="badge badge-warning"><i class="fa-solid fa-triangle-exclamation"></i> Under Review</span>
+                            {% else %}
+                            <span class="badge" style="background: rgba(148, 163, 184, 0.15); color: #94a3b8;">Normal</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">
+                            No attendance records match the selected date range.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- TAB 3: GPS GEOFENCE & COMPLIANCE EXCEPTIONS               -->
+    <!-- ======================================================== -->
+    {% elif active_tab == 'exceptions' %}
+    <div class="panel">
+        <div class="table-responsive">
+            <table class="table" id="reportExportTable">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Representative</th>
+                        <th>Entity / Customer</th>
+                        <th>Deviation Distance</th>
+                        <th>Reported Reason / Remarks</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for exc in exceptions %}
+                    <tr>
+                        <td><strong>{{ exc.date }}</strong></td>
+                        <td>
+                            <span class="badge badge-warning" style="font-size: 0.72rem;">
+                                <i class="fa-solid fa-triangle-exclamation"></i> {{ exc.type }}
+                            </span>
+                        </td>
+                        <td>
+                            <strong>{{ exc.employee_name }}</strong>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">{{ exc.employee_code }}</div>
+                        </td>
+                        <td>{{ exc.target }}</td>
+                        <td>
+                            {% if exc.distance %}
+                            <strong style="color: #f59e0b;">{{ exc.distance|floatformat:0 }} meters</strong>
+                            {% else %}
+                            --
+                            {% endif %}
+                        </td>
+                        <td style="max-width: 250px; font-size: 0.82rem; color: var(--text-secondary);">
+                            {{ exc.reason|default:"Location perimeter check exceeded threshold" }}
+                        </td>
+                        <td>
+                            <span class="badge badge-warning">REQUIRES_REVIEW</span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">
+                            <i class="fa-solid fa-circle-check" style="color: #10b981; font-size: 1.5rem; margin-bottom: 0.5rem;"></i>
+                            <p>No geofence compliance deviations recorded in this period. 100% compliant!</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Export Table to CSV
+    function exportActiveTableToCsv() {
+        const table = document.getElementById('reportExportTable');
+        if (!table) return;
+
+        let csv = [];
+        const rows = table.querySelectorAll('tr');
+
+        for (let i = 0; i < rows.length; i++) {
+            const row = [];
+            const cols = rows[i].querySelectorAll('td, th');
+            for (let j = 0; j < cols.length; j++) {
+                let data = cols[j].innerText.replace(/(\r\n|\n|\r)/gm, ' ').replace(/(\s\s+)/g, ' ').trim();
+                data = data.replace(/"/g, '""');
+                row.push('"' + data + '"');
+            }
+            csv.push(row.join(','));
+        }
+
+        const csvContent = 'data:text/csv;charset=utf-8,' + csv.join('\n');
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement('a');
+        link.setAttribute('href', encodedUri);
+        link.setAttribute('download', `Celldus_SFA_Report_${new Date().toISOString().slice(0, 10)}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+</script>
+{% endblock %}

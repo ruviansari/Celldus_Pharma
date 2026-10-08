@@ -60,7 +60,8 @@
                         <span class="badge badge-primary"><i class="fa-solid fa-shield-halved"
                                 style="margin-right: 0.25rem;"></i>Super Admin</span>
                         {% else %}
-                        <span class="badge badge-secondary">Standard Staff</span>
+                        <span class="badge badge-secondary"><i class="fa-solid fa-user"
+                                style="margin-right: 0.25rem;"></i>Standard Staff</span>
                         {% endif %}
                     </td>
                     <td style="color: var(--text-muted); font-size: 0.85rem;">{{ u.date_joined|date:"M d, Y" }}</td>
@@ -131,13 +132,27 @@
             </div>
             <div class="form-group">
                 <label class="form-label" for="add_password">Password</label>
-                <input type="password" id="add_password" name="password" class="form-control" minlength="6"
-                    placeholder="••••••••" required>
+                <div style="position: relative;">
+                    <input type="password" id="add_password" name="password" class="form-control" minlength="6"
+                        placeholder="••••••••" required style="padding-right: 44px;">
+                    <button type="button" class="pwd-toggle-btn" onclick="togglePasswordVisibility('add_password', this)"
+                        style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; transition: color 0.15s ease;"
+                        title="Show/Hide Password">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+                </div>
             </div>
             <div class="form-group">
                 <label class="form-label" for="add_confirm_password">Confirm Password</label>
-                <input type="password" id="add_confirm_password" name="confirm_password" class="form-control"
-                    minlength="6" placeholder="••••••••" required>
+                <div style="position: relative;">
+                    <input type="password" id="add_confirm_password" name="confirm_password" class="form-control"
+                        minlength="6" placeholder="••••••••" required style="padding-right: 44px;">
+                    <button type="button" class="pwd-toggle-btn" onclick="togglePasswordVisibility('add_confirm_password', this)"
+                        style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; transition: color 0.15s ease;"
+                        title="Show/Hide Password">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+                </div>
             </div>
             <div class="form-group" style="display: flex; gap: 0.5rem; align-items: center; margin-top: 1rem;">
                 <input type="checkbox" id="add_is_superuser" name="is_superuser"
@@ -163,13 +178,27 @@
             {% csrf_token %}
             <div class="form-group">
                 <label class="form-label" for="new_password">New Password</label>
-                <input type="password" id="new_password" name="password" class="form-control" minlength="6"
-                    placeholder="••••••••" required>
+                <div style="position: relative;">
+                    <input type="password" id="new_password" name="password" class="form-control" minlength="6"
+                        placeholder="••••••••" required style="padding-right: 44px;">
+                    <button type="button" class="pwd-toggle-btn" onclick="togglePasswordVisibility('new_password', this)"
+                        style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; transition: color 0.15s ease;"
+                        title="Show/Hide Password">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+                </div>
             </div>
             <div class="form-group">
                 <label class="form-label" for="confirm_new_password">Confirm New Password</label>
-                <input type="password" id="confirm_new_password" name="confirm_password" class="form-control"
-                    minlength="6" placeholder="••••••••" required>
+                <div style="position: relative;">
+                    <input type="password" id="confirm_new_password" name="confirm_password" class="form-control"
+                        minlength="6" placeholder="••••••••" required style="padding-right: 44px;">
+                    <button type="button" class="pwd-toggle-btn" onclick="togglePasswordVisibility('confirm_new_password', this)"
+                        style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; transition: color 0.15s ease;"
+                        title="Show/Hide Password">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+                </div>
             </div>
             <div class="form-actions">
                 <button type="button" class="btn btn-secondary"
@@ -187,7 +216,38 @@
         const form = document.getElementById('changePasswordForm');
         form.action = `/dashboard/users/change-password/${id}/`;
         document.getElementById('pwd_username').innerText = username;
+        // Reset password fields and visibility on open
+        ['new_password', 'confirm_new_password'].forEach(id => {
+            const input = document.getElementById(id);
+            if (input) {
+                input.value = '';
+                input.type = 'password';
+            }
+        });
+        document.querySelectorAll('#changePasswordModal .pwd-toggle-btn i').forEach(icon => {
+            icon.className = 'fa-solid fa-eye';
+        });
         openModal('changePasswordModal');
+    }
+
+    // Toggle Password Visibility (Eye Icon)
+    function togglePasswordVisibility(inputId, btn) {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+        const icon = btn.querySelector('i');
+        if (input.type === 'password') {
+            input.type = 'text';
+            if (icon) {
+                icon.className = 'fa-solid fa-eye-slash';
+            }
+            btn.style.color = '#38bdf8';
+        } else {
+            input.type = 'password';
+            if (icon) {
+                icon.className = 'fa-solid fa-eye';
+            }
+            btn.style.color = 'var(--text-muted)';
+        }
     }
 </script>
 {% endblock %}

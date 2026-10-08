@@ -246,19 +246,40 @@
                         <span>Tax Invoices System</span>
                     </a>
                 </li>
-                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_employee' %}active{% endif %}">
+                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_employee' or '/employee' in request.path %}active{% endif %}">
                     <a href="{% url 'dashboard_employee' %}">
                         <i class="fa-solid fa-users-gear"></i>
                         <span>Employee</span>
                     </a>
                 </li>
-                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_customers' %}active{% endif %}">
+
+                <li class="sidebar-menu-header">Field Force SFA & Tracking</li>
+                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_field_portal' %}active{% endif %}">
+                    <a href="{% url 'dashboard_field_portal' %}">
+                        <i class="fa-solid fa-mobile-screen"></i>
+                        <span>Field Force Portal (MR)</span>
+                        <span style="background: #06b6d4; color: #fff; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; margin-left: auto;">GPS</span>
+                    </a>
+                </li>
+                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_field_tracking' %}active{% endif %}">
+                    <a href="{% url 'dashboard_field_tracking' %}">
+                        <i class="fa-solid fa-map-location-dot"></i>
+                        <span>Manager Live Cockpit</span>
+                    </a>
+                </li>
+                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_field_reports' %}active{% endif %}">
+                    <a href="{% url 'dashboard_field_reports' %}">
+                        <i class="fa-solid fa-chart-line"></i>
+                        <span>SFA Reports & Audit</span>
+                    </a>
+                </li>
+                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_customers' or '/customers' in request.path %}active{% endif %}">
                     <a href="{% url 'dashboard_customers' %}">
                         <i class="fa-solid fa-users-viewfinder"></i>
                         <span>Website Inquiries</span>
                     </a>
                 </li>
-                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_users' %}active{% endif %}">
+                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_users' or '/users' in request.path %}active{% endif %}">
                     <a href="{% url 'dashboard_users' %}">
                         <i class="fa-solid fa-user-shield"></i>
                         <span>10 Enterprise Roles</span>
@@ -469,6 +490,49 @@
 
             const currentCollapsed = document.documentElement.classList.contains('sidebar-collapsed');
             updateToggleTitles(currentCollapsed);
+        })();
+
+        // Sidebar Scroll Persistence & Active Highlight Manager
+        (function () {
+            const sidebarMenu = document.querySelector('.sidebar-menu');
+            if (!sidebarMenu) return;
+
+            // 1. Restore saved scroll position across page reloads
+            const savedScroll = sessionStorage.getItem('celldus_sidebar_scroll');
+            if (savedScroll !== null) {
+                sidebarMenu.scrollTop = parseInt(savedScroll, 10);
+            } else {
+                // Ensure active item is visible in view without jumping
+                const activeItem = sidebarMenu.querySelector('.sidebar-menu-item.active');
+                if (activeItem) {
+                    activeItem.scrollIntoView({ block: 'nearest', behavior: 'instant' });
+                }
+            }
+
+            // 2. Track scroll position dynamically
+            sidebarMenu.addEventListener('scroll', function () {
+                sessionStorage.setItem('celldus_sidebar_scroll', sidebarMenu.scrollTop);
+            }, { passive: true });
+
+            // 3. Immediately highlight clicked link & save scroll
+            sidebarMenu.querySelectorAll('.sidebar-menu-item a').forEach(function (link) {
+                link.addEventListener('click', function () {
+                    sessionStorage.setItem('celldus_sidebar_scroll', sidebarMenu.scrollTop);
+                    sidebarMenu.querySelectorAll('.sidebar-menu-item').forEach(function (item) {
+                        item.classList.remove('active');
+                    });
+                    const parent = this.closest('.sidebar-menu-item');
+                    if (parent) {
+                        parent.classList.add('active');
+                    }
+                });
+            });
+
+            // 4. Ensure main window always starts at top on navigation
+            if ('scrollRestoration' in history) {
+                history.scrollRestoration = 'manual';
+            }
+            window.scrollTo(0, 0);
         })();
     </script>
 

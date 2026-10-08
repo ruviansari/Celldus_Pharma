@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Modern Login Page</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -58,7 +59,15 @@
             font-weight: 500;
         }
 
-        .input-group input {
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+
+        .input-group input,
+        .input-wrapper input {
             width: 100%;
             padding: 0.75rem 1rem;
             border: 1px solid #d1d5db;
@@ -68,9 +77,36 @@
             outline: none;
         }
 
-        .input-group input:focus {
+        .input-wrapper input {
+            padding-right: 2.75rem;
+        }
+
+        .input-group input:focus,
+        .input-wrapper input:focus {
             border-color: #4f46e5;
             box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .toggle-visibility-btn {
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #9ca3af;
+            cursor: pointer;
+            padding: 0.25rem 0.5rem;
+            font-size: 1rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s ease;
+            outline: none;
+        }
+
+        .toggle-visibility-btn:hover {
+            color: #4f46e5;
         }
 
         .remember-forget {
@@ -153,12 +189,22 @@
             {% csrf_token %}
             <div class="input-group">
                 <label for="username">Username or Email</label>
-                <input type="text" id="username" name="username" placeholder="Username or email address" required>
+                <div class="input-wrapper">
+                    <input type="text" id="username" name="username" placeholder="Username or email address" required>
+                    <button type="button" class="toggle-visibility-btn" onclick="toggleFieldVisibility('username', this)" title="Toggle visibility" aria-label="Toggle username visibility">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+                </div>
             </div>
 
             <div class="input-group">
                 <label for="password">Password</label>
-                <input type="password" id="password" name="password" placeholder="••••••••" required>
+                <div class="input-wrapper">
+                    <input type="password" id="password" name="password" placeholder="••••••••" required>
+                    <button type="button" class="toggle-visibility-btn" onclick="toggleFieldVisibility('password', this)" title="Show password" aria-label="Toggle password visibility">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+                </div>
             </div>
 
             <div class="remember-forget">
@@ -176,5 +222,39 @@
         </form>
     </div>
 
+    <script>
+        function toggleFieldVisibility(fieldId, btn) {
+            const input = document.getElementById(fieldId);
+            if (!input) return;
+            const icon = btn.querySelector('i');
+            if (!icon) return;
+
+            if (fieldId === 'password') {
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                    btn.setAttribute('title', 'Hide password');
+                } else {
+                    input.type = 'password';
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                    btn.setAttribute('title', 'Show password');
+                }
+            } else {
+                if (input.type === 'text') {
+                    input.type = 'password';
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                    btn.setAttribute('title', 'Show username');
+                } else {
+                    input.type = 'text';
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                    btn.setAttribute('title', 'Hide username');
+                }
+            }
+        }
+    </script>
 </body>
 </html>

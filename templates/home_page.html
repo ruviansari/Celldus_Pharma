@@ -307,76 +307,308 @@
                     </div>
                 </div>
             </div><!-- row end -->
-            <div class="row ttm-boxes-spacing-5px mt-20">
-                <div class="col-lg-3 col-md-6 col-sm-6 ttm-box-col-wrapper">
-                    <!-- ttm-fid -->
-                    <div class="ttm-fid inside ttm-fid-with-icon ttm-fid-view-lefticon style1">
-                        <div class="ttm-fid-icon-wrapper">
-                            <i class="fa-solid fa-calendar-check"></i>
+            <style>
+                /* CELLDUS EXECUTIVE HOME STATS SYSTEM */
+                .celldus-home-stats-wrapper {
+                    margin-top: 2rem;
+                    background: #ffffff;
+                    border-radius: 22px;
+                    padding: 1.75rem 2rem;
+                    box-shadow: 0 16px 40px -12px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(226, 232, 240, 0.9);
+                    position: relative;
+                    overflow: hidden;
+                    border: 1px solid rgba(226, 232, 240, 0.85);
+                }
+                .celldus-home-stats-wrapper::before {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    height: 4px;
+                    background: linear-gradient(90deg, #2563eb 0%, #10b981 33%, #6366f1 66%, #0ea5e9 100%);
+                }
+                .celldus-home-stats-grid {
+                    display: grid;
+                    grid-template-columns: repeat(4, 1fr);
+                    gap: 1.5rem;
+                    position: relative;
+                    z-index: 1;
+                }
+                .celldus-home-stat-card {
+                    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s ease;
+                    border-radius: 16px;
+                    padding: 0.5rem;
+                }
+                .celldus-home-stat-card:hover {
+                    transform: translateY(-4px);
+                }
+                .celldus-home-stat-card:not(:last-child) {
+                    position: relative;
+                }
+                .celldus-home-stat-card:not(:last-child)::after {
+                    content: '';
+                    position: absolute;
+                    right: -0.75rem;
+                    top: 15%;
+                    bottom: 15%;
+                    width: 1px;
+                    background: linear-gradient(180deg, rgba(226, 232, 240, 0.2) 0%, rgba(203, 213, 225, 0.8) 50%, rgba(226, 232, 240, 0.2) 100%);
+                }
+                .home-stat-card-inner {
+                    display: flex;
+                    align-items: center;
+                    gap: 1.15rem;
+                    padding: 0.5rem;
+                }
+                .home-stat-icon-box {
+                    width: 58px;
+                    height: 58px;
+                    border-radius: 16px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 1.55rem;
+                    flex-shrink: 0;
+                    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+                    box-shadow: 0 8px 18px -4px rgba(0, 0, 0, 0.08);
+                }
+                .celldus-home-stat-card:hover .home-stat-icon-box {
+                    transform: scale(1.1) rotate(4deg);
+                }
+                .theme-blue .home-stat-icon-box {
+                    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+                    border: 1.5px solid rgba(59, 130, 246, 0.3);
+                    color: #2563eb;
+                    box-shadow: 0 10px 22px -5px rgba(37, 99, 235, 0.22);
+                }
+                .theme-blue .home-stat-plus { color: #2563eb; }
+
+                .theme-emerald .home-stat-icon-box {
+                    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+                    border: 1.5px solid rgba(16, 185, 129, 0.3);
+                    color: #059669;
+                    box-shadow: 0 10px 22px -5px rgba(16, 185, 129, 0.22);
+                }
+                .theme-emerald .home-stat-plus { color: #059669; }
+
+                .theme-indigo .home-stat-icon-box {
+                    background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+                    border: 1.5px solid rgba(99, 102, 241, 0.3);
+                    color: #4f46e5;
+                    box-shadow: 0 10px 22px -5px rgba(99, 102, 241, 0.22);
+                }
+                .theme-indigo .home-stat-plus { color: #4f46e5; }
+
+                .theme-amber .home-stat-icon-box {
+                    background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
+                    border: 1.5px solid rgba(14, 165, 233, 0.3);
+                    color: #0284c7;
+                    box-shadow: 0 10px 22px -5px rgba(2, 132, 199, 0.22);
+                }
+                .theme-amber .home-stat-plus { color: #0284c7; }
+
+                .home-stat-content {
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                }
+                .home-stat-number-wrap {
+                    font-size: 2.15rem;
+                    font-weight: 800;
+                    line-height: 1.1;
+                    color: #0f172a;
+                    font-family: 'Inter', sans-serif;
+                    letter-spacing: -0.03em;
+                    display: flex;
+                    align-items: baseline;
+                    gap: 2px;
+                }
+                .home-stat-number-wrap .numinate {
+                    font-size: inherit;
+                    font-weight: inherit;
+                    line-height: inherit;
+                    color: #0f172a;
+                    background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                }
+                .home-stat-plus {
+                    font-size: 1.35rem;
+                    font-weight: 800;
+                    line-height: 1;
+                    margin-left: 2px;
+                }
+                .home-stat-title {
+                    font-size: 0.84rem;
+                    font-weight: 600;
+                    color: #64748b;
+                    margin-top: 0.25rem;
+                    letter-spacing: 0.01em;
+                    line-height: 1.3;
+                    white-space: nowrap;
+                }
+
+                @media (max-width: 991px) {
+                    .celldus-home-stats-wrapper {
+                        padding: 1.5rem 1.25rem;
+                        border-radius: 20px;
+                        margin-top: 1.5rem;
+                    }
+                    .celldus-home-stats-grid {
+                        grid-template-columns: repeat(2, 1fr);
+                        gap: 1rem;
+                    }
+                    .celldus-home-stat-card:not(:last-child)::after {
+                        display: none;
+                    }
+                    .celldus-home-stat-card {
+                        background: #f8fafc;
+                        border: 1px solid #e2e8f0;
+                        border-radius: 16px;
+                        padding: 0.85rem;
+                        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
+                    }
+                    .home-stat-card-inner {
+                        gap: 0.9rem;
+                        padding: 0.2rem;
+                    }
+                    .home-stat-icon-box {
+                        width: 50px;
+                        height: 50px;
+                        border-radius: 14px;
+                        font-size: 1.3rem;
+                    }
+                    .home-stat-number-wrap {
+                        font-size: 1.85rem;
+                    }
+                    .home-stat-title {
+                        font-size: 0.78rem;
+                        white-space: normal;
+                    }
+                }
+
+                @media (max-width: 575px) {
+                    .celldus-home-stats-wrapper {
+                        padding: 1rem 0.75rem;
+                        border-radius: 18px;
+                        box-shadow: 0 12px 30px -10px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(226, 232, 240, 0.9);
+                    }
+                    .celldus-home-stats-grid {
+                        grid-template-columns: repeat(2, 1fr);
+                        gap: 0.65rem;
+                    }
+                    .celldus-home-stat-card {
+                        padding: 0.75rem 0.65rem;
+                        border-radius: 14px;
+                        background: #f8fafc;
+                        border: 1px solid #e2e8f0;
+                    }
+                    .home-stat-card-inner {
+                        flex-direction: column;
+                        align-items: flex-start;
+                        gap: 0.55rem;
+                        padding: 0;
+                    }
+                    .home-stat-icon-box {
+                        width: 42px;
+                        height: 42px;
+                        border-radius: 12px;
+                        font-size: 1.15rem;
+                    }
+                    .home-stat-number-wrap {
+                        font-size: 1.55rem;
+                    }
+                    .home-stat-plus {
+                        font-size: 1.1rem;
+                    }
+                    .home-stat-title {
+                        font-size: 0.74rem;
+                        line-height: 1.25;
+                        font-weight: 600;
+                    }
+                }
+
+                @media (max-width: 360px) {
+                    .celldus-home-stats-grid {
+                        grid-template-columns: 1fr;
+                        gap: 0.65rem;
+                    }
+                    .home-stat-card-inner {
+                        flex-direction: row;
+                        align-items: center;
+                        gap: 0.85rem;
+                    }
+                }
+            </style>
+
+            <div class="row mt-20">
+                <div class="col-lg-12">
+                    <div class="celldus-home-stats-wrapper">
+                        <div class="celldus-home-stats-grid">
+                            
+                            <!-- Stat 1: Years of Experience -->
+                            <div class="celldus-home-stat-card theme-blue">
+                                <div class="home-stat-card-inner">
+                                    <div class="home-stat-icon-box">
+                                        <i class="fa-solid fa-calendar-check"></i>
+                                    </div>
+                                    <div class="home-stat-content">
+                                        <div class="home-stat-number-wrap">
+                                            <span data-appear-animation="animateDigits" data-from="0" data-to="5" data-interval="1" class="numinate">5</span><span class="home-stat-plus">+</span>
+                                        </div>
+                                        <div class="home-stat-title">Years of Experience</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Stat 2: Product Portfolio -->
+                            <div class="celldus-home-stat-card theme-emerald">
+                                <div class="home-stat-card-inner">
+                                    <div class="home-stat-icon-box">
+                                        <i class="fa-solid fa-capsules"></i>
+                                    </div>
+                                    <div class="home-stat-content">
+                                        <div class="home-stat-number-wrap">
+                                            <span data-appear-animation="animateDigits" data-from="0" data-to="{% if total_products_count %}{{ total_products_count }}{% else %}15{% endif %}" data-interval="2" class="numinate">{% if total_products_count %}{{ total_products_count }}{% else %}15{% endif %}</span><span class="home-stat-plus">+</span>
+                                        </div>
+                                        <div class="home-stat-title">Product Portfolio</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Stat 3: Healthcare Partners -->
+                            <div class="celldus-home-stat-card theme-indigo">
+                                <div class="home-stat-card-inner">
+                                    <div class="home-stat-icon-box">
+                                        <i class="fa-solid fa-hospital-user"></i>
+                                    </div>
+                                    <div class="home-stat-content">
+                                        <div class="home-stat-number-wrap">
+                                            <span data-appear-animation="animateDigits" data-from="0" data-to="150" data-interval="15" class="numinate">150</span><span class="home-stat-plus">+</span>
+                                        </div>
+                                        <div class="home-stat-title">Healthcare Partners</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Stat 4: States Covered -->
+                            <div class="celldus-home-stat-card theme-amber">
+                                <div class="home-stat-card-inner">
+                                    <div class="home-stat-icon-box">
+                                        <i class="fa-solid fa-map-location-dot"></i>
+                                    </div>
+                                    <div class="home-stat-content">
+                                        <div class="home-stat-number-wrap">
+                                            <span data-appear-animation="animateDigits" data-from="0" data-to="25" data-interval="15" class="numinate">25</span><span class="home-stat-plus">+</span>
+                                        </div>
+                                        <div class="home-stat-title">States Covered</div>
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
-                        <div class="ttm-fid-contents">
-                            <h4 class="ttm-fid-inner">
-                                <span data-appear-animation="animateDigits" data-from="0" data-to="5" data-interval="1"
-                                    class="numinate">5</span>
-                                <sub>+</sub>
-                            </h4>
-                            <h3 class="ttm-fid-title">Years of Experience</h3>
-                        </div>
-                    </div><!-- ttm-fid end -->
-                </div>
-                <div class="col-lg-3 col-md-6 col-sm-6 ttm-box-col-wrapper">
-                    <!-- ttm-fid -->
-                    <div class="ttm-fid inside ttm-fid-with-icon ttm-fid-view-lefticon style1">
-                        <div class="ttm-fid-icon-wrapper">
-                            <i class="fa-solid fa-capsules"></i>
-                        </div>
-                        <div class="ttm-fid-contents">
-                            <h4 class="ttm-fid-inner">
-                                <span data-appear-animation="animateDigits" data-from="0" data-to="{{ total_products_count|default:products|length }}"
-                                    data-interval="2" data-before="" data-before-style="sup" data-after=""
-                                    data-after-style="sub" class="numinate">{{ total_products_count|default:products|length }}
-                                </span>
-                                <sub>+</sub>
-                            </h4>
-                            <h3 class="ttm-fid-title">Product Portfolio</h3>
-                        </div>
-                    </div><!-- ttm-fid end -->
-                </div>
-                <div class="col-lg-3 col-md-6 col-sm-6 ttm-box-col-wrapper">
-                    <!-- ttm-fid -->
-                    <div class="ttm-fid inside ttm-fid-with-icon ttm-fid-view-lefticon style1">
-                        <div class="ttm-fid-icon-wrapper">
-                            <i class="fa-solid fa-hospital-user"></i>
-                        </div>
-                        <div class="ttm-fid-contents">
-                            <h4 class="ttm-fid-inner">
-                                <span data-appear-animation="animateDigits" data-from="0" data-to="150"
-                                    data-interval="15" data-before="" data-before-style="sup" data-after=""
-                                    data-after-style="sub" class="numinate">150
-                                </span>
-                                <sub>+</sub>
-                            </h4>
-                            <h3 class="ttm-fid-title">Healthcare Partners</h3>
-                        </div>
-                    </div><!-- ttm-fid end -->
-                </div>
-                <div class="col-lg-3 col-md-6 col-sm-6 ttm-box-col-wrapper">
-                    <!-- ttm-fid -->
-                    <div class="ttm-fid inside ttm-fid-with-icon ttm-fid-view-lefticon style1">
-                        <div class="ttm-fid-icon-wrapper">
-                            <i class="fa-solid fa-map-location-dot"></i>
-                        </div>
-                        <div class="ttm-fid-contents">
-                            <h4 class="ttm-fid-inner">
-                                <span data-appear-animation="animateDigits" data-from="0" data-to="25"
-                                    data-interval="15" data-before="" data-before-style="sup" data-after=""
-                                    data-after-style="sub" class="numinate">25
-                                </span>
-                                <sub>+</sub>
-                            </h4>
-                            <h3 class="ttm-fid-title">States Covered</h3>
-                        </div>
-                    </div><!-- ttm-fid end -->
+                    </div>
                 </div>
             </div>
         </div>

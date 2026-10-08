@@ -37,6 +37,8 @@ CSRF_TRUSTED_ORIGINS = [
     'https://*.trycloudflare.com',
     'https://*.pinggy.link',
     'https://*.pinggy.net',
+    'https://*.pinggy-free.link',
+    'https://*.lhr.life',
 ]
 
 # Application definition
@@ -201,5 +203,9 @@ SPECTACULAR_SETTINGS = {
 
 # Cross-Origin Resource Sharing (CORS)
 CORS_ALLOW_ALL_ORIGINS = True
+
+# Google Maps API Configuration
+GOOGLE_MAPS_API_KEY = os.environ.get('GOOGLE_MAPS_API_KEY', 'AIzaSyB51aYJiic2l5j0grNJsbd-WIoH2M-D0L0')
+
 
 

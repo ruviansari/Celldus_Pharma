@@ -37,6 +37,7 @@ urlpatterns = [
     path('api/v1/crm/', include('erp_crm.urls')),
     path('api/v1/finance/', include('erp_finance.urls')),
     path('api/v1/hr/', include('erp_hr.urls')),
+    path('api/v1/tracking/', include('erp_crm.tracking_urls')),
 
     # Frontend Website & Dashboards
     path('', include('main.urls')),

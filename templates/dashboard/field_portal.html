@@ -1,0 +1,1410 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Field Force SFA & MR Portal | Celldus Pharma{% endblock %}
+{% block page_title %}Field Force SFA & Detailing Portal{% endblock %}
+{% block page_subtitle %}Field Representative Mobile Cockpit: GPS Attendance, Daily Beat Plan, Geofenced Doctor Detailing, Samples & POB Orders{% endblock %}
+
+{% block top_actions %}
+<div class="top-actions-grid" style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+    <!-- Network Sync Status Pill -->
+    <div id="networkStatusPill" class="network-pill online" title="Network Connection Status">
+        <i class="fa-solid fa-signal"></i>
+        <span id="networkStatusText">Online (Synced)</span>
+    </div>
+
+    <!-- Manual Sync Offline Queue Button -->
+    <button id="syncOfflineBtn" class="btn btn-secondary" onclick="syncPendingEvents()" style="display: none;">
+        <i class="fa-solid fa-cloud-arrow-up"></i>
+        <span>Sync (<span id="pendingQueueCount">0</span>)</span>
+    </button>
+
+    <!-- Switch to Manager Cockpit if authorized -->
+    {% if is_manager_or_admin %}
+    <a href="{% url 'dashboard_field_tracking' %}" class="btn btn-secondary">
+        <i class="fa-solid fa-map-location-dot"></i>
+        <span>Manager Live Cockpit</span>
+    </a>
+    {% endif %}
+
+    <button id="themeToggleBtn" class="theme-toggle-btn" type="button" title="Switch Theme (Dark / Light)">
+        <i id="themeToggleIcon" class="fa-solid fa-sun"></i>
+        <span id="themeToggleText">Light Mode</span>
+    </button>
+</div>
+{% endblock %}
+{% block theme_toggle_block %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Mobile-first SFA Portal Aesthetics */
+    .sfa-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        max-width: 1100px;
+        margin: 0 auto;
+    }
+
+    /* Network Pill */
+    .network-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.35rem 0.85rem;
+        border-radius: 9999px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        background: rgba(16, 185, 129, 0.12);
+        color: #10b981;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        transition: var(--transition);
+    }
+    .network-pill.offline {
+        background: rgba(245, 158, 11, 0.12);
+        color: #f59e0b;
+        border-color: rgba(245, 158, 11, 0.3);
+    }
+
+    /* Representative Hero Card */
+    .rep-hero-card {
+        background: linear-gradient(135deg, rgba(79, 70, 229, 0.15) 0%, rgba(6, 182, 212, 0.08) 100%);
+        border: 1px solid rgba(79, 70, 229, 0.3);
+        border-radius: 16px;
+        padding: 1.25rem 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    }
+    .rep-profile {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    .rep-avatar {
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #4f46e5, #06b6d4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
+        font-size: 1.3rem;
+        font-weight: 700;
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35);
+    }
+    .rep-info h2 {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .rep-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-top: 0.35rem;
+        font-size: 0.82rem;
+        color: var(--text-secondary);
+    }
+    .rep-meta-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        background: rgba(255, 255, 255, 0.04);
+        padding: 0.2rem 0.6rem;
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
+    }
+
+    /* GPS Permission Education Banner */
+    .gps-edu-banner {
+        background: rgba(14, 165, 233, 0.08);
+        border: 1px solid rgba(14, 165, 233, 0.3);
+        border-radius: 12px;
+        padding: 0.9rem 1.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    .gps-edu-content {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 0.88rem;
+        color: var(--text-primary);
+    }
+    .gps-edu-content i {
+        font-size: 1.25rem;
+        color: var(--color-accent);
+    }
+    .gps-live-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.75rem;
+        padding: 0.3rem 0.7rem;
+        border-radius: 8px;
+        background: rgba(16, 185, 129, 0.15);
+        color: #10b981;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        font-weight: 600;
+    }
+
+    /* Attendance & Quick Action Card */
+    .attendance-hero-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 1.5rem;
+        backdrop-filter: blur(16px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+    }
+    .attendance-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+    .att-stat-box {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+    }
+    .att-stat-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-muted);
+        font-weight: 600;
+    }
+    .att-stat-val {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+    .att-actions-bar {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        align-items: center;
+        border-top: 1px solid var(--border-color);
+        padding-top: 1.25rem;
+    }
+
+    /* Big Action Punch Buttons */
+    .btn-punch-in {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: #ffffff;
+        font-size: 1rem;
+        font-weight: 700;
+        padding: 0.85rem 1.75rem;
+        border-radius: 12px;
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.35);
+        transition: var(--transition);
+    }
+    .btn-punch-in:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(16, 185, 129, 0.5);
+    }
+    .btn-punch-out {
+        background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+        color: #ffffff;
+        font-size: 1rem;
+        font-weight: 700;
+        padding: 0.85rem 1.75rem;
+        border-radius: 12px;
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        box-shadow: 0 4px 15px rgba(244, 63, 94, 0.35);
+        transition: var(--transition);
+    }
+    .btn-punch-out:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(244, 63, 94, 0.5);
+    }
+    .btn-punch-in:disabled, .btn-punch-out:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none !important;
+    }
+
+    /* Beat Plan & Visits Section */
+    .section-header-flex {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+    .section-title {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    /* Progress Tracker Bar */
+    .beat-progress-card {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1rem;
+    }
+    .progress-meta {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+    }
+    .progress-track {
+        height: 8px;
+        background: rgba(255, 255, 255, 0.06);
+        border-radius: 999px;
+        overflow: hidden;
+    }
+    .progress-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #4f46e5, #10b981);
+        border-radius: 999px;
+        transition: width 0.4s ease;
+    }
+
+    /* Visit Target Cards */
+    .visits-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.85rem;
+    }
+    .visit-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 14px;
+        padding: 1.15rem 1.35rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+    }
+    .visit-card:hover {
+        border-color: var(--border-hover);
+        transform: translateY(-2px);
+    }
+    .visit-card.active-visit {
+        border-color: #06b6d4;
+        background: rgba(6, 182, 212, 0.06);
+        box-shadow: 0 0 20px rgba(6, 182, 212, 0.15);
+    }
+    .visit-card.completed-visit {
+        opacity: 0.85;
+        border-color: rgba(16, 185, 129, 0.3);
+    }
+    .visit-main {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        flex: 1;
+        min-width: 260px;
+    }
+    .visit-seq-badge {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.95rem;
+        color: var(--color-accent);
+        flex-shrink: 0;
+    }
+    .visit-details h3 {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0 0 0.25rem 0;
+    }
+    .visit-sub {
+        font-size: 0.82rem;
+        color: var(--text-secondary);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        align-items: center;
+    }
+    .visit-sub-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+    .visit-status-tag {
+        font-size: 0.72rem;
+        font-weight: 700;
+        padding: 0.25rem 0.65rem;
+        border-radius: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+    .status-PLANNED { background: rgba(148, 163, 184, 0.15); color: #94a3b8; }
+    .status-IN_PROGRESS { background: rgba(6, 182, 212, 0.15); color: #06b6d4; border: 1px solid rgba(6, 182, 212, 0.3); }
+    .status-COMPLETED { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+    .status-MISSED { background: rgba(244, 63, 94, 0.15); color: #f43f5e; }
+
+    /* Detailing Modal Styles */
+    .detailing-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1rem;
+    }
+    .detailing-section {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    .detailing-sec-title {
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--color-accent);
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        letter-spacing: 0.03em;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="sfa-container">
+    <!-- 1. REPRESENTATIVE HERO PROFILE -->
+    <div class="rep-hero-card">
+        <div class="rep-profile">
+            <div class="rep-avatar">
+                {{ employee.first_name|slice:":1" }}{{ employee.last_name|slice:":1"|default:"P" }}
+            </div>
+            <div class="rep-info">
+                <h2>
+                    {{ employee.first_name }} {{ employee.last_name }}
+                    <span class="badge badge-success" style="font-size: 0.7rem; padding: 2px 8px;">Active Field Force</span>
+                </h2>
+                <div class="rep-meta">
+                    <span class="rep-meta-tag"><i class="fa-solid fa-id-badge"></i> {{ employee.employee_code }}</span>
+                    <span class="rep-meta-tag"><i class="fa-solid fa-briefcase"></i> {{ employee.designation|default:"Medical Representative" }}</span>
+                    <span class="rep-meta-tag"><i class="fa-solid fa-map-pin"></i> Territory: {{ employee.territory.name|default:"Delhi NCR Medical Zone" }}</span>
+                    <span class="rep-meta-tag"><i class="fa-solid fa-layer-group"></i> Tier: {{ employee.sales_tier|default:"MR" }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <div id="liveClock" style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary); text-align: right;">
+                --:-- --
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. GPS LOCATION PERMISSION & HEALTH BANNER -->
+    <div class="gps-edu-banner">
+        <div class="gps-edu-content">
+            <i class="fa-solid fa-location-crosshairs"></i>
+            <div>
+                <strong>Location Verification Protocol</strong>
+                <p style="margin: 0.15rem 0 0 0; font-size: 0.8rem; color: var(--text-secondary);">
+                    Location access is required to verify your attendance and field visit against WHO-GMP audit rules.
+                </p>
+            </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+            <span id="gpsStatusPill" class="gps-live-badge" style="background: rgba(148, 163, 184, 0.12); color: #94a3b8; border-color: rgba(148, 163, 184, 0.2);">
+                <i class="fa-solid fa-satellite-dish"></i> GPS Ready
+            </span>
+            <button class="btn btn-secondary" onclick="checkAndPromptGps()" style="padding: 0.35rem 0.75rem; font-size: 0.78rem;">
+                <i class="fa-solid fa-arrows-rotate"></i> Ping GPS
+            </button>
+        </div>
+    </div>
+
+    <!-- 3. TODAY'S ATTENDANCE PUNCH CARD -->
+    <div class="attendance-hero-card">
+        <div class="section-header-flex">
+            <div class="section-title">
+                <i class="fa-solid fa-clock-rotate-left" style="color: var(--color-primary);"></i>
+                Today's Duty Attendance ({{ today|date:"l, d M Y" }})
+            </div>
+            <div id="attendanceStatusTag" class="badge badge-info" style="font-size: 0.82rem; padding: 4px 10px;">
+                Checking Status...
+            </div>
+        </div>
+
+        <div class="attendance-grid">
+            <div class="att-stat-box">
+                <span class="att-stat-label">Check-In Time</span>
+                <span id="attCheckInVal" class="att-stat-val">--:--</span>
+                <span id="attCheckInLoc" style="font-size: 0.75rem; color: var(--text-muted);"><i class="fa-solid fa-location-dot"></i> Pending</span>
+            </div>
+            <div class="att-stat-box">
+                <span class="att-stat-label">Check-Out Time</span>
+                <span id="attCheckOutVal" class="att-stat-val">--:--</span>
+                <span id="attCheckOutLoc" style="font-size: 0.75rem; color: var(--text-muted);"><i class="fa-solid fa-location-dot"></i> Pending</span>
+            </div>
+            <div class="att-stat-box">
+                <span class="att-stat-label">Duty Duration</span>
+                <span id="attWorkingHoursVal" class="att-stat-val" style="color: #10b981;">00h 00m</span>
+                <span style="font-size: 0.75rem; color: var(--text-muted);"><i class="fa-solid fa-stopwatch"></i> Active timer</span>
+            </div>
+            <div class="att-stat-box">
+                <span class="att-stat-label">Work Mode</span>
+                <select id="workModeSelect" class="form-control" style="font-size: 0.85rem; padding: 0.35rem 0.6rem; height: auto; margin-top: 0.2rem;">
+                    <option value="FIELD" selected>Field Detailing</option>
+                    <option value="HQ">Depot / Branch HQ</option>
+                    <option value="TRANSIT">Territory Transit</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="att-actions-bar">
+            <!-- Dynamic Check-in / Check-out Buttons -->
+            <button id="btnCheckIn" class="btn-punch-in" onclick="handlePunchCheckIn()">
+                <i class="fa-solid fa-fingerprint"></i>
+                <span>CHECK IN FOR DUTY</span>
+            </button>
+
+            <button id="btnCheckOut" class="btn-punch-out" onclick="handlePunchCheckOut()" style="display: none;">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                <span>COMPLETE DUTY (CHECK-OUT)</span>
+            </button>
+
+            <div id="punchFeedbackText" style="font-size: 0.85rem; color: var(--text-muted); margin-left: auto;">
+                Location and server timestamp will be securely validated.
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. TODAY'S BEAT PLAN & VISITS -->
+    <div>
+        <div class="section-header-flex">
+            <div class="section-title">
+                <i class="fa-solid fa-route" style="color: var(--color-accent);"></i>
+                Today's Beat Route & Customer Calls
+            </div>
+            <div style="font-size: 0.85rem; color: var(--text-muted);">
+                Ordered by planned schedule
+            </div>
+        </div>
+
+        <!-- Progress Summary -->
+        <div class="beat-progress-card">
+            <div class="progress-meta">
+                <span>Route Progress: <strong id="progressStatsText">0 / 0 Completed</strong></span>
+                <span id="progressPercentText" style="font-weight: 700; color: #10b981;">0%</span>
+            </div>
+            <div class="progress-track">
+                <div id="beatProgressBar" class="progress-bar-fill" style="width: 0%;"></div>
+            </div>
+        </div>
+
+        <!-- Visit Cards Container -->
+        <div id="visitsListContainer" class="visits-list">
+            <div class="panel" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">
+                <i class="fa-solid fa-spinner fa-spin" style="font-size: 1.5rem; margin-bottom: 0.5rem;"></i>
+                <p>Loading today's route plan...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- MODAL: ACTIVE VISIT DETAILING, SAMPLES & POB FORM         -->
+<!-- ======================================================== -->
+<div id="activeVisitModal" class="modal-overlay" style="display: none; align-items: center; justify-content: center; z-index: 1050;">
+    <div class="modal-container" style="max-width: 750px; width: 95%; max-height: 90vh; overflow-y: auto;">
+        <div class="modal-header">
+            <div>
+                <h3 id="detailingModalCustName" style="margin: 0; font-size: 1.2rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fa-solid fa-user-doctor" style="color: var(--color-accent);"></i> Detailing Session
+                </h3>
+                <span id="detailingModalCustType" style="font-size: 0.8rem; color: var(--text-muted);">Customer Call</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <span id="liveVisitTimer" class="badge badge-warning" style="font-size: 0.9rem; padding: 4px 10px;">
+                    <i class="fa-solid fa-stopwatch"></i> 00m 00s
+                </span>
+                <button type="button" class="modal-close" onclick="closeModal('activeVisitModal')">&times;</button>
+            </div>
+        </div>
+
+        <div class="modal-body" style="display: flex; flex-direction: column; gap: 1.25rem;">
+            <!-- Geofence Status Pill -->
+            <div id="visitGeofencePill" style="padding: 0.6rem 1rem; border-radius: 8px; font-size: 0.82rem; background: rgba(16, 185, 129, 0.12); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">
+                <i class="fa-solid fa-shield-check"></i> GPS Verified within customer geofence perimeter.
+            </div>
+
+            <!-- Detailing Sections -->
+            <div class="detailing-grid">
+                <!-- 1. Products Discussed -->
+                <div class="detailing-section">
+                    <span class="detailing-sec-title">
+                        <i class="fa-solid fa-pills"></i> 1. Products Discussed
+                    </span>
+                    <label class="form-label" style="font-size: 0.8rem;">Select Promoted Formulation:</label>
+                    <select id="detailProductSelect" class="form-control" style="font-size: 0.85rem;">
+                        <option value="">-- Choose Product Formulation --</option>
+                        {% for item in items %}
+                        <option value="{{ item.id }}">{{ item.name }} ({{ item.item_code }})</option>
+                        {% endfor %}
+                    </select>
+
+                    <label class="form-label" style="font-size: 0.8rem; margin-top: 0.3rem;">Doctor Clinical Interest (1 to 5):</label>
+                    <select id="detailProductRating" class="form-control" style="font-size: 0.85rem;">
+                        <option value="5">⭐⭐⭐⭐⭐ 5 - Highly Enthusiastic / Rx Promised</option>
+                        <option value="4" selected>⭐⭐⭐⭐ 4 - Good Interest / Trial Expected</option>
+                        <option value="3">⭐⭐⭐ 3 - Neutral / Literature Reviewed</option>
+                        <option value="2">⭐⭐ 2 - Low Interest / Competing Brand Preferred</option>
+                        <option value="1">⭐ 1 - Not Interested</option>
+                    </select>
+                </div>
+
+                <!-- 2. Physician Samples Given -->
+                <div class="detailing-section">
+                    <span class="detailing-sec-title">
+                        <i class="fa-solid fa-vial"></i> 2. Samples Distributed
+                    </span>
+                    <label class="form-label" style="font-size: 0.8rem;">Sample Product:</label>
+                    <select id="sampleProductSelect" class="form-control" style="font-size: 0.85rem;">
+                        <option value="">-- Select Sample Given (Optional) --</option>
+                        {% for item in items %}
+                        <option value="{{ item.id }}">{{ item.name }}</option>
+                        {% endfor %}
+                    </select>
+
+                    <label class="form-label" style="font-size: 0.8rem; margin-top: 0.3rem;">Quantity Distributed (Packs/Strips):</label>
+                    <input type="number" id="sampleQtyInput" class="form-control" placeholder="e.g. 2" min="1" value="1" style="font-size: 0.85rem;">
+                </div>
+            </div>
+
+            <!-- 3. Doctor Feedback & Response -->
+            <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" style="font-weight: 600;">Doctor Feedback & Clinical Response:</label>
+                <textarea id="doctorResponseInput" class="form-control" rows="2" placeholder="e.g. Inquired about safety profile in geriatric patients; committed to prescribe for 5 patients this week."></textarea>
+            </div>
+
+            <!-- 4. POB (Person Order Booking) Amount & Remarks -->
+            <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label" style="font-weight: 600;">POB Order Booking Amount (₹):</label>
+                    <input type="number" step="0.01" id="pobAmountInput" class="form-control" placeholder="0.00" value="0.00">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label" style="font-weight: 600;">Next Follow-Up Date:</label>
+                    <input type="date" id="followUpDateInput" class="form-control">
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" style="font-weight: 600;">Visit General Remarks:</label>
+                <input type="text" id="visitRemarksInput" class="form-control" placeholder="Met in OPD clinic / Accompanied by ASM">
+            </div>
+        </div>
+
+        <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('activeVisitModal')">Save Draft & Minimize</button>
+            <button type="button" id="btnEndVisitSubmit" class="btn btn-primary" onclick="handleEndVisitSubmit()" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none;">
+                <i class="fa-solid fa-flag-checkered"></i> Complete & End Visit
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- MODAL: DEVIATION / GEOFENCE JUSTIFICATION REASON         -->
+<!-- ======================================================== -->
+<div id="deviationReasonModal" class="modal-overlay" style="display: none; align-items: center; justify-content: center; z-index: 1060;">
+    <div class="modal-container" style="max-width: 500px; width: 90%;">
+        <div class="modal-header">
+            <h3 style="margin: 0; color: #f59e0b; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fa-solid fa-triangle-exclamation"></i> Geofence Boundary Alert
+            </h3>
+            <button type="button" class="modal-close" onclick="closeModal('deviationReasonModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p id="deviationModalMessage" style="font-size: 0.88rem; color: var(--text-primary); margin-bottom: 1rem;">
+                You appear to be away from the registered customer location.
+            </p>
+            <div class="form-group">
+                <label class="form-label">Justification / Operational Reason:</label>
+                <textarea id="deviationReasonText" class="form-control" rows="3" placeholder="e.g. Doctor met at hospital private annex / clinic renovation in progress."></textarea>
+                <small style="color: var(--text-muted); display: block; margin-top: 0.35rem;">
+                    This visit will be recorded as <strong>REQUIRES_REVIEW</strong> for supervisor approval without blocking your work.
+                </small>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('deviationReasonModal')">Cancel</button>
+            <button type="button" class="btn btn-primary" onclick="proceedWithDeviation()">Proceed with Justification</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // =========================================================================
+    // CELDDUS PHARMA SFA & FIELD FORCE ENGINE
+    // =========================================================================
+
+    const SFA_STATE = {
+        attendance: null,
+        beatPlan: [],
+        activeVisit: null,
+        currentGps: null,
+        visitTimerInterval: null,
+        dutyTimerInterval: null,
+        pendingDeviationTarget: null,
+        offlineQueueKey: 'celldus_offline_tracking_queue_v1'
+    };
+
+    // Helper: CSRF Token
+    function getCsrfToken() {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, 10) === ('csrftoken=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(10));
+                    break;
+                }
+            }
+        }
+        return cookieValue || document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+    }
+
+    // Helper: Toast Alert
+    function showToast(msg, type = 'info') {
+        const popup = document.createElement('div');
+        popup.className = `alert-popup alert-${type}`;
+        popup.style.cssText = "position: fixed; top: 1.5rem; right: 1.5rem; z-index: 9999; padding: 1rem 1.4rem; border-radius: 10px; font-size: 0.9rem; font-weight: 600; box-shadow: 0 10px 25px rgba(0,0,0,0.3); transition: all 0.3s cubic-bezier(0.4,0,0.2,1);";
+        
+        if (type === 'success') {
+            popup.style.background = "#10b981";
+            popup.style.color = "#ffffff";
+            popup.innerHTML = `<i class="fa-solid fa-circle-check" style="margin-right:0.5rem;"></i> ${msg}`;
+        } else if (type === 'error') {
+            popup.style.background = "#ef4444";
+            popup.style.color = "#ffffff";
+            popup.innerHTML = `<i class="fa-solid fa-circle-exclamation" style="margin-right:0.5rem;"></i> ${msg}`;
+        } else {
+            popup.style.background = "#0284c7";
+            popup.style.color = "#ffffff";
+            popup.innerHTML = `<i class="fa-solid fa-circle-info" style="margin-right:0.5rem;"></i> ${msg}`;
+        }
+
+        document.body.appendChild(popup);
+        setTimeout(() => {
+            popup.style.opacity = '0';
+            popup.style.transform = 'translateY(-10px)';
+            setTimeout(() => popup.remove(), 400);
+        }, 4000);
+    }
+
+    // Live Clock Update
+    setInterval(() => {
+        const now = new Date();
+        const timeEl = document.getElementById('liveClock');
+        if (timeEl) {
+            timeEl.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+    }, 1000);
+
+    // =========================================================================
+    // 1. GPS PERMISSION & LOCATION PROMPT
+    // =========================================================================
+
+    function requestLocation() {
+        return new Promise((resolve, reject) => {
+            if (!navigator.geolocation) {
+                const err = new Error("Geolocation is not supported by your mobile browser.");
+                err.code = -1;
+                return reject(err);
+            }
+
+            const options = {
+                enableHighAccuracy: true,
+                timeout: 15000,
+                maximumAge: 0
+            };
+
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    SFA_STATE.currentGps = {
+                        lat: parseFloat(pos.coords.latitude.toFixed(6)),
+                        lng: parseFloat(pos.coords.longitude.toFixed(6)),
+                        accuracy: parseFloat((pos.coords.accuracy || 10).toFixed(1)),
+                        timestamp: pos.timestamp
+                    };
+                    updateGpsStatusBadge(pos.coords.accuracy);
+                    resolve(SFA_STATE.currentGps);
+                },
+                (err) => {
+                    let msg = "GPS location error.";
+                    if (err.code === 1) msg = "Location permission denied. Please allow GPS access in browser settings.";
+                    else if (err.code === 2) msg = "GPS signal unavailable. Please ensure location is switched on.";
+                    else if (err.code === 3) msg = "GPS request timed out. Please retry outdoors.";
+                    
+                    updateGpsStatusBadge(null, msg);
+                    reject(new Error(msg));
+                },
+                options
+            );
+        });
+    }
+
+    function updateGpsStatusBadge(accuracy, errorMsg = null) {
+        const pill = document.getElementById('gpsStatusPill');
+        if (!pill) return;
+
+        if (errorMsg) {
+            pill.className = "gps-live-badge";
+            pill.style.background = "rgba(239, 68, 68, 0.15)";
+            pill.style.color = "#ef4444";
+            pill.style.borderColor = "rgba(239, 68, 68, 0.3)";
+            pill.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> GPS Disabled`;
+        } else if (accuracy !== null) {
+            pill.className = "gps-live-badge";
+            pill.style.background = "rgba(16, 185, 129, 0.15)";
+            pill.style.color = "#10b981";
+            pill.style.borderColor = "rgba(16, 185, 129, 0.3)";
+            pill.innerHTML = `<i class="fa-solid fa-satellite-dish"></i> GPS Active (±${Math.round(accuracy)}m)`;
+        }
+    }
+
+    async function checkAndPromptGps() {
+        try {
+            showToast("Pinging GPS satellite coordinates...", "info");
+            const coords = await requestLocation();
+            showToast(`GPS verified: ${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)} (±${Math.round(coords.accuracy)}m)`, "success");
+        } catch (e) {
+            showToast(e.message, "error");
+        }
+    }
+
+    // =========================================================================
+    // 2. ATTENDANCE LIFECYCLE (CHECK-IN / CHECK-OUT)
+    // =========================================================================
+
+    async function fetchAttendanceStatus() {
+        try {
+            const res = await fetch('/api/v1/tracking/attendance/today/', {
+                headers: { 'Accept': 'application/json' }
+            });
+            const body = await res.json();
+            if (body.success && body.data) {
+                renderAttendance(body.data);
+            }
+        } catch (e) {
+            console.warn("Failed to fetch today's attendance:", e);
+        }
+    }
+
+    function renderAttendance(data) {
+        SFA_STATE.attendance = data;
+        const statusTag = document.getElementById('attendanceStatusTag');
+        const checkInVal = document.getElementById('attCheckInVal');
+        const checkInLoc = document.getElementById('attCheckInLoc');
+        const checkOutVal = document.getElementById('attCheckOutVal');
+        const checkOutLoc = document.getElementById('attCheckOutLoc');
+        const btnIn = document.getElementById('btnCheckIn');
+        const btnOut = document.getElementById('btnCheckOut');
+
+        const rec = data.record || {};
+        const hasCheckedIn = Boolean(data.has_checked_in || data.is_checked_in || rec.check_in_time);
+        const hasCheckedOut = Boolean(data.has_checked_out || data.is_checked_out || rec.check_out_time);
+        const checkInTime = data.check_in_time || rec.in_time || rec.check_in_time;
+        const checkOutTime = data.check_out_time || rec.out_time || rec.check_out_time;
+        const checkInLat = data.check_in_lat || rec.check_in_lat;
+
+        if (!hasCheckedIn) {
+            statusTag.className = "badge badge-warning";
+            statusTag.textContent = "Duty Not Started";
+            checkInVal.textContent = "--:--";
+            checkOutVal.textContent = "--:--";
+            btnIn.style.display = "inline-flex";
+            btnIn.disabled = false;
+            btnOut.style.display = "none";
+            stopDutyTimer();
+        } else if (hasCheckedIn && !hasCheckedOut) {
+            statusTag.className = "badge badge-success";
+            statusTag.textContent = "Active on Duty";
+            checkInVal.textContent = checkInTime ? String(checkInTime).slice(0, 5) : "Checked In";
+            checkInLoc.innerHTML = `<i class="fa-solid fa-location-dot"></i> GPS Lat: ${checkInLat || 'Verified'}`;
+            btnIn.style.display = "none";
+            btnOut.style.display = "inline-flex";
+            btnOut.disabled = false;
+            startDutyTimer(checkInTime);
+        } else {
+            statusTag.className = "badge badge-info";
+            statusTag.textContent = "Duty Completed";
+            checkInVal.textContent = checkInTime ? String(checkInTime).slice(0, 5) : "--:--";
+            checkOutVal.textContent = checkOutTime ? String(checkOutTime).slice(0, 5) : "Checked Out";
+            btnIn.style.display = "none";
+            btnOut.style.display = "inline-flex";
+            btnOut.disabled = true;
+            btnOut.innerHTML = `<i class="fa-solid fa-circle-check"></i> Duty Ended (${checkOutTime ? String(checkOutTime).slice(0, 5) : ''})`;
+            stopDutyTimer();
+            if (data.total_working_hours) {
+                document.getElementById('attWorkingHoursVal').textContent = `${data.total_working_hours.toFixed(1)} hrs`;
+            }
+        }
+    }
+
+    function startDutyTimer(checkInTimeStr) {
+        stopDutyTimer();
+        const timerEl = document.getElementById('attWorkingHoursVal');
+        if (!checkInTimeStr || !timerEl) return;
+
+        function update() {
+            const now = new Date();
+            const parts = checkInTimeStr.split(':');
+            const inDate = new Date();
+            inDate.setHours(parseInt(parts[0]), parseInt(parts[1]), parseInt(parts[2] || 0));
+            const diffMs = Math.max(0, now - inDate);
+            const hrs = Math.floor(diffMs / 3600000);
+            const mins = Math.floor((diffMs % 3600000) / 60000);
+            timerEl.textContent = `${String(hrs).padStart(2, '0')}h ${String(mins).padStart(2, '0')}m`;
+        }
+        update();
+        SFA_STATE.dutyTimerInterval = setInterval(update, 30000);
+    }
+
+    function stopDutyTimer() {
+        if (SFA_STATE.dutyTimerInterval) {
+            clearInterval(SFA_STATE.dutyTimerInterval);
+            SFA_STATE.dutyTimerInterval = null;
+        }
+    }
+
+    async function handlePunchCheckIn() {
+        const btn = document.getElementById('btnCheckIn');
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Reading GPS...`;
+
+        try {
+            const gps = await requestLocation();
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Submitting...`;
+
+            const payload = {
+                lat: gps.lat,
+                lng: gps.lng,
+                accuracy: gps.accuracy,
+                work_mode: document.getElementById('workModeSelect').value,
+                idempotency_key: `punch-in-${Date.now()}`
+            };
+
+            const res = await fetch('/api/v1/tracking/attendance/check-in/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken()
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const body = await res.json();
+            if (body.success) {
+                showToast("Duty check-in successful! Have a great field day.", "success");
+                fetchAttendanceStatus();
+            } else {
+                let errMsg = body.message || "Check-in failed.";
+                if (body.data && typeof body.data === 'object' && Object.keys(body.data).length > 0) {
+                    const firstKey = Object.keys(body.data)[0];
+                    const val = body.data[firstKey];
+                    errMsg = `${firstKey}: ${Array.isArray(val) ? val[0] : val}`;
+                }
+                showToast(errMsg, "error");
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-fingerprint"></i> CHECK IN FOR DUTY`;
+            }
+        } catch (e) {
+            showToast(e.message, "error");
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-fingerprint"></i> CHECK IN FOR DUTY`;
+        }
+    }
+
+    async function handlePunchCheckOut() {
+        if (!confirm("Are you sure you want to end field duty for today?")) return;
+
+        const btn = document.getElementById('btnCheckOut');
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Reading GPS...`;
+
+        try {
+            const gps = await requestLocation();
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Finalizing...`;
+
+            const payload = {
+                lat: gps.lat,
+                lng: gps.lng,
+                accuracy: gps.accuracy,
+                idempotency_key: `punch-out-${Date.now()}`
+            };
+
+            const res = await fetch('/api/v1/tracking/attendance/check-out/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken()
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const body = await res.json();
+            if (body.success) {
+                showToast("Duty check-out completed successfully.", "success");
+                fetchAttendanceStatus();
+            } else {
+                let errMsg = body.message || "Check-out failed.";
+                if (body.data && typeof body.data === 'object' && Object.keys(body.data).length > 0) {
+                    const firstKey = Object.keys(body.data)[0];
+                    const val = body.data[firstKey];
+                    errMsg = `${firstKey}: ${Array.isArray(val) ? val[0] : val}`;
+                }
+                showToast(errMsg, "error");
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-right-from-bracket"></i> COMPLETE DUTY (CHECK-OUT)`;
+            }
+        } catch (e) {
+            showToast(e.message, "error");
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-right-from-bracket"></i> COMPLETE DUTY (CHECK-OUT)`;
+        }
+    }
+
+    // =========================================================================
+    // 3. BEAT PLAN & FIELD VISITS
+    // =========================================================================
+
+    async function fetchTodayBeatPlan() {
+        try {
+            const res = await fetch('/api/v1/tracking/beat-plan/today/', {
+                headers: { 'Accept': 'application/json' }
+            });
+            const body = await res.json();
+            if (body.success && body.data) {
+                SFA_STATE.beatPlan = body.data.targets || [];
+                renderBeatPlan(SFA_STATE.beatPlan);
+            }
+        } catch (e) {
+            console.error("Failed to fetch today's beat plan:", e);
+        }
+    }
+
+    function renderBeatPlan(targets) {
+        const container = document.getElementById('visitsListContainer');
+        if (!container) return;
+
+        if (targets.length === 0) {
+            container.innerHTML = `
+                <div class="panel" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">
+                    <i class="fa-solid fa-calendar-check" style="font-size: 2rem; color: #10b981; margin-bottom: 0.75rem;"></i>
+                    <h3 style="color: var(--text-primary); margin-bottom: 0.25rem;">No visits planned for today</h3>
+                    <p style="font-size: 0.85rem;">Check back tomorrow or ask your Area Sales Manager to assign a daily beat plan.</p>
+                </div>
+            `;
+            updateProgressBar(0, 0);
+            return;
+        }
+
+        const completed = targets.filter(t => t.status === 'COMPLETED').length;
+        updateProgressBar(completed, targets.length);
+
+        container.innerHTML = targets.map((item, idx) => {
+            const cust = item.customer || {};
+            const isCompleted = item.status === 'COMPLETED';
+            const isInProgress = item.status === 'IN_PROGRESS';
+
+            let actionBtn = '';
+            if (isCompleted) {
+                actionBtn = `<span class="badge badge-success" style="padding: 6px 12px;"><i class="fa-solid fa-check-double"></i> Completed</span>`;
+            } else if (isInProgress) {
+                actionBtn = `
+                    <button class="btn btn-primary" onclick="openActiveDetailingDrawer('${item.customer_id}', '${item.id}')" style="background: #06b6d4; border-color: #06b6d4;">
+                        <i class="fa-solid fa-pen-to-square"></i> Detailing Active
+                    </button>
+                `;
+            } else {
+                actionBtn = `
+                    <button class="btn btn-primary" onclick="handleStartVisitClick('${item.customer_id}', '${item.id}', '${encodeURIComponent(cust.name || 'Customer')}')">
+                        <i class="fa-solid fa-play"></i> START VISIT
+                    </button>
+                `;
+            }
+
+            return `
+                <div class="visit-card ${isInProgress ? 'active-visit' : ''} ${isCompleted ? 'completed-visit' : ''}">
+                    <div class="visit-main">
+                        <div class="visit-seq-badge">#${item.sequence || (idx + 1)}</div>
+                        <div class="visit-details">
+                            <h3>${cust.name || 'Doctor / Customer'}</h3>
+                            <div class="visit-sub">
+                                <span class="visit-sub-item"><i class="fa-solid fa-user-doctor"></i> ${cust.customer_type || 'CLINIC'}</span>
+                                <span class="visit-sub-item"><i class="fa-solid fa-clock"></i> Planned: ${item.planned_time ? item.planned_time.slice(0, 5) : 'Anytime'}</span>
+                                <span class="visit-status-tag status-${item.status}">${item.status}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        ${actionBtn}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function updateProgressBar(completed, total) {
+        const statsEl = document.getElementById('progressStatsText');
+        const pctEl = document.getElementById('progressPercentText');
+        const barEl = document.getElementById('beatProgressBar');
+        if (!statsEl || !pctEl || !barEl) return;
+
+        statsEl.textContent = `${completed} / ${total} Completed`;
+        const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+        pctEl.textContent = `${pct}%`;
+        barEl.style.width = `${pct}%`;
+    }
+
+    // =========================================================================
+    // 4. START VISIT WITH GEOFENCE VALIDATION
+    // =========================================================================
+
+    async function handleStartVisitClick(customerId, beatPlanId, customerNameEncoded) {
+        if (!SFA_STATE.attendance || !SFA_STATE.attendance.has_checked_in) {
+            showToast("You must check in for duty before starting field visits.", "error");
+            return;
+        }
+
+        const customerName = decodeURIComponent(customerNameEncoded);
+        showToast(`Verifying GPS geofence for ${customerName}...`, "info");
+
+        try {
+            const gps = await requestLocation();
+            await executeStartVisit(customerId, beatPlanId, customerName, gps, "");
+        } catch (e) {
+            showToast(e.message, "error");
+        }
+    }
+
+    async function executeStartVisit(customerId, beatPlanId, customerName, gps, deviationReason) {
+        try {
+            const payload = {
+                customer_id: customerId,
+                beat_plan_id: beatPlanId,
+                lat: gps.lat,
+                lng: gps.lng,
+                accuracy: gps.accuracy,
+                deviation_reason: deviationReason,
+                idempotency_key: `visit-start-${customerId}-${Date.now()}`
+            };
+
+            const res = await fetch('/api/v1/tracking/visits/start/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken()
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const body = await res.json();
+            if (body.success) {
+                showToast(`Visit started successfully! Geofence verified.`, "success");
+                SFA_STATE.activeVisit = body.data;
+                openActiveDetailingDrawer(customerId, beatPlanId, body.data);
+                fetchTodayBeatPlan();
+            } else if (body.error_code === 'OUTSIDE_GEOFENCE') {
+                // Prompt deviation justification modal
+                SFA_STATE.pendingDeviationTarget = { customerId, beatPlanId, customerName, gps };
+                document.getElementById('deviationModalMessage').innerHTML = `
+                    You are approximately <strong>${body.data?.distance_meters ? Math.round(body.data.distance_meters) : '1000'}m</strong> away from <strong>${customerName}</strong>'s registered clinic (Geofence perimeter: ${body.data?.allowed_radius_meters || 150}m).
+                `;
+                openModal('deviationReasonModal');
+            } else {
+                showToast(body.message || "Failed to start visit.", "error");
+            }
+        } catch (e) {
+            // Handle offline case
+            if (!navigator.onLine) {
+                queueOfflineEvent('VISIT_START', { customerId, beatPlanId, gps });
+                showToast("You are offline. Visit start saved locally and will sync when connected.", "info");
+            } else {
+                showToast("Error connecting to server. Please retry.", "error");
+            }
+        }
+    }
+
+    async function proceedWithDeviation() {
+        const reason = document.getElementById('deviationReasonText').value.trim();
+        if (!reason) {
+            alert("Please enter an operational justification reason (e.g. met doctor in conference / OPD block).");
+            return;
+        }
+
+        closeModal('deviationReasonModal');
+        if (SFA_STATE.pendingDeviationTarget) {
+            const target = SFA_STATE.pendingDeviationTarget;
+            await executeStartVisit(target.customerId, target.beatPlanId, target.customerName, target.gps, reason);
+            SFA_STATE.pendingDeviationTarget = null;
+        }
+    }
+
+    // =========================================================================
+    // 5. ACTIVE VISIT DETAILING & END VISIT
+    // =========================================================================
+
+    function openActiveDetailingDrawer(customerId, beatPlanId, visitData = null) {
+        const item = SFA_STATE.beatPlan.find(b => b.customer_id === customerId);
+        const custName = item?.customer?.name || "Doctor";
+        const custType = item?.customer?.customer_type || "Physician Detailing";
+
+        document.getElementById('detailingModalCustName').innerHTML = `<i class="fa-solid fa-user-doctor" style="color: var(--color-accent);"></i> ${custName}`;
+        document.getElementById('detailingModalCustType').textContent = custType;
+
+        // Reset form
+        document.getElementById('doctorResponseInput').value = '';
+        document.getElementById('pobAmountInput').value = '0.00';
+        document.getElementById('visitRemarksInput').value = '';
+
+        // Store active visit reference
+        if (visitData) {
+            SFA_STATE.activeVisit = visitData;
+        }
+
+        startVisitTimer();
+        openModal('activeVisitModal');
+    }
+
+    function startVisitTimer() {
+        stopVisitTimer();
+        let seconds = 0;
+        const timerEl = document.getElementById('liveVisitTimer');
+        SFA_STATE.visitTimerInterval = setInterval(() => {
+            seconds++;
+            const m = Math.floor(seconds / 60);
+            const s = seconds % 60;
+            if (timerEl) {
+                timerEl.innerHTML = `<i class="fa-solid fa-stopwatch"></i> ${String(m).padStart(2, '0')}m ${String(s).padStart(2, '0')}s`;
+            }
+        }, 1000);
+    }
+
+    function stopVisitTimer() {
+        if (SFA_STATE.visitTimerInterval) {
+            clearInterval(SFA_STATE.visitTimerInterval);
+            SFA_STATE.visitTimerInterval = null;
+        }
+    }
+
+    async function handleEndVisitSubmit() {
+        if (!SFA_STATE.activeVisit && !SFA_STATE.beatPlan.find(b => b.status === 'IN_PROGRESS')) {
+            showToast("No active visit session found.", "error");
+            return;
+        }
+
+        const visitId = SFA_STATE.activeVisit?.id || SFA_STATE.beatPlan.find(b => b.status === 'IN_PROGRESS')?.visit_id;
+        if (!visitId) {
+            showToast("Unable to resolve active visit document ID.", "error");
+            return;
+        }
+
+        const btn = document.getElementById('btnEndVisitSubmit');
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Finalizing Detailing...`;
+
+        try {
+            const gps = await requestLocation();
+
+            // Collect Detailing Products
+            const prodId = document.getElementById('detailProductSelect').value;
+            const prodRating = document.getElementById('detailProductRating').value;
+            const productsDiscussed = prodId ? [{ product_id: prodId, interest_rating: parseInt(prodRating), remarks: "Promoted in detailing call" }] : [];
+
+            // Collect Samples
+            const sampleId = document.getElementById('sampleProductSelect').value;
+            const sampleQty = document.getElementById('sampleQtyInput').value;
+            const samplesGiven = sampleId ? [{ product_id: sampleId, quantity: parseInt(sampleQty) || 1 }] : [];
+
+            const payload = {
+                lat: gps.lat,
+                lng: gps.lng,
+                accuracy: gps.accuracy,
+                doctor_response: document.getElementById('doctorResponseInput').value.trim(),
+                remarks: document.getElementById('visitRemarksInput').value.trim(),
+                booked_amount: parseFloat(document.getElementById('pobAmountInput').value) || 0.0,
+                next_follow_up_date: document.getElementById('followUpDateInput').value || null,
+                products_discussed: productsDiscussed,
+                samples_given: samplesGiven,
+                idempotency_key: `visit-end-${visitId}-${Date.now()}`
+            };
+
+            const res = await fetch(`/api/v1/tracking/visits/${visitId}/end/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken()
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const body = await res.json();
+            if (body.success) {
+                showToast("Visit completed successfully! Detailing data synchronized.", "success");
+                stopVisitTimer();
+                closeModal('activeVisitModal');
+                SFA_STATE.activeVisit = null;
+                fetchTodayBeatPlan();
+            } else {
+                showToast(body.message || "Failed to complete visit.", "error");
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-flag-checkered"></i> Complete & End Visit`;
+            }
+        } catch (e) {
+            showToast(e.message, "error");
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-flag-checkered"></i> Complete & End Visit`;
+        }
+    }
+
+    // =========================================================================
+    // 6. OFFLINE SYNC & EVENT QUEUE
+    // =========================================================================
+
+    function queueOfflineEvent(eventType, payload) {
+        try {
+            const queue = JSON.parse(localStorage.getItem(SFA_STATE.offlineQueueKey) || '[]');
+            queue.push({
+                event_type: eventType,
+                payload: payload,
+                timestamp: new Date().toISOString(),
+                idempotency_key: `offline-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`
+            });
+            localStorage.setItem(SFA_STATE.offlineQueueKey, JSON.stringify(queue));
+            updateSyncQueueUi();
+        } catch (e) {
+            console.error("Failed to enqueue offline event:", e);
+        }
+    }
+
+    function updateSyncQueueUi() {
+        const queue = JSON.parse(localStorage.getItem(SFA_STATE.offlineQueueKey) || '[]');
+        const syncBtn = document.getElementById('syncOfflineBtn');
+        const countEl = document.getElementById('pendingQueueCount');
+        if (queue.length > 0) {
+            if (syncBtn) syncBtn.style.display = 'inline-flex';
+            if (countEl) countEl.textContent = queue.length;
+        } else {
+            if (syncBtn) syncBtn.style.display = 'none';
+        }
+    }
+
+    async function syncPendingEvents() {
+        const queue = JSON.parse(localStorage.getItem(SFA_STATE.offlineQueueKey) || '[]');
+        if (queue.length === 0) return;
+
+        showToast(`Syncing ${queue.length} cached offline events...`, "info");
+        try {
+            const res = await fetch('/api/v1/tracking/sync/batch/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken()
+                },
+                body: JSON.stringify({ events: queue.map(q => ({
+                    event_type: q.event_type,
+                    latitude: q.payload?.gps?.lat || q.payload?.lat,
+                    longitude: q.payload?.gps?.lng || q.payload?.lng,
+                    accuracy: q.payload?.gps?.accuracy,
+                    device_timestamp: q.timestamp,
+                    idempotency_key: q.idempotency_key
+                })) })
+            });
+
+            const body = await res.json();
+            if (body.success) {
+                localStorage.removeItem(SFA_STATE.offlineQueueKey);
+                updateSyncQueueUi();
+                showToast("All offline events synchronized with server database!", "success");
+            }
+        } catch (e) {
+            showToast("Server unreachable. Will retry when connection stabilizes.", "error");
+        }
+    }
+
+    // Monitor Network Connectivity
+    window.addEventListener('online', () => {
+        const pill = document.getElementById('networkStatusPill');
+        const text = document.getElementById('networkStatusText');
+        if (pill) pill.className = "network-pill online";
+        if (text) text.textContent = "Online (Synced)";
+        syncPendingEvents();
+    });
+
+    window.addEventListener('offline', () => {
+        const pill = document.getElementById('networkStatusPill');
+        const text = document.getElementById('networkStatusText');
+        if (pill) pill.className = "network-pill offline";
+        if (text) text.textContent = "Offline (Cached)";
+        showToast("You're offline. Events will be saved locally and synced when connection returns.", "info");
+    });
+
+    // Initialize on Page Load
+    document.addEventListener('DOMContentLoaded', () => {
+        fetchAttendanceStatus();
+        fetchTodayBeatPlan();
+        updateSyncQueueUi();
+        // Warm up location quietly
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => updateGpsStatusBadge(pos.coords.accuracy),
+                (err) => console.log("GPS warm-up:", err.message),
+                { enableHighAccuracy: true, timeout: 5000 }
+            );
+        }
+    });
+</script>
+{% endblock %}

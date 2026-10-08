@@ -6,17 +6,17 @@
 {% block page_subtitle %}Comprehensive 360° management of pharmaceutical field representatives, plant technical chemists, QA/QC staff, attendance records, and leave approvals.{% endblock %}
 
 {% block top_actions %}
-<div style="display: grid; grid-template-columns: repeat(2, minmax(160px, auto)); gap: 0.5rem; align-items: center;">
-    <button class="btn btn-primary" onclick="openModal('addEmployeeModal')" style="display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; height: 38px; padding: 0 1.25rem; border-radius: 9999px; white-space: nowrap;">
+<div class="top-actions-grid" style="display: grid; grid-template-columns: repeat(2, minmax(160px, auto)); gap: 0.5rem; align-items: center;">
+    <button class="btn btn-primary" onclick="openModal('addEmployeeModal')">
         <i class="fa-solid fa-user-plus"></i> Onboard Employee
     </button>
-    <button class="btn btn-secondary" onclick="openModal('markAttendanceModal')" style="display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; height: 38px; padding: 0 1.25rem; border-radius: 9999px; white-space: nowrap;">
+    <button class="btn btn-secondary" onclick="openModal('markAttendanceModal')">
         <i class="fa-solid fa-clock"></i> Mark Attendance
     </button>
-    <button class="btn btn-secondary" onclick="openModal('applyLeaveModal')" style="display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; height: 38px; padding: 0 1.25rem; border-radius: 9999px; white-space: nowrap;">
+    <button class="btn btn-secondary" onclick="openModal('applyLeaveModal')">
         <i class="fa-solid fa-calendar-check"></i> Apply Leave
     </button>
-    <button id="themeToggleBtn" class="theme-toggle-btn" type="button" title="Switch Theme (Dark / Light)" aria-label="Toggle theme" style="display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; height: 38px; padding: 0 1.25rem; border-radius: 9999px; margin: 0; box-sizing: border-box; white-space: nowrap;">
+    <button id="themeToggleBtn" class="theme-toggle-btn" type="button" title="Switch Theme (Dark / Light)" aria-label="Toggle theme">
         <i id="themeToggleIcon" class="fa-solid fa-sun"></i>
         <span id="themeToggleText">Light Mode</span>
     </button>
@@ -349,10 +349,21 @@
 <!-- ========================================== -->
 {% if active_tab == 'fieldforce' %}
 <div class="panel">
-    <div class="panel-header" style="margin-bottom: 1.25rem;">
+    <div class="panel-header" style="margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
         <div>
             <h2 class="panel-title">Pharma Commercial Sales & Medical Representatives (MR) Force</h2>
             <p class="panel-subtitle">Dedicated desk monitoring medical detailing reps, hospital institutional liaisons, and territory coverage.</p>
+        </div>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <a href="{% url 'dashboard_field_portal' %}" class="btn btn-primary" style="font-size: 0.85rem;">
+                <i class="fa-solid fa-mobile-screen"></i> Launch MR Portal
+            </a>
+            <a href="{% url 'dashboard_field_tracking' %}" class="btn btn-secondary" style="font-size: 0.85rem;">
+                <i class="fa-solid fa-map-location-dot"></i> Manager Cockpit
+            </a>
+            <a href="{% url 'dashboard_field_reports' %}" class="btn btn-secondary" style="font-size: 0.85rem;">
+                <i class="fa-solid fa-chart-line"></i> SFA Reports
+            </a>
         </div>
     </div>
 
@@ -841,11 +852,11 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                 <div class="form-group">
                     <label class="form-label" for="leave_from">From Date *</label>
-                    <input type="date" id="leave_from" name="from_date" class="form-control" required>
+                    <input type="date" id="leave_from" name="from_date" class="form-control" required onchange="autoCalcLeaveDays()" oninput="autoCalcLeaveDays()">
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="leave_to">To Date *</label>
-                    <input type="date" id="leave_to" name="to_date" class="form-control" required>
+                    <input type="date" id="leave_to" name="to_date" class="form-control" required onchange="autoCalcLeaveDays()" oninput="autoCalcLeaveDays()">
                 </div>
             </div>
 
@@ -868,6 +879,53 @@
 </div>
 
 <script>
+function autoCalcLeaveDays() {
+    const fromInput = document.getElementById('leave_from');
+    const toInput = document.getElementById('leave_to');
+    const daysInput = document.getElementById('days_count');
+    if (!fromInput || !toInput || !daysInput) return;
+
+    if (fromInput.value) {
+        toInput.min = fromInput.value;
+    }
+
+    if (fromInput.value && !toInput.value) {
+        toInput.value = fromInput.value;
+        daysInput.value = "1.0";
+        return;
+    }
+
+    if (fromInput.value && toInput.value) {
+        const [y1, m1, d1] = fromInput.value.split('-').map(Number);
+        const [y2, m2, d2] = toInput.value.split('-').map(Number);
+        const dFrom = new Date(y1, m1 - 1, d1);
+        const dTo = new Date(y2, m2 - 1, d2);
+
+        if (dTo < dFrom) {
+            toInput.value = fromInput.value;
+            daysInput.value = "1.0";
+            return;
+        }
+
+        const diffTime = dTo.getTime() - dFrom.getTime();
+        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)) + 1;
+        daysInput.value = (diffDays > 0 ? diffDays : 1).toFixed(1);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const fromInput = document.getElementById('leave_from');
+    const toInput = document.getElementById('leave_to');
+    if (fromInput) {
+        fromInput.addEventListener('change', autoCalcLeaveDays);
+        fromInput.addEventListener('input', autoCalcLeaveDays);
+    }
+    if (toInput) {
+        toInput.addEventListener('change', autoCalcLeaveDays);
+        toInput.addEventListener('input', autoCalcLeaveDays);
+    }
+});
+
 function openEditEmployeeModal(id, code, first, last, dept, desig, branchId, salary, phone, email, bankAcc, bankIfsc) {
     document.getElementById('edit_emp_code_display').innerText = code;
     document.getElementById('edit_first_name').value = first;

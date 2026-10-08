@@ -3,7 +3,7 @@ import io
 from decimal import Decimal
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.contrib.auth.decorators import user_passes_test
+from django.contrib.auth.decorators import user_passes_test, login_required
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django.http import JsonResponse, HttpResponse
@@ -11,10 +11,11 @@ from django.db import transaction, models
 from django.db.models import Q
 
 # ERP Modules Imports
+from django.conf import settings
 from erp_core.models import AuditLog, Branch, ERPUserRole, DocumentSequence
 from erp_core.security import audit_log_event, check_prevent_self_approval
 from erp_masters.models import (
-    ItemMaster, SupplierMaster, CustomerMaster,
+    ItemMaster, SupplierMaster, CustomerMaster, Territory,
     Warehouse, StorageBin, UnitOfMeasure,
     QualitySpecification, BOMHeader
 )
@@ -28,8 +29,9 @@ from erp_manufacturing.models import ProductionOrder, BatchProcessStep
 from erp_manufacturing.services import complete_production_batch
 from erp_sales.models import SalesOrder, SalesOrderLine, SalesOrderLotAllocation, SalesDispatchInvoice
 from erp_sales.services import approve_sales_order_and_reserve_fefo, dispatch_sales_order
-from erp_crm.models import Lead, FollowUpTask, LeadImportBatch
+from erp_crm.models import Lead, FollowUpTask, LeadImportBatch, DailyBeatPlan, FieldVisit, EmployeeLocationEvent, VisitOrderBooking
 from erp_crm.services import process_lead_import_rows
+from erp_crm.tracking_permissions import get_authenticated_employee, is_sales_manager, is_system_or_hr_admin
 from erp_hr.models import Employee, AttendanceRecord, LeaveApplication
 
 
@@ -1986,4 +1988,243 @@ def dashboard_leave_action(request, leave_id, action):
         request=request
     )
     return redirect('/dashboard/employee/?tab=leaves')
+
+
+# ==========================================
+# 12. FIELD FORCE SFA & EMPLOYEE TRACKING
+# ==========================================
+
+@login_required(login_url='dashboard_login')
+def dashboard_field_portal(request):
+    """
+    Mobile-first Field Force SFA Portal for Medical Representatives.
+    Includes GPS Attendance, Daily Beat Plan, Geofenced Detailing, and Offline Sync.
+    """
+    try:
+        employee = get_authenticated_employee(request.user)
+    except Exception:
+        employee = None
+
+    if not employee:
+        if request.user.is_staff or request.user.is_superuser:
+            b = Branch.objects.first()
+            employee, _ = Employee.objects.get_or_create(
+                user=request.user,
+                defaults={
+                    'employee_code': f"EMP-ADM-{request.user.id:03d}",
+                    'first_name': request.user.first_name or request.user.username.capitalize(),
+                    'last_name': request.user.last_name or 'Director',
+                    'email': request.user.email or f"{request.user.username}@cellduspharma.com",
+                    'department': 'SALES',
+                    'designation': 'National Sales Director',
+                    'sales_tier': 'NSM',
+                    'joining_date': timezone.now().date(),
+                    'is_active': True,
+                    'branch': b,
+                }
+            )
+        else:
+            messages.error(request, "No active Employee profile linked to your user account. Please contact HR.")
+            return redirect('dashboard_index')
+
+    today = timezone.now().date()
+    items = ItemMaster.objects.filter(is_active=True).order_by('name')
+    is_mgr = is_sales_manager(request.user) or is_system_or_hr_admin(request.user)
+
+    context = {
+        'employee': employee,
+        'today': today,
+        'items': items,
+        'is_manager_or_admin': is_mgr,
+    }
+    return render(request, 'dashboard/field_portal.html', context)
+
+
+@login_required(login_url='dashboard_login')
+def dashboard_field_tracking(request):
+    """
+    Manager Tracking Cockpit & Live Operations Center.
+    Displays real-time geographic map, team status, and daily timeline stepper.
+    """
+    today = timezone.now().date()
+    field_force = Employee.objects.select_related('territory', 'branch').filter(department='SALES').order_by('employee_code')
+    attendances_today = AttendanceRecord.objects.filter(date=today)
+    att_map = {a.employee_id: a for a in attendances_today}
+
+    visits_today = FieldVisit.objects.select_related('customer', 'employee').filter(visit_date=today).order_by('-start_time')
+    beat_plans_today = DailyBeatPlan.objects.filter(date=today)
+
+    total_field_force = field_force.count()
+    present_count = attendances_today.filter(check_in_time__isnull=False).count()
+    in_progress_visits = visits_today.filter(visit_status='IN_PROGRESS').count()
+    completed_visits = visits_today.filter(visit_status='COMPLETED').count()
+    planned_visits = beat_plans_today.count()
+
+    pob_agg = VisitOrderBooking.objects.filter(visit__visit_date=today).aggregate(models.Sum('booked_amount'))
+    total_pob_amount = pob_agg['booked_amount__sum'] or Decimal('0.00')
+
+    flagged_visits_count = visits_today.filter(is_flagged=True).count()
+    flagged_att_count = attendances_today.filter(Q(check_in_status='REQUIRES_REVIEW') | Q(flag_reason__gt='')).count()
+    exception_count = flagged_visits_count + flagged_att_count
+
+    team_data = []
+    for emp in field_force:
+        att = att_map.get(emp.id)
+        emp_visits = [v for v in visits_today if v.employee_id == emp.id]
+        emp_planned = [b for b in beat_plans_today if b.employee_id == emp.id]
+        is_active_visit = any(v.visit_status == 'IN_PROGRESS' for v in emp_visits)
+        completed_v = sum(1 for v in emp_visits if v.visit_status == 'COMPLETED')
+        pob_emp = sum((o.booked_amount for v in emp_visits for o in v.orders_booked.all()), Decimal('0.00'))
+
+        att_status = 'NOT_CHECKED_IN'
+        if att:
+            att_status = att.check_in_status or ('PRESENT' if att.check_in_time else 'ABSENT')
+
+        team_data.append({
+            'employee': emp,
+            'attendance': att,
+            'attendance_status': att_status,
+            'is_active_in_visit': is_active_visit,
+            'planned_visits': len(emp_planned),
+            'completed_visits': completed_v,
+            'pob_booked_amount': pob_emp,
+        })
+
+    activity_feed = []
+    for v in visits_today[:15]:
+        activity_feed.append({
+            'type': 'VISIT',
+            'icon': 'fa-check' if v.visit_status == 'COMPLETED' else 'fa-stethoscope',
+            'icon_bg': 'rgba(16, 185, 129, 0.15)' if not v.is_flagged else 'rgba(245, 158, 11, 0.15)',
+            'icon_color': '#10b981' if not v.is_flagged else '#f59e0b',
+            'employee_id': str(v.employee_id),
+            'employee_name': f"{v.employee.first_name} {v.employee.last_name}",
+            'title': f"{v.employee.first_name} {v.employee.last_name} @ {v.customer.name}",
+            'subtitle': f"{v.customer.customer_type} | {v.customer.city or 'Field'}",
+            'time': v.start_time.strftime('%H:%M') if v.start_time else '--:--',
+            'status': v.visit_status,
+            'is_flagged': v.is_flagged,
+            'flag_reason': v.flag_reason,
+            'timestamp': v.start_time or timezone.now()
+        })
+
+    for a in attendances_today.filter(check_in_time__isnull=False).select_related('employee')[:15]:
+        activity_feed.append({
+            'type': 'ATTENDANCE',
+            'icon': 'fa-fingerprint',
+            'icon_bg': 'rgba(79, 70, 229, 0.15)' if a.check_in_status == 'VALID' else 'rgba(244, 63, 94, 0.15)',
+            'icon_color': '#6366f1' if a.check_in_status == 'VALID' else '#f43f5e',
+            'employee_id': str(a.employee_id),
+            'employee_name': f"{a.employee.first_name} {a.employee.last_name}",
+            'title': f"{a.employee.first_name} {a.employee.last_name} Punched In",
+            'subtitle': f"Mode: {a.work_mode} | {a.employee.territory.name if a.employee.territory else 'HQ'}",
+            'time': timezone.localtime(a.check_in_time).strftime('%H:%M') if a.check_in_time else (str(a.in_time)[:5] if a.in_time else '--:--'),
+            'status': a.check_in_status or 'PRESENT',
+            'is_flagged': bool(a.flag_reason),
+            'flag_reason': a.flag_reason,
+            'timestamp': a.check_in_time or timezone.now()
+        })
+    activity_feed.sort(key=lambda x: x['timestamp'], reverse=True)
+
+    territories = Territory.objects.all().order_by('name')
+
+    stats = {
+        'total_field_force': total_field_force,
+        'present_count': present_count,
+        'in_progress_visits': in_progress_visits,
+        'completed_visits': completed_visits,
+        'planned_visits': planned_visits,
+        'total_pob_amount': total_pob_amount,
+        'exception_count': exception_count,
+    }
+
+    context = {
+        'stats': stats,
+        'team_data': team_data,
+        'recent_visits': visits_today[:15],
+        'activity_feed': activity_feed,
+        'territories': territories,
+        'today': today,
+        'google_maps_api_key': getattr(settings, 'GOOGLE_MAPS_API_KEY', 'AIzaSyB51aYJiic2l5j0grNJsbd-WIoH2M-D0L0'),
+    }
+    return render(request, 'dashboard/field_tracking.html', context)
+
+
+@login_required(login_url='dashboard_login')
+def dashboard_field_reports(request):
+    """
+    Field Force SFA Performance, Coverage & Exception Reports.
+    Includes CSV export capability.
+    """
+    tab = request.GET.get('tab', 'visits')
+    start_date_str = request.GET.get('start_date', '')
+    end_date_str = request.GET.get('end_date', '')
+    territory_filter = request.GET.get('territory', '')
+
+    today = timezone.now().date()
+    start_date = today - timezone.timedelta(days=7)
+    end_date = today
+
+    if start_date_str:
+        try:
+            start_date = timezone.datetime.strptime(start_date_str, '%Y-%m-%d').date()
+        except Exception:
+            pass
+    if end_date_str:
+        try:
+            end_date = timezone.datetime.strptime(end_date_str, '%Y-%m-%d').date()
+        except Exception:
+            pass
+
+    visits_qs = FieldVisit.objects.select_related('customer', 'employee').prefetch_related('orders_booked').filter(
+        visit_date__gte=start_date,
+        visit_date__lte=end_date
+    ).order_by('-visit_date', '-start_time')
+
+    if territory_filter:
+        visits_qs = visits_qs.filter(customer__territory_id=territory_filter)
+
+    att_qs = AttendanceRecord.objects.select_related('employee').filter(
+        date__gte=start_date,
+        date__lte=end_date
+    ).order_by('-date', '-check_in_time')
+
+    exceptions = []
+    for v in visits_qs.filter(is_flagged=True):
+        exceptions.append({
+            'date': v.visit_date,
+            'type': 'VISIT_GEOFENCE_DEVIATION',
+            'employee_name': f"{v.employee.first_name} {v.employee.last_name}",
+            'employee_code': v.employee.employee_code,
+            'target': v.customer.name,
+            'distance': v.distance_to_target_meters,
+            'reason': v.flag_reason or v.geofence_deviation_reason or 'Geofence exceeded',
+        })
+
+    for a in att_qs.filter(Q(check_in_status='REQUIRES_REVIEW') | Q(flag_reason__gt='')):
+        exceptions.append({
+            'date': a.date,
+            'type': 'ATTENDANCE_FLAG',
+            'employee_name': f"{a.employee.first_name} {a.employee.last_name}",
+            'employee_code': a.employee.employee_code,
+            'target': 'Check-In Punch',
+            'distance': None,
+            'reason': a.flag_reason or 'Suspicious location or mock GPS',
+        })
+
+    territories = Territory.objects.all().order_by('name')
+
+    context = {
+        'active_tab': tab,
+        'start_date': start_date.strftime('%Y-%m-%d'),
+        'end_date': end_date.strftime('%Y-%m-%d'),
+        'selected_territory': territory_filter,
+        'territories': territories,
+        'visits': visits_qs[:100],
+        'attendance_list': att_qs[:100],
+        'exceptions': exceptions,
+        'exception_count': len(exceptions),
+    }
+    return render(request, 'dashboard/field_reports.html', context)
+
 

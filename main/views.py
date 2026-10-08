@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.db.models import Q
+from django.db.models import Q, ProtectedError
 from .models import Contact, Subscriber, Category, Product, Blog
 from django.contrib import messages
 from django.http import JsonResponse
@@ -532,8 +532,24 @@ def dashboard_user_delete(request, id):
         if target_user == request.user:
             messages.error(request, "You cannot delete your own account!")
         else:
-            target_user.delete()
-            messages.success(request, f"User account '{target_user.username}' deleted successfully.")
+            username = target_user.username
+            try:
+                # Unassign CRM follow-up tasks so historical leads/tasks are preserved
+                try:
+                    from erp_crm.models import FollowUpTask
+                    FollowUpTask.objects.filter(assigned_to=target_user).update(assigned_to=None)
+                except Exception:
+                    pass
+
+                target_user.delete()
+                messages.success(request, f"User account '{username}' deleted successfully.")
+            except ProtectedError:
+                messages.error(
+                    request,
+                    f"Cannot delete '{username}' because they are referenced in permanent regulatory GMP records (such as QA release or dispensing). You can deactivate their login using the Status Toggle button instead."
+                )
+            except Exception as e:
+                messages.error(request, f"Failed to delete user '{username}': {str(e)}")
     return redirect('dashboard_users')
 
 @staff_required

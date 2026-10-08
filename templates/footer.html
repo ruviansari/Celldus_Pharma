@@ -1,25 +1,559 @@
 {% load static %}
 <footer class="footer widget-footer clearfix">
 
-    <div class="first-footer ttm-bgcolor-skincolor">
-        <div class="container">
-            <div class="row">
-                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-6 widget-area">
-                    <div class="featured-icon-box icon-align-before-content style1">
-                        <div class="featured-icon">
-                            <div
-                                class="ttm-icon ttm-icon_element-onlytxt ttm-icon_element-color-skincolor ttm-icon_element-size-lg">
-                                <i class="flaticon-mail"></i>
-                            </div>
-                        </div>
+    <style>
+        /* =========================================================
+           CELLDUS PHARMA EXECUTIVE FOOTER - ULTRA PREMIUM
+           ========================================================= */
+        .first-footer.celldus-first-footer {
+            background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 50%, #172554 100%) !important;
+            padding: 36px 0 !important;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px -10px rgba(29, 78, 216, 0.4);
+        }
+        .first-footer.celldus-first-footer::before {
+            content: '';
+            position: absolute;
+            top: -80px;
+            right: -60px;
+            width: 260px;
+            height: 260px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        .newsletter-left-wrap {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+        }
+        .newsletter-icon-badge {
+            width: 58px;
+            height: 58px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(8px);
+        }
+        .newsletter-title {
+            color: #ffffff;
+            font-size: 1.35rem;
+            font-weight: 800;
+            margin: 0 0 4px 0;
+            letter-spacing: -0.01em;
+            line-height: 1.2;
+        }
+        .newsletter-subtitle {
+            color: #bfdbfe;
+            font-size: 0.88rem;
+            margin: 0;
+            line-height: 1.4;
+        }
+        .premium-subscribe-bar {
+            background: #ffffff;
+            border-radius: 9999px;
+            padding: 5px 6px 5px 22px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.25);
+            border: 2px solid rgba(255, 255, 255, 0.25);
+            transition: all 0.3s ease;
+        }
+        .premium-subscribe-bar:focus-within {
+            box-shadow: 0 18px 40px -5px rgba(0, 0, 0, 0.35), 0 0 0 3px rgba(147, 197, 253, 0.5);
+        }
+        .premium-subscribe-bar input[type="email"] {
+            flex: 1;
+            border: none !important;
+            background: transparent !important;
+            outline: none !important;
+            font-size: 0.95rem !important;
+            color: #0f172a !important;
+            font-weight: 500 !important;
+            height: 44px !important;
+            padding: 0 !important;
+            box-shadow: none !important;
+        }
+        .premium-subscribe-bar input[type="email"]::placeholder {
+            color: #94a3b8;
+        }
+        .premium-subscribe-btn {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
+            color: #ffffff !important;
+            border-radius: 9999px !important;
+            padding: 0 28px !important;
+            height: 44px !important;
+            font-weight: 700 !important;
+            font-size: 0.92rem !important;
+            border: none !important;
+            cursor: pointer !important;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.3) !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 6px !important;
+            white-space: nowrap !important;
+            flex-shrink: 0 !important;
+        }
+        .premium-subscribe-btn:hover {
+            transform: translateY(-1px) !important;
+            filter: brightness(1.2) !important;
+            box-shadow: 0 6px 20px rgba(15, 23, 42, 0.45) !important;
+        }
 
-                        <div class="featured-content">
-                            <div class="featured-title">
-                                <h5>Subscribe To Our Newsletter</h5>
-                            </div>
-                            <div class="featured-desc">
-                                <p>Stay in touch with us to get latest news and discount coupons</p>
-                            </div>
+        /* Second Footer (Contact Info) */
+        .second-footer.celldus-second-footer {
+            background: #f8fafc !important;
+            border-bottom: 1px solid #e2e8f0 !important;
+            padding: 34px 0 24px 0 !important;
+        }
+        .celldus-contact-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 18px;
+            padding: 1.15rem 1.25rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 1.1rem;
+            box-shadow: 0 4px 18px -4px rgba(15, 23, 42, 0.05);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            height: 100%;
+        }
+        .celldus-contact-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 28px -6px rgba(15, 23, 42, 0.1);
+            border-color: #cbd5e1;
+        }
+        .contact-card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            flex-shrink: 0;
+            transition: transform 0.3s ease;
+        }
+        .celldus-contact-card:hover .contact-card-icon {
+            transform: scale(1.08);
+        }
+        .icon-address {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border: 1.5px solid rgba(59, 130, 246, 0.3);
+            color: #2563eb;
+            box-shadow: 0 6px 16px -4px rgba(37, 99, 235, 0.2);
+        }
+        .icon-phone {
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+            border: 1.5px solid rgba(16, 185, 129, 0.3);
+            color: #059669;
+            box-shadow: 0 6px 16px -4px rgba(16, 185, 129, 0.2);
+        }
+        .icon-email {
+            background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+            border: 1.5px solid rgba(99, 102, 241, 0.3);
+            color: #4f46e5;
+            box-shadow: 0 6px 16px -4px rgba(99, 102, 241, 0.2);
+        }
+        .contact-card-body {
+            flex: 1;
+        }
+        .contact-card-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 0 0 4px 0;
+            letter-spacing: -0.01em;
+        }
+        .contact-card-desc {
+            font-size: 0.85rem;
+            color: #64748b;
+            line-height: 1.45;
+            margin: 0;
+            word-break: break-word;
+        }
+        .contact-card-desc a {
+            color: #2563eb;
+            font-weight: 600;
+            text-decoration: none;
+            transition: color 0.15s ease;
+        }
+        .contact-card-desc a:hover {
+            color: #1d4ed8;
+            text-decoration: underline;
+        }
+
+        /* Responsive Tweaks */
+        @media (max-width: 991px) {
+            .newsletter-left-wrap {
+                margin-bottom: 1.25rem;
+            }
+            .second-footer.celldus-second-footer .widget-area {
+                margin-bottom: 0.9rem;
+            }
+        }
+        @media (max-width: 575px) {
+            .first-footer.celldus-first-footer {
+                padding: 24px 0 !important;
+            }
+            .newsletter-left-wrap {
+                gap: 0.85rem;
+                margin-bottom: 1rem;
+            }
+            .newsletter-icon-badge {
+                width: 46px;
+                height: 46px;
+                border-radius: 12px;
+                font-size: 1.2rem;
+            }
+            .newsletter-title {
+                font-size: 1.18rem;
+            }
+            .newsletter-subtitle {
+                font-size: 0.8rem;
+            }
+            .premium-subscribe-bar {
+                flex-direction: column;
+                background: transparent;
+                border: none;
+                padding: 0;
+                box-shadow: none;
+                gap: 8px;
+            }
+            .premium-subscribe-bar input[type="email"] {
+                width: 100% !important;
+                background: #ffffff !important;
+                border: 1px solid rgba(255, 255, 255, 0.4) !important;
+                border-radius: 14px !important;
+                padding: 0 16px !important;
+                height: 48px !important;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+            }
+            .premium-subscribe-btn {
+                width: 100% !important;
+                height: 48px !important;
+                border-radius: 14px !important;
+                font-size: 0.95rem !important;
+            }
+            .celldus-contact-card {
+                padding: 0.9rem 1rem;
+                border-radius: 15px;
+                gap: 0.85rem;
+            }
+            .contact-card-icon {
+                width: 44px;
+                height: 44px;
+                border-radius: 12px;
+                font-size: 1.15rem;
+            }
+            .contact-card-title {
+                font-size: 0.9rem;
+            }
+            .contact-card-desc {
+                font-size: 0.8rem;
+            }
+        }
+
+        /* =========================================================
+           THIRD FOOTER - ULTRA-PREMIUM NAVIGATION & POSTS
+           ========================================================= */
+        .third-footer.celldus-third-footer {
+            background: #ffffff !important;
+            padding: 56px 0 40px 0 !important;
+            border-bottom: 1px solid #e2e8f0 !important;
+            position: relative;
+        }
+        
+        /* Widget Titles */
+        .celldus-footer-title {
+            font-size: 1.15rem !important;
+            font-weight: 800 !important;
+            color: #0f172a !important;
+            margin: 0 0 1.25rem 0 !important;
+            letter-spacing: -0.01em !important;
+            position: relative !important;
+            display: inline-block !important;
+            padding-bottom: 0.6rem !important;
+        }
+        .celldus-footer-title::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 36px;
+            height: 3px;
+            border-radius: 9999px;
+            background: linear-gradient(90deg, #2563eb, #06b6d4);
+        }
+
+        /* Company Info Column */
+        .footer-company-desc {
+            color: #64748b;
+            font-size: 0.9rem;
+            line-height: 1.65;
+            margin-top: 1rem;
+        }
+        .footer-trust-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            margin-top: 1rem;
+            padding: 0.4rem 0.85rem;
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 9999px;
+            color: #1d4ed8;
+            font-size: 0.76rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+
+        /* Useful Links Grid */
+        .footer-links-grid {
+            list-style: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.6rem 0.85rem;
+        }
+        .footer-links-grid li {
+            margin: 0 !important;
+            padding: 0 !important;
+            list-style: none !important;
+        }
+        .footer-link-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #475569;
+            font-size: 0.88rem;
+            font-weight: 500;
+            text-decoration: none;
+            padding: 0.45rem 0.65rem;
+            border-radius: 8px;
+            transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .footer-link-item i {
+            font-size: 0.72rem;
+            color: #94a3b8;
+            transition: transform 0.22s ease, color 0.22s ease;
+        }
+        .footer-link-item:hover {
+            color: #1d4ed8;
+            background: #eff6ff;
+            transform: translateX(3px);
+        }
+        .footer-link-item:hover i {
+            color: #2563eb;
+            transform: translateX(2px);
+        }
+
+        /* Recent Posts List */
+        .footer-recent-posts {
+            list-style: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+        }
+        .footer-recent-posts li {
+            list-style: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        .footer-post-card {
+            display: flex;
+            align-items: center;
+            gap: 0.95rem;
+            padding: 0.55rem 0.7rem;
+            border-radius: 12px;
+            background: #f8fafc;
+            border: 1px solid #f1f5f9;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            text-decoration: none;
+        }
+        .footer-post-card:hover {
+            background: #ffffff;
+            border-color: #cbd5e1;
+            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+            transform: translateY(-2px);
+        }
+        .footer-post-thumb {
+            width: 56px;
+            height: 56px;
+            border-radius: 10px;
+            object-fit: cover;
+            flex-shrink: 0;
+            border: 1px solid #e2e8f0;
+        }
+        .footer-post-info {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .footer-post-date {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: #0284c7;
+        }
+        .footer-post-title {
+            font-size: 0.84rem;
+            font-weight: 600;
+            color: #0f172a;
+            line-height: 1.35;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            margin: 0;
+            transition: color 0.15s ease;
+        }
+        .footer-post-card:hover .footer-post-title {
+            color: #1d4ed8;
+        }
+
+        .celldus-third-footer .widget {
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        .celldus-third-footer .widget:after {
+            display: none !important;
+            content: none !important;
+        }
+
+        /* Bottom Footer Text & Social Bar */
+        .bottom-footer-text {
+            background: #0b1329 !important;
+            padding: 20px 0 !important;
+            border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+            color: #94a3b8 !important;
+            font-size: 0.86rem !important;
+        }
+        .bottom-footer-text a {
+            color: #38bdf8 !important;
+            text-decoration: none !important;
+            font-weight: 600 !important;
+            transition: color 0.2s ease;
+        }
+        .bottom-footer-text a:hover {
+            color: #7dd3fc !important;
+        }
+        .bottom-footer-text .social-icons ul {
+            margin: 0 !important;
+            padding: 0 !important;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .bottom-footer-text .social-icons li a {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #e2e8f0 !important;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+        }
+        .bottom-footer-text .social-icons li a:hover {
+            background: #2563eb;
+            border-color: #2563eb;
+            color: #ffffff !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+        }
+
+        /* Responsive Tweaks */
+        @media (max-width: 991px) {
+            .third-footer.celldus-third-footer {
+                padding: 42px 0 28px 0 !important;
+            }
+            .third-footer .widget-area {
+                margin-bottom: 2rem;
+            }
+            .third-footer .widget-area:last-child {
+                margin-bottom: 0.5rem;
+            }
+        }
+        @media (max-width: 767px) {
+            .bottom-footer-text .copyright {
+                text-align: center;
+            }
+            .bottom-footer-text .social-icons {
+                justify-content: center !important;
+                margin-top: 12px;
+            }
+        }
+        @media (max-width: 575px) {
+            .third-footer.celldus-third-footer {
+                padding: 32px 0 20px 0 !important;
+            }
+            .celldus-footer-title {
+                font-size: 1.1rem !important;
+                margin-bottom: 0.95rem !important;
+            }
+            .footer-links-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.55rem;
+            }
+            .footer-link-item {
+                font-size: 0.82rem;
+                padding: 0.6rem 0.65rem;
+                background: #f8fafc;
+                border: 1px solid #e2e8f0;
+                border-radius: 10px;
+                font-weight: 600;
+                color: #334155;
+            }
+            .footer-link-item i {
+                color: #2563eb;
+            }
+            .footer-post-card {
+                padding: 0.55rem 0.65rem;
+            }
+            .footer-post-thumb {
+                width: 52px;
+                height: 52px;
+            }
+            .footer-post-title {
+                font-size: 0.82rem;
+            }
+        }
+    </style>
+
+    <div class="first-footer celldus-first-footer ttm-bgcolor-skincolor">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-6 widget-area">
+                    <div class="newsletter-left-wrap">
+                        <div class="newsletter-icon-badge">
+                            <i class="fa-solid fa-envelope-open-text"></i>
+                        </div>
+                        <div>
+                            <h5 class="newsletter-title">Subscribe To Our Newsletter</h5>
+                            <p class="newsletter-subtitle">Stay in touch with us to get latest news and discount coupons</p>
                         </div>
                     </div>
                 </div>
@@ -27,27 +561,21 @@
                     <form id="subscribe-form" method="POST" action="{% url 'subscribe' %}">
                         {% csrf_token %}
 
-                        <div class="mailchimp-inputbox clearfix" id="subscribe-content">
-
-                            <p>
-                                <input type="email" name="email" placeholder="Enter Your Email Address..." required>
-                            </p>
-
-                            <p>
-                                <button
-                                    class="submit ttm-btn ttm-btn-size-md ttm-btn-shape-rounded ttm-btn-style-fill ttm-btn-color-black"
-                                    type="submit">
-                                    Subscribe Now!
-                                </button>
-                            </p>
-
+                        <div class="premium-subscribe-bar" id="subscribe-content">
+                            <input type="email" name="email" placeholder="Enter Your Email Address..." required>
+                            <button class="premium-subscribe-btn" type="submit">
+                                <i class="fa-solid fa-paper-plane" style="font-size: 0.85rem;"></i>
+                                <span>Subscribe Now!</span>
+                            </button>
                         </div>
 
                         <!-- SUCCESS / ERROR MESSAGE -->
-                        <div id="subscribe-msg">
+                        <div id="subscribe-msg" style="margin-top: 8px;">
                             {% if messages %}
                             {% for message in messages %}
-                            <p style="color:green;">{{ message }}</p>
+                            <p style="color: #6ee7b7; font-weight: 600; margin: 4px 0 0 12px; font-size: 0.85rem;">
+                                <i class="fa-solid fa-circle-check"></i> {{ message }}
+                            </p>
                             {% endfor %}
                             {% endif %}
                         </div>
@@ -57,122 +585,97 @@
             </div>
         </div>
     </div>
-    <div class="second-footer">
+    <div class="second-footer celldus-second-footer">
         <div class="container">
             <div class="row">
                 <div class="widget-area col-xs-12 col-sm-12 col-md-5 col-lg-5">
-                    <aside class="widget widget-text">
-                        <!--featured-icon-box-->
-                        <div class="featured-icon-box icon-align-before-content">
-                            <div class="featured-icon">
-                                <div class="ttm-icon ttm-icon_element-onlytxt  ttm-icon_element-size-sm">
-                                    <i class="flaticon-placeholder"></i>
-                                </div>
-                            </div>
-                            <div class="featured-content">
-                                <div class="featured-title">
-                                    <h5>Address</h5>
-                                </div>
-                                <div class="featured-desc">
-                                    <p>H1A/20, SECTOR-63, GAUTAM BUDDHA NAGAR, NOIDA, UTTAR PRADESH, INDIA, 201301
-                                    </p>
-                                </div>
-                            </div>
-                        </div><!-- featured-icon-box end-->
-                    </aside>
+                    <div class="celldus-contact-card">
+                        <div class="contact-card-icon icon-address">
+                            <i class="fa-solid fa-location-dot"></i>
+                        </div>
+                        <div class="contact-card-body">
+                            <h5 class="contact-card-title">Address</h5>
+                            <p class="contact-card-desc">
+                                H1A/20, SECTOR-63, GAUTAM BUDDHA NAGAR, NOIDA, UTTAR PRADESH, INDIA, 201301
+                            </p>
+                        </div>
+                    </div>
                 </div>
                 <div class="widget-area col-xs-12 col-sm-12 col-md-3 col-lg-3">
-                    <aside class="widget widget-text">
-                        <!--featured-icon-box-->
-                        <div class="featured-icon-box icon-align-before-content">
-                            <div class="featured-icon">
-                                <div class="ttm-icon ttm-icon_element-onlytxt  ttm-icon_element-size-sm">
-                                    <i class="fa fa-phone"></i>
-                                </div>
-                            </div>
-                            <div class="featured-content">
-                                <div class="featured-title">
-                                    <h5>Call Us On</h5>
-                                </div>
-                                <div class="featured-desc">
-                                    <p><a href="tel:+919217499771">+91 9217499771</a></p>
-                                </div>
-                            </div>
-                        </div><!-- featured-icon-box end-->
-                    </aside>
+                    <div class="celldus-contact-card">
+                        <div class="contact-card-icon icon-phone">
+                            <i class="fa-solid fa-phone-volume"></i>
+                        </div>
+                        <div class="contact-card-body">
+                            <h5 class="contact-card-title">Call Us On</h5>
+                            <p class="contact-card-desc">
+                                <a href="tel:+919217499771">+91 9217499771</a>
+                            </p>
+                        </div>
+                    </div>
                 </div>
-                <div class="widget-area col-xs-12 col-sm-12 col-md-3 col-lg-4">
-                    <aside class="widget widget-text">
-                        <!--featured-icon-box-->
-                        <div class="featured-icon-box icon-align-before-content">
-                            <div class="featured-icon">
-                                <div class="ttm-icon ttm-icon_element-onlytxt  ttm-icon_element-size-sm">
-                                    <i class="flaticon-email"></i>
-                                </div>
-                            </div>
-                            <div class="featured-content">
-                                <div class="featured-title">
-                                    <h5>Email Us</h5>
-                                </div>
-                                <div class="featured-desc">
-                                    <p><a href="mailto:info@cellduspharma.com">info@cellduspharma.com</a></p>
-                                </div>
-                            </div>
-                        </div><!-- featured-icon-box end-->
-                    </aside>
+                <div class="widget-area col-xs-12 col-sm-12 col-md-4 col-lg-4">
+                    <div class="celldus-contact-card">
+                        <div class="contact-card-icon icon-email">
+                            <i class="fa-solid fa-envelope"></i>
+                        </div>
+                        <div class="contact-card-body">
+                            <h5 class="contact-card-title">Email Us</h5>
+                            <p class="contact-card-desc">
+                                <a href="mailto:info@cellduspharma.com">info@cellduspharma.com</a>
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-    <div class="third-footer">
+    <div class="third-footer celldus-third-footer">
         <div class="container">
             <div class="row">
-                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-5 widget-area">
+                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-4 widget-area">
                     <div class="widget widget_text clearfix">
                         <div class="footer-logo">
-                            <img id="footer-logo-img" class="img-center" src="{% static 'images/footer-logo.png' %}"
-                                alt="">
+                            <img id="footer-logo-img" class="img-fluid" src="{% static 'images/footer-logo.png' %}"
+                                alt="Celldus Pharma">
                         </div>
                         <div class="textwidget widget-text">
-                            <p class="mb-0">Celldus Pharma is a trusted pharmaceutical marketing company dedicated to
+                            <p class="footer-company-desc mb-0">Celldus Pharma is a trusted pharmaceutical marketing company dedicated to
                                 delivering high-quality healthcare products. We focus on innovation, reliability, and
                                 improving lives through effective medical solutions.
                             </p>
-                            <!-- <a class="ttm-btn ttm-btn-size-sm ttm-btn-shape-rounded ttm-btn-style-border ttm-btn-color-skincolor"
-                                href="" title="">Read More!</a> -->
-                        </div>
-                    </div>
-                </div>
-                <div class="col-xs-12 col-sm-12 col-md-6 col-lg-3 widget-area">
-                    <div class="widget widget_nav_menu clearfix">
-                        <h3 class="widget-title">Usefull Links</h3>
-                        <div class="row">
-                            <div class="col-6">
-                                <ul>
-                                    <li><a href="{% url 'home' %}">Home</a></li>
-                                    <li><a href="{% url 'about_us' %}">About Us</a></li>
-                                    <li><a href="{% url 'product' %}">Product Portfolio</a></li>
-                                    <li><a href="{% url 'our_blog' %}">Our Blog</a></li>
-                                    <li><a href="{% url 'contact' %}">Contact Us</a></li>
-                                    <li><a href="{% url 'faq' %}">FAQ</a></li>
-                                </ul>
+                            <div class="footer-trust-badge">
+                                <i class="fa-solid fa-shield-halved"></i> WHO-GMP &amp; Schedule M Compliant
                             </div>
-
-
                         </div>
                     </div>
                 </div>
-                <div class="col-xs-12 col-sm-12 col-md-6 col-lg-4 widget-area">
+                <div class="col-xs-12 col-sm-6 col-md-6 col-lg-4 widget-area">
+                    <div class="widget widget_nav_menu clearfix">
+                        <h3 class="celldus-footer-title">Useful Links</h3>
+                        <ul class="footer-links-grid">
+                            <li><a class="footer-link-item" href="{% url 'home' %}"><i class="fa fa-angle-right"></i> <span>Home</span></a></li>
+                            <li><a class="footer-link-item" href="{% url 'about_us' %}"><i class="fa fa-angle-right"></i> <span>About Us</span></a></li>
+                            <li><a class="footer-link-item" href="{% url 'product' %}"><i class="fa fa-angle-right"></i> <span>Product Portfolio</span></a></li>
+                            <li><a class="footer-link-item" href="{% url 'our_blog' %}"><i class="fa fa-angle-right"></i> <span>Our Blog</span></a></li>
+                            <li><a class="footer-link-item" href="{% url 'contact' %}"><i class="fa fa-angle-right"></i> <span>Contact Us</span></a></li>
+                            <li><a class="footer-link-item" href="{% url 'faq' %}"><i class="fa fa-angle-right"></i> <span>FAQ</span></a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-xs-12 col-sm-6 col-md-6 col-lg-4 widget-area">
                     <div class="widget style2 widget-out-link clearfix">
-                        <h3 class="widget-title">Recent Posts</h3>
-                        <ul class="widget-post ttm-recent-post-list pr-5">
+                        <h3 class="celldus-footer-title">Recent Posts</h3>
+                        <ul class="footer-recent-posts">
                             {% for blog in footer_blogs %}
                             <li>
-                                <a href="{% url 'blog_details' blog.id %}">
-                                    <img src="{% static blog.image %}" alt="{{ blog.title }}">
+                                <a class="footer-post-card" href="{% url 'blog_details' blog.id %}">
+                                    <img class="footer-post-thumb" src="{% static blog.image %}" alt="{{ blog.title }}">
+                                    <div class="footer-post-info">
+                                        <span class="footer-post-date"><i class="fa fa-calendar"></i> {{ blog.date }}</span>
+                                        <h4 class="footer-post-title">{{ blog.title }}</h4>
+                                    </div>
                                 </a>
-                                <span class="post-date"><i class="fa fa-calendar"></i>{{ blog.date }}</span>
-                                <a href="{% url 'blog_details' blog.id %}">{{ blog.title }}</a>
                             </li>
                             {% endfor %}
                         </ul>
@@ -180,7 +683,6 @@
                 </div>
             </div>
         </div>
-    </div>
     </div>
     <div class="bottom-footer-text">
         <div class="container">

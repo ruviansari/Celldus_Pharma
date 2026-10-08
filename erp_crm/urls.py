@@ -8,5 +8,6 @@ router.register(r'tasks', FollowUpTaskViewSet, basename='crm-task')
 router.register(r'imports', LeadImportBatchViewSet, basename='lead-import')
 
 urlpatterns = [
+    path('field/', include('erp_crm.tracking_urls')),
     path('', include(router.urls)),
 ]

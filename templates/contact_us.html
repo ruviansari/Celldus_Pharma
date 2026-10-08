@@ -1,6 +1,276 @@
 {% extends 'base.html' %}
 {% block content %}
 
+<style>
+/* ========================================================
+   CELLDUS OFFICE INFORMATION - ULTRA-PREMIUM CARD
+   ======================================================== */
+.celldus-office-card {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 34px 28px;
+    box-shadow: 0 12px 35px -8px rgba(15, 23, 42, 0.08), 0 4px 14px -3px rgba(15, 23, 42, 0.04);
+    border: 1px solid #e2e8f0;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.celldus-office-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #1d4ed8 0%, #2563eb 50%, #06b6d4 100%);
+}
+
+/* Header */
+.office-card-header {
+    margin-bottom: 24px;
+}
+.office-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+    padding: 4px 12px;
+    border-radius: 9999px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+}
+.office-card-title {
+    font-size: 1.4rem !important;
+    font-weight: 800 !important;
+    color: #0f172a !important;
+    margin: 0 0 6px 0 !important;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+}
+.office-card-desc {
+    color: #64748b;
+    font-size: 0.88rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* Info List */
+.office-info-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+.office-info-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    padding: 14px 16px;
+    background: #f8fafc;
+    border: 1px solid #f1f5f9;
+    border-radius: 14px;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.office-info-item:hover {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
+    transform: translateY(-2px);
+}
+
+/* Icons */
+.office-info-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    flex-shrink: 0;
+}
+.icon-loc {
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+}
+.icon-call {
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+    color: #059669;
+    border: 1px solid #a7f3d0;
+}
+.icon-mail {
+    background: linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%);
+    color: #0284c7;
+    border: 1px solid #bae6fd;
+}
+
+/* Content */
+.office-info-body {
+    flex: 1;
+    min-width: 0;
+}
+.office-info-label {
+    font-size: 0.74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748b;
+    margin-bottom: 3px;
+    display: block;
+}
+.office-info-text {
+    font-size: 0.86rem;
+    color: #334155;
+    line-height: 1.5;
+    margin: 0;
+    font-weight: 500;
+}
+.office-contact-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: #0f172a;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none !important;
+    transition: all 0.2s ease;
+    padding: 3px 0;
+}
+.office-contact-link i {
+    font-size: 0.8rem;
+    color: #2563eb;
+    transition: transform 0.2s ease;
+}
+.office-contact-link:hover {
+    color: #1d4ed8;
+    transform: translateX(3px);
+}
+.office-contact-link:hover i {
+    transform: scale(1.15);
+}
+.office-directions-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #2563eb;
+    text-decoration: none !important;
+    margin-top: 6px;
+    transition: all 0.2s ease;
+}
+.office-directions-link:hover {
+    color: #1d4ed8;
+    transform: translateX(2px);
+}
+
+/* Social Bar */
+.office-social-section {
+    padding-top: 18px;
+    border-top: 1px solid #e2e8f0;
+}
+.office-social-heading {
+    font-size: 0.74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #64748b;
+    margin-bottom: 12px;
+    display: block;
+}
+.office-social-list {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    list-style: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+.office-social-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    color: #475569;
+    text-decoration: none !important;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.office-social-btn.facebook:hover {
+    background: #1877f2;
+    border-color: #1877f2;
+    color: #ffffff !important;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 14px rgba(24, 119, 242, 0.35);
+}
+.office-social-btn.linkedin:hover {
+    background: #0a66c2;
+    border-color: #0a66c2;
+    color: #ffffff !important;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 14px rgba(10, 102, 194, 0.35);
+}
+.office-social-btn.pinterest:hover {
+    background: #e60023;
+    border-color: #e60023;
+    color: #ffffff !important;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 14px rgba(230, 0, 35, 0.35);
+}
+.office-social-btn.twitter:hover {
+    background: #0f172a;
+    border-color: #0f172a;
+    color: #ffffff !important;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 14px rgba(15, 23, 42, 0.35);
+}
+
+/* Responsive */
+@media (max-width: 991px) {
+    .celldus-office-card {
+        margin-bottom: 30px;
+        padding: 28px 22px;
+    }
+}
+@media (max-width: 575px) {
+    .celldus-office-card {
+        padding: 22px 18px;
+        border-radius: 16px;
+    }
+    .office-card-title {
+        font-size: 1.25rem !important;
+    }
+    .office-info-item {
+        padding: 12px 14px;
+        gap: 12px;
+    }
+    .office-info-icon {
+        width: 38px;
+        height: 38px;
+        font-size: 1rem;
+        border-radius: 10px;
+    }
+    .office-contact-link {
+        font-size: 0.88rem;
+    }
+    .office-social-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+    }
+}
+</style>
+
 <div class="ttm-page-title-row">
     <div class="ttm-page-title-row-inner">
         <div class="container">
@@ -30,96 +300,93 @@
         <div class="container">
             <div class="row">
                 <div class="col-lg-4">
-                    <!-- testimonial-box -->
-                    <div class="pt-45 res-991-pt-0 res-991-pb-30">
-                        <div class="mb-30">
-                            <h4>Our Office Inforamtion</h4>
+                    <div class="celldus-office-card">
+                        <div class="office-card-header">
+                            <span class="office-badge"><i class="fa-solid fa-building-circle-check"></i> Headquarters</span>
+                            <h3 class="office-card-title">Our Office Information</h3>
+                            <p class="office-card-desc">Reach out to our team directly. We are always ready to assist your queries.</p>
                         </div>
-                        <!--featured-icon-box-->
-                        <div class="featured-icon-box icon-align-before-content icon-ver_align-top">
-                            <div class="featured-icon">
-                                <div
-                                    class="ttm-icon ttm-icon_element-onlytxt ttm-icon_element-color-skincolor ttm-icon_element-size-md">
-                                    <i class="flaticon-placeholder"></i>
+
+                        <div class="office-info-list">
+                            <!-- Location -->
+                            <div class="office-info-item">
+                                <div class="office-info-icon icon-loc">
+                                    <i class="fa-solid fa-location-dot"></i>
                                 </div>
-                            </div>
-                            <div class="featured-content">
-                                <div class="featured-title">
-                                    <h5>Location</h5>
-                                </div>
-                                <div class="featured-desc">
-                                    <p>H1A/20, SECTOR-63, GAUTAM BUDDHA NAGAR, NOIDA, UTTAR PRADESH, INDIA, 201301
+                                <div class="office-info-body">
+                                    <span class="office-info-label">Office Address</span>
+                                    <p class="office-info-text">
+                                        H1A/20, SECTOR-63, GAUTAM BUDDHA NAGAR, NOIDA, UTTAR PRADESH, INDIA, 201301
                                     </p>
+                                    <a href="https://maps.google.com/?q=H1A/20,+Sector+63,+Noida,+Uttar+Pradesh,+India+201301" target="_blank" class="office-directions-link">
+                                        <i class="fa-solid fa-diamond-turn-right"></i> Get Directions
+                                    </a>
                                 </div>
                             </div>
-                        </div><!-- featured-icon-box end-->
-                        <div class="sep_holder_box width-100 mt-20 mb-20">
-                            <span class="sep_holder"><span class="sep_line"></span></span>
+
+                            <!-- Phone -->
+                            <div class="office-info-item">
+                                <div class="office-info-icon icon-call">
+                                    <i class="fa-solid fa-phone-volume"></i>
+                                </div>
+                                <div class="office-info-body">
+                                    <span class="office-info-label">Call Us</span>
+                                    <div class="d-flex flex-column">
+                                        <a href="tel:+919217499770" class="office-contact-link">
+                                            <i class="fa-solid fa-phone"></i> +91 9217499770
+                                        </a>
+                                        <a href="tel:+919217499771" class="office-contact-link">
+                                            <i class="fa-solid fa-phone"></i> +91 9217499771
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Email -->
+                            <div class="office-info-item">
+                                <div class="office-info-icon icon-mail">
+                                    <i class="fa-solid fa-envelope"></i>
+                                </div>
+                                <div class="office-info-body">
+                                    <span class="office-info-label">Email</span>
+                                    <div class="d-flex flex-column">
+                                        <a href="mailto:info@cellduspharma.com" class="office-contact-link">
+                                            <i class="fa-regular fa-envelope"></i> info@cellduspharma.com
+                                        </a>
+                                        <a href="mailto:sales@cellduspharma.com" class="office-contact-link">
+                                            <i class="fa-regular fa-envelope"></i> sales@cellduspharma.com
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <!--featured-icon-box-->
-                        <div class="featured-icon-box icon-align-before-content icon-ver_align-top">
-                            <div class="featured-icon">
-                                <div
-                                    class="ttm-icon ttm-icon_element-onlytxt ttm-icon_element-color-skincolor ttm-icon_element-size-md">
-                                    <i class="flaticon-call"></i>
-                                </div>
-                            </div>
-                            <div class="featured-content">
-                                <div class="featured-title">
-                                    <h5>Call Us</h5>
-                                </div>
-                                <div class="featured-desc">
-                                    <a href="tel:+919217499770">+91 9217499770</a><br>
-                                    <a href="tel:+919217499771">+91 9217499771</a>
-                                </div>
-                            </div>
-                        </div><!-- featured-icon-box end-->
-                        <div class="sep_holder_box width-100 mt-20 mb-20">
-                            <span class="sep_holder"><span class="sep_line"></span></span>
+
+                        <!-- Social Links -->
+                        <div class="office-social-section">
+                            <span class="office-social-heading">Connect With Us</span>
+                            <ul class="office-social-list">
+                                <li>
+                                    <a target="_blank" href="https://www.facebook.com/preyantechnosys19" class="office-social-btn facebook" title="Facebook">
+                                        <i class="fa-brands fa-facebook-f"></i>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a target="_blank" href="https://www.linkedin.com/in/preyan-technosys-pvt-ltd/" class="office-social-btn linkedin" title="LinkedIn">
+                                        <i class="fa-brands fa-linkedin-in"></i>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a target="_blank" href="https://in.pinterest.com/preyan_technosys/" class="office-social-btn pinterest" title="Pinterest">
+                                        <i class="fa-brands fa-pinterest-p"></i>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a target="_blank" href="https://twitter.com/PreyanTechnosys" class="office-social-btn twitter" title="Twitter">
+                                        <i class="fa-brands fa-twitter"></i>
+                                    </a>
+                                </li>
+                            </ul>
                         </div>
-                        <!--featured-icon-box-->
-                        <div class="featured-icon-box icon-align-before-content icon-ver_align-top">
-                            <div class="featured-icon">
-                                <div
-                                    class="ttm-icon ttm-icon_element-onlytxt ttm-icon_element-color-skincolor ttm-icon_element-size-md">
-                                    <i class="flaticon-email"></i>
-                                </div>
-                            </div>
-                            <div class="featured-content">
-                                <div class="featured-title">
-                                    <h5>Email</h5>
-                                </div>
-                                <div class="featured-desc">
-                                    <a href="mailto:info@cellduspharma.com">info@cellduspharma.com</a><br>
-                                    <a href="mailto:sales@cellduspharma.com">sales@cellduspharma.com</a>
-                                </div>
-                            </div>
-                        </div><!-- featured-icon-box end-->
-                        <ul class="social-icons">
-                            <li class="social-facebook">
-                                <a target="_blank" href="https://www.facebook.com/preyantechnosys19">
-                                    <i class="fa-brands fa-facebook-f"></i>
-                                </a>
-                            </li>
-
-                            <li class="social-linkedin">
-                                <a target="_blank" href="https://www.linkedin.com/in/preyan-technosys-pvt-ltd/">
-                                    <i class="fa-brands fa-linkedin-in"></i>
-                                </a>
-                            </li>
-
-                            <li class="social-pinterest">
-                                <a target="_blank" href="https://in.pinterest.com/preyan_technosys/">
-                                    <i class="fa-brands fa-pinterest-p"></i>
-                                </a>
-                            </li>
-
-                            <li class="social-twitter">
-                                <a target="_blank" href="https://twitter.com/PreyanTechnosys">
-                                    <i class="fa-brands fa-twitter"></i>
-                                </a>
-                            </li>
-                        </ul>
                     </div>
                 </div>
                 <div class="col-lg-8">

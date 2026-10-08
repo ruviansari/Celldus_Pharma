@@ -218,89 +218,315 @@
     <!--features-section-->
 
 
-    <!--fid-section-->
+    <!--fid-section (Celldus Executive Stats Showcase)-->
+    <style>
+        .celldus-stats-wrapper {
+            background: #ffffff;
+            border-radius: 24px;
+            padding: 2.2rem 2.4rem;
+            position: relative;
+            box-shadow: 
+                0 25px 60px -15px rgba(15, 23, 42, 0.09),
+                0 10px 25px -10px rgba(37, 99, 235, 0.06),
+                0 0 0 1px rgba(226, 232, 240, 0.85);
+            border: 1px solid rgba(241, 245, 249, 1);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        .celldus-stats-wrapper::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #2563eb 0%, #06b6d4 33%, #10b981 66%, #6366f1 100%);
+            border-radius: 24px 24px 0 0;
+        }
+        .celldus-stats-wrapper::after {
+            content: '';
+            position: absolute;
+            top: -60px;
+            right: -60px;
+            width: 220px;
+            height: 220px;
+            background: radial-gradient(circle, rgba(37, 99, 235, 0.05) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        .celldus-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            position: relative;
+            z-index: 1;
+        }
+        .celldus-stat-card {
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+            border-radius: 16px;
+            padding: 0.5rem;
+        }
+        .celldus-stat-card:hover {
+            transform: translateY(-4px);
+        }
+        .celldus-stat-card:not(:last-child) {
+            position: relative;
+        }
+        .celldus-stat-card:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            right: -0.75rem;
+            top: 15%;
+            bottom: 15%;
+            width: 1px;
+            background: linear-gradient(180deg, rgba(226, 232, 240, 0.1) 0%, rgba(203, 213, 225, 0.7) 50%, rgba(226, 232, 240, 0.1) 100%);
+        }
+        .stat-card-inner {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+            padding: 0.75rem 0.5rem;
+        }
+        .stat-icon-box {
+            width: 62px;
+            height: 62px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.65rem;
+            flex-shrink: 0;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.08);
+        }
+        .celldus-stat-card:hover .stat-icon-box {
+            transform: scale(1.08) rotate(3deg);
+        }
+        .theme-blue .stat-icon-box {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border: 1.5px solid rgba(59, 130, 246, 0.3);
+            color: #2563eb;
+            box-shadow: 0 10px 22px -5px rgba(37, 99, 235, 0.22);
+        }
+        .theme-blue .stat-plus { color: #2563eb; }
+        .theme-emerald .stat-icon-box {
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+            border: 1.5px solid rgba(16, 185, 129, 0.3);
+            color: #059669;
+            box-shadow: 0 10px 22px -5px rgba(16, 185, 129, 0.22);
+        }
+        .theme-emerald .stat-plus { color: #059669; }
+        .theme-indigo .stat-icon-box {
+            background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+            border: 1.5px solid rgba(99, 102, 241, 0.3);
+            color: #4f46e5;
+            box-shadow: 0 10px 22px -5px rgba(99, 102, 241, 0.22);
+        }
+        .theme-indigo .stat-plus { color: #4f46e5; }
+        .theme-amber .stat-icon-box {
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
+            border: 1.5px solid rgba(14, 165, 233, 0.3);
+            color: #0284c7;
+            box-shadow: 0 10px 22px -5px rgba(2, 132, 199, 0.22);
+        }
+        .theme-amber .stat-plus { color: #0284c7; }
+        .stat-content {
+            display: flex;
+            flex-direction: column;
+        }
+        .stat-number-wrap {
+            font-size: 2.25rem;
+            font-weight: 800;
+            line-height: 1;
+            color: #0f172a;
+            font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            letter-spacing: -0.03em;
+            display: flex;
+            align-items: baseline;
+            gap: 2px;
+        }
+        .stat-number-wrap .numinate {
+            font-size: inherit;
+            font-weight: inherit;
+            line-height: 1;
+            color: #0f172a;
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .stat-plus {
+            font-size: 1.45rem;
+            font-weight: 800;
+            line-height: 1;
+            margin-left: 2px;
+        }
+        .stat-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #64748b;
+            margin-top: 0.35rem;
+            letter-spacing: 0.02em;
+            line-height: 1.35;
+            white-space: nowrap;
+        }
+        @media (max-width: 991px) {
+            .celldus-stats-wrapper {
+                padding: 1.6rem 1.25rem;
+                border-radius: 20px;
+            }
+            .celldus-stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1.1rem;
+            }
+            .celldus-stat-card:not(:last-child)::after {
+                display: none;
+            }
+            .celldus-stat-card {
+                background: #f8fafc;
+                border: 1px solid #e2e8f0;
+                border-radius: 16px;
+                padding: 0.85rem;
+            }
+            .stat-card-inner {
+                gap: 0.9rem;
+                padding: 0.25rem;
+            }
+            .stat-icon-box {
+                width: 52px;
+                height: 52px;
+                border-radius: 14px;
+                font-size: 1.35rem;
+            }
+            .stat-number-wrap {
+                font-size: 1.85rem;
+            }
+            .stat-plus {
+                font-size: 1.25rem;
+            }
+            .stat-title {
+                font-size: 0.78rem;
+                white-space: normal;
+            }
+        }
+        @media (max-width: 575px) {
+            .celldus-stats-wrapper {
+                padding: 1.25rem 0.85rem;
+                border-radius: 18px;
+                box-shadow: 0 15px 35px -10px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(226, 232, 240, 0.9);
+            }
+            .celldus-stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.75rem;
+            }
+            .celldus-stat-card {
+                padding: 0.75rem 0.6rem;
+                border-radius: 14px;
+                box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+            }
+            .stat-card-inner {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.6rem;
+                padding: 0;
+            }
+            .stat-icon-box {
+                width: 44px;
+                height: 44px;
+                border-radius: 12px;
+                font-size: 1.15rem;
+            }
+            .stat-number-wrap {
+                font-size: 1.65rem;
+            }
+            .stat-plus {
+                font-size: 1.15rem;
+            }
+            .stat-title {
+                font-size: 0.74rem;
+                line-height: 1.25;
+                font-weight: 600;
+            }
+        }
+        @media (max-width: 360px) {
+            .celldus-stats-grid {
+                grid-template-columns: 1fr;
+                gap: 0.75rem;
+            }
+            .stat-card-inner {
+                flex-direction: row;
+                align-items: center;
+                gap: 0.9rem;
+            }
+        }
+    </style>
     <div class="ttm-row fid-section mt_80 res-991-mt-0 z-index-1 clearfix">
         <div class="container">
-            <!-- row -->
             <div class="row">
                 <div class="col-lg-12">
-                    <div class="ttm-bg ttm-col-bgcolor-yes ttm-bgcolor-white">
-                        <div class="ttm-col-wrapper-bg-layer ttm-bg-layer"></div>
-                        <div class="layer-content">
-                            <div class="row">
-                                <div class="col-lg-3 col-md-6 col-sm-6">
-                                    <!-- ttm-fid -->
-                                    <div class="ttm-fid inside ttm-fid-with-icon ttm-fid-view-lefticon style2">
-                                        <div class="ttm-fid-icon-wrapper ttm-textcolor-skincolor">
-                                            <i class="fa-solid fa-clock"></i>
+                    <div class="celldus-stats-wrapper">
+                        <div class="celldus-stats-grid">
+                            
+                            <!-- Stat 1: Years of Excellence -->
+                            <div class="celldus-stat-card theme-blue">
+                                <div class="stat-card-inner">
+                                    <div class="stat-icon-box">
+                                        <i class="fa-solid fa-clock"></i>
+                                    </div>
+                                    <div class="stat-content">
+                                        <div class="stat-number-wrap">
+                                            <span data-appear-animation="animateDigits" data-from="0" data-to="5" data-interval="5" class="numinate">5</span><span class="stat-plus">+</span>
                                         </div>
-                                        <div class="ttm-fid-contents">
-                                            <h4 class="ttm-fid-inner">
-                                                <span data-appear-animation="animateDigits" data-from="0" data-to="5"
-                                                    data-interval="5" class="numinate">5
-                                                </span>
-                                                <sub>+</sub>
-                                            </h4>
-                                            <h3 class="ttm-fid-title">Years of Excellence</h3>
-                                        </div>
+                                        <div class="stat-title">Years of Excellence</div>
                                     </div>
                                 </div>
-                                <div class="col-lg-3 col-md-6 col-sm-6">
-                                    <!-- ttm-fid -->
-                                    <div class="ttm-fid inside ttm-fid-with-icon ttm-fid-view-lefticon style2">
-                                        <div class="ttm-fid-icon-wrapper ttm-textcolor-skincolor">
-                                            <i class="fa-solid fa-capsules"></i>
+                            </div>
+
+                            <!-- Stat 2: Product Portfolio -->
+                            <div class="celldus-stat-card theme-emerald">
+                                <div class="stat-card-inner">
+                                    <div class="stat-icon-box">
+                                        <i class="fa-solid fa-capsules"></i>
+                                    </div>
+                                    <div class="stat-content">
+                                        <div class="stat-number-wrap">
+                                            <span data-appear-animation="animateDigits" data-from="0" data-to="15" data-interval="15" data-before="" data-before-style="sup" data-after="" data-after-style="sub" class="numinate">15</span><span class="stat-plus">+</span>
                                         </div>
-                                        <div class="ttm-fid-contents">
-                                            <h4 class="ttm-fid-inner">
-                                                <span data-appear-animation="animateDigits" data-from="0" data-to="15"
-                                                    data-interval="15" data-before="" data-before-style="sup"
-                                                    data-after="" data-after-style="sub" class="numinate">15
-                                                </span>
-                                                <sub>+</sub>
-                                            </h4>
-                                            <h3 class="ttm-fid-title">Product Portfolio</h3>
-                                        </div>
-                                    </div><!-- ttm-fid end -->
+                                        <div class="stat-title">Product Portfolio</div>
+                                    </div>
                                 </div>
-                                <div class="col-lg-3 col-md-6 col-sm-6">
-                                    <!-- ttm-fid -->
-                                    <div class="ttm-fid inside ttm-fid-with-icon ttm-fid-view-lefticon style2">
-                                        <div class="ttm-fid-icon-wrapper ttm-textcolor-skincolor">
-                                            <i class="fa-solid fa-user-doctor"></i>
+                            </div>
+
+                            <!-- Stat 3: Doctors Associated -->
+                            <div class="celldus-stat-card theme-indigo">
+                                <div class="stat-card-inner">
+                                    <div class="stat-icon-box">
+                                        <i class="fa-solid fa-user-doctor"></i>
+                                    </div>
+                                    <div class="stat-content">
+                                        <div class="stat-number-wrap">
+                                            <span data-appear-animation="animateDigits" data-from="0" data-to="150" data-interval="15" data-before="" data-before-style="sup" data-after="" data-after-style="sub" class="numinate">150</span><span class="stat-plus">+</span>
                                         </div>
-                                        <div class="ttm-fid-contents">
-                                            <h4 class="ttm-fid-inner">
-                                                <span data-appear-animation="animateDigits" data-from="0" data-to="150"
-                                                    data-interval="15" data-before="" data-before-style="sup"
-                                                    data-after="" data-after-style="sub" class="numinate">150
-                                                </span>
-                                                <sub>+</sub>
-                                            </h4>
-                                            <h3 class="ttm-fid-title">Doctors Associated</h3>
-                                        </div>
-                                    </div><!-- ttm-fid end -->
+                                        <div class="stat-title">Doctors Associated</div>
+                                    </div>
                                 </div>
-                                <div class="col-lg-3 col-md-6 col-sm-6">
-                                    <!-- ttm-fid -->
-                                    <div class="ttm-fid inside ttm-fid-with-icon ttm-fid-view-lefticon style2">
-                                        <div class="ttm-fid-icon-wrapper ttm-textcolor-skincolor">
-                                            <i class="fa-solid fa-map-location-dot"></i>
+                            </div>
+
+                            <!-- Stat 4: States Covered -->
+                            <div class="celldus-stat-card theme-amber">
+                                <div class="stat-card-inner">
+                                    <div class="stat-icon-box">
+                                        <i class="fa-solid fa-map-location-dot"></i>
+                                    </div>
+                                    <div class="stat-content">
+                                        <div class="stat-number-wrap">
+                                            <span data-appear-animation="animateDigits" data-from="0" data-to="25" data-interval="15" data-before="" data-before-style="sup" data-after="" data-after-style="sub" class="numinate">25</span><span class="stat-plus">+</span>
                                         </div>
-                                        <div class="ttm-fid-contents">
-                                            <h4 class="ttm-fid-inner">
-                                                <span data-appear-animation="animateDigits" data-from="0" data-to="25"
-                                                    data-interval="15" data-before="" data-before-style="sup"
-                                                    data-after="" data-after-style="sub" class="numinate">25
-                                                </span>
-                                                <sub>+</sub>
-                                            </h4>
-                                            <h3 class="ttm-fid-title">States Covered</h3>
-                                        </div>
-                                    </div><!-- ttm-fid end -->
+                                        <div class="stat-title">States Covered</div>
+                                    </div>
                                 </div>
-                            </div><!-- row end -->
-                        </div><!-- ttm-client end -->
+                            </div>
+
+                        </div>
                     </div>
                 </div>
             </div>

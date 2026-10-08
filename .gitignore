@@ -50,3 +50,7 @@ Desktop.ini
 # Archives
 *.zip
 *.tar.gz
+
+# Binaries & Executables
+*.exe
+cloudflared.exe

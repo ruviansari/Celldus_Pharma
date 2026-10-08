@@ -206,9 +206,46 @@ class SupplierMaster(ERPBaseModel):
         return f"[{self.supplier_code}] {self.legal_name} ({self.status})"
 
 
+
+class Territory(ERPBaseModel):
+    """
+    Commercial sales territory and headquarter zone for field reps & beat planning.
+    """
+    REGION_CHOICES = (
+        ('NORTH', 'North Zone'),
+        ('SOUTH', 'South Zone'),
+        ('EAST', 'East Zone'),
+        ('WEST', 'West Zone'),
+        ('CENTRAL', 'Central Zone'),
+    )
+
+    code = models.CharField(max_length=50, unique=True, db_index=True, help_text="e.g. TERR-DEL-01, TERR-NOIDA")
+    name = models.CharField(max_length=150, db_index=True)
+    headquarters = models.CharField(max_length=100, help_text="HQ City, e.g. Noida, Delhi-NCR, Lucknow")
+    state = models.CharField(max_length=100)
+    region = models.CharField(max_length=20, choices=REGION_CHOICES, default='NORTH')
+    branch = models.ForeignKey(Branch, on_delete=models.PROTECT, related_name='territories')
+    manager = models.ForeignKey(
+        'erp_hr.Employee',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='managed_territories',
+        help_text="Area / Regional Sales Manager overseeing territory"
+    )
+
+    class Meta:
+        verbose_name = "Territory"
+        verbose_name_plural = "Territories"
+        ordering = ['code']
+
+    def __str__(self):
+        return f"[{self.code}] {self.name} ({self.headquarters})"
+
+
 class CustomerMaster(ERPBaseModel):
     """
-    Hospitals, Stockists, Distributors, Pharmacies, and Export Clients.
+    Hospitals, Stockists, Distributors, Pharmacies, Clinics, and Export Clients.
     """
     CUSTOMER_TYPE_CHOICES = (
         ('DISTRIBUTOR', 'Wholesale Distributor'),
@@ -245,6 +282,19 @@ class CustomerMaster(ERPBaseModel):
     current_balance = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
     payment_terms_days = models.PositiveIntegerField(default=30)
     credit_hold = models.BooleanField(default=False, help_text="Hold orders if invoices overdue or limit exceeded")
+
+    # Geolocation & Geofencing for Field Force Management & Visit Verification
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, help_text="Latitude coordinate")
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, help_text="Longitude coordinate")
+    geofence_radius_meters = models.PositiveIntegerField(default=150, help_text="Geofence boundary radius in meters")
+    territory = models.ForeignKey(
+        Territory,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='customers',
+        help_text="Assigned commercial sales territory"
+    )
 
     class Meta:
         ordering = ['-created_at']

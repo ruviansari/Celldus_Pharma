@@ -1,0 +1,1395 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Field Tracking & Manager Cockpit | Celldus Pharma{% endblock %}
+{% block page_title %}Manager Field Tracking & SFA Cockpit{% endblock %}
+{% block page_subtitle %}Live 360° Supervisory Oversight: Real-time Attendance, Geofenced Doctor Detailing, GPS Audit Trail, and Territory Exceptions{% endblock %}
+
+{% block top_actions %}
+<div class="cockpit-top-actions">
+    <a href="{% url 'dashboard_field_portal' %}" class="cockpit-action-btn btn-view-mobile" title="Open Medical Representative Mobile Portal">
+        <div class="btn-icon-wrapper"><i class="fa-solid fa-mobile-screen-button"></i></div>
+        <span>MR Mobile View</span>
+    </a>
+    <a href="{% url 'dashboard_field_reports' %}" class="cockpit-action-btn btn-view-reports" title="Open SFA Audit & Coverage Reports">
+        <div class="btn-icon-wrapper"><i class="fa-solid fa-chart-line"></i></div>
+        <span>SFA Reports & Audit</span>
+    </a>
+    <button class="cockpit-action-btn btn-view-refresh" onclick="refreshTrackingCockpit()" title="Live Telemetry & Activity Sync">
+        <div class="btn-icon-wrapper"><i class="fa-solid fa-arrows-rotate" id="refreshBtnIcon"></i></div>
+        <span id="refreshBtnText">Live Refresh</span>
+    </button>
+    <button id="themeToggleBtn" class="cockpit-action-btn btn-view-theme" type="button" title="Switch Theme (Dark / Light)">
+        <div class="btn-icon-wrapper"><i id="themeToggleIcon" class="fa-solid fa-sun"></i></div>
+        <span id="themeToggleText">Light Mode</span>
+    </button>
+</div>
+{% endblock %}
+{% block theme_toggle_block %}{% endblock %}
+
+{% block extra_css %}
+<!-- Google Maps Integration -->
+
+<style>
+    /* ========================================================================= */
+    /* PREMIUM BUTTONS & HEADER TOOLBAR                                         */
+    /* ========================================================================= */
+    .cockpit-top-actions {
+        display: flex;
+        gap: 0.65rem;
+        align-items: center;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+    .cockpit-action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        padding: 0.55rem 1rem;
+        border-radius: 12px;
+        font-size: 0.84rem;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 1px solid transparent;
+        line-height: 1.2;
+    }
+    .cockpit-action-btn .btn-icon-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.95rem;
+    }
+
+    /* MR Mobile View - Cyan Glass */
+    .btn-view-mobile {
+        background: linear-gradient(135deg, rgba(6, 182, 212, 0.12), rgba(14, 165, 233, 0.06));
+        border-color: rgba(6, 182, 212, 0.3);
+        color: #06b6d4;
+    }
+    .btn-view-mobile:hover {
+        background: linear-gradient(135deg, rgba(6, 182, 212, 0.22), rgba(14, 165, 233, 0.14));
+        border-color: #06b6d4;
+        color: #22d3ee;
+        box-shadow: 0 6px 20px rgba(6, 182, 212, 0.25);
+        transform: translateY(-2px);
+    }
+
+    /* Reports & Audit - Violet Glass */
+    .btn-view-reports {
+        background: linear-gradient(135deg, rgba(168, 85, 247, 0.12), rgba(139, 92, 246, 0.06));
+        border-color: rgba(168, 85, 247, 0.3);
+        color: #c084fc;
+    }
+    .btn-view-reports:hover {
+        background: linear-gradient(135deg, rgba(168, 85, 247, 0.22), rgba(139, 92, 246, 0.14));
+        border-color: #c084fc;
+        color: #e879f9;
+        box-shadow: 0 6px 20px rgba(168, 85, 247, 0.25);
+        transform: translateY(-2px);
+    }
+
+    /* Live Refresh - Royal Indigo Gradient */
+    .btn-view-refresh {
+        background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 50%, #06b6d4 100%);
+        color: #ffffff;
+        border: none;
+        box-shadow: 0 4px 16px rgba(79, 70, 229, 0.35);
+    }
+    .btn-view-refresh:hover {
+        background: linear-gradient(135deg, #4338ca 0%, #2563eb 50%, #0891b2 100%);
+        box-shadow: 0 6px 22px rgba(79, 70, 229, 0.5);
+        transform: translateY(-2px);
+        color: #ffffff;
+    }
+
+    /* Light/Dark Toggle - Frosted Glass */
+    .btn-view-theme {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: var(--border-color);
+        color: var(--text-primary);
+    }
+    .btn-view-theme:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: var(--border-hover);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+    }
+    .btn-view-theme #themeToggleIcon {
+        color: #f59e0b;
+    }
+
+    /* ========================================================================= */
+    /* CLICKABLE KPI METRIC CARDS                                                */
+    /* ========================================================================= */
+    .manager-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    .m-stat-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 14px;
+        padding: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        user-select: none;
+    }
+    .m-stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; height: 3px;
+        background: transparent;
+        transition: var(--transition);
+    }
+    .m-stat-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(99, 102, 241, 0.5);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+    }
+    .m-stat-card:hover::before {
+        background: linear-gradient(90deg, #4f46e5, #06b6d4);
+    }
+    .m-stat-card.active-card {
+        border-color: #6366f1 !important;
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(6, 182, 212, 0.08)) !important;
+        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.4), 0 10px 25px rgba(0, 0, 0, 0.25) !important;
+        transform: translateY(-3px);
+    }
+    .m-stat-card.active-card::before {
+        background: linear-gradient(90deg, #4f46e5, #06b6d4);
+    }
+
+    .m-stat-badge {
+        position: absolute;
+        top: 0.65rem;
+        right: 0.65rem;
+        font-size: 0.68rem;
+        font-weight: 700;
+        padding: 2px 7px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-color);
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        opacity: 0.8;
+        transition: var(--transition);
+    }
+    .m-stat-card:hover .m-stat-badge {
+        opacity: 1;
+        background: rgba(255, 255, 255, 0.12);
+        color: var(--text-primary);
+    }
+    .m-stat-card.active-card .m-stat-badge {
+        background: #4f46e5;
+        color: #ffffff;
+        border-color: #4f46e5;
+        opacity: 1;
+    }
+
+    .m-stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.35rem;
+        flex-shrink: 0;
+        transition: var(--transition);
+    }
+    .m-stat-card:hover .m-stat-icon {
+        transform: scale(1.08);
+    }
+    .m-stat-val {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--text-primary);
+        line-height: 1.2;
+    }
+    .m-stat-lbl {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        font-weight: 600;
+    }
+
+    /* ========================================================================= */
+    /* MAP & COCKPIT SECTION                                                     */
+    /* ========================================================================= */
+    .cockpit-layout {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    @media (min-width: 1024px) {
+        .cockpit-layout {
+            grid-template-columns: 3fr 2fr;
+        }
+    }
+
+    .map-panel {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    }
+    .map-header {
+        padding: 1rem 1.25rem;
+        background: rgba(255, 255, 255, 0.02);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    #fieldCockpitMap {
+        height: 470px;
+        width: 100%;
+        background: #0f172a;
+        z-index: 10;
+    }
+
+    /* Custom Leaflet Marker Styling */
+    .custom-rep-marker {
+        background: transparent;
+        border: none;
+    }
+    .rep-marker-pin {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
+        font-size: 0.85rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        border: 2px solid #ffffff;
+        position: relative;
+        cursor: pointer;
+    }
+    .rep-marker-pulse {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        border: 2px solid;
+        animation: markerPulse 2s infinite ease-out;
+        opacity: 0.8;
+    }
+    @keyframes markerPulse {
+        0% { transform: scale(1); opacity: 0.8; }
+        100% { transform: scale(2.2); opacity: 0; }
+    }
+
+    .map-popup-card {
+        font-family: inherit;
+        font-size: 0.85rem;
+        min-width: 190px;
+        color: #0f172a;
+    }
+    .map-popup-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.35rem;
+    }
+    .map-popup-meta {
+        font-size: 0.75rem;
+        color: #64748b;
+        display: flex;
+        gap: 0.6rem;
+        margin-bottom: 0.4rem;
+    }
+    .map-popup-info {
+        padding: 0.4rem 0;
+        border-top: 1px solid #e2e8f0;
+        font-size: 0.74rem;
+        color: #334155;
+        line-height: 1.4;
+    }
+    .map-popup-btn {
+        width: 100%;
+        margin-top: 0.4rem;
+        padding: 0.35rem 0.6rem;
+        background: #4f46e5;
+        color: #ffffff;
+        border: none;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.35rem;
+        transition: background 0.2s;
+    }
+    .map-popup-btn:hover {
+        background: #4338ca;
+    }
+
+    /* ========================================================================= */
+    /* LIVE FEED SIDEBAR                                                         */
+    /* ========================================================================= */
+    .live-feed-panel {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        max-height: 540px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    }
+    .feed-header-flex {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+    }
+    .feed-filter-group {
+        display: flex;
+        gap: 0.35rem;
+        align-items: center;
+    }
+    .feed-chip {
+        padding: 0.25rem 0.65rem;
+        border-radius: 8px;
+        font-size: 0.72rem;
+        font-weight: 600;
+        border: 1px solid var(--border-color);
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+    .feed-chip:hover {
+        border-color: var(--border-hover);
+        color: var(--text-primary);
+        transform: translateY(-1px);
+    }
+    .feed-chip.active {
+        background: linear-gradient(135deg, rgba(79, 70, 229, 0.25), rgba(6, 182, 212, 0.2));
+        border-color: #6366f1;
+        color: #a5b4fc;
+        box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);
+    }
+
+    .feed-items-list {
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        padding-right: 0.35rem;
+        flex: 1;
+    }
+    .feed-item {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 0.85rem;
+        display: flex;
+        gap: 0.75rem;
+        align-items: flex-start;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .feed-item:hover {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: var(--border-hover);
+        transform: translateX(4px);
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+    }
+    .feed-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.95rem;
+        flex-shrink: 0;
+    }
+
+    /* Filter Toolbar & Active Indicator */
+    .filter-toolbar {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 14px;
+        padding: 1rem 1.25rem;
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    .active-filter-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.25rem 0.75rem;
+        background: rgba(99, 102, 241, 0.15);
+        border: 1px solid rgba(99, 102, 241, 0.35);
+        color: #a5b4fc;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 600;
+    }
+    .active-filter-indicator button {
+        background: transparent;
+        border: none;
+        color: #cbd5e1;
+        cursor: pointer;
+        padding: 0;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+    }
+    .active-filter-indicator button:hover {
+        color: #ef4444;
+    }
+
+    /* Timeline Stepper */
+    .timeline-stepper {
+        position: relative;
+        padding-left: 2rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+    }
+    .timeline-stepper::before {
+        content: '';
+        position: absolute;
+        left: 0.75rem;
+        top: 0.5rem;
+        bottom: 0.5rem;
+        width: 2px;
+        background: var(--border-color);
+    }
+    .timeline-node {
+        position: relative;
+    }
+    .timeline-dot {
+        position: absolute;
+        left: -2rem;
+        top: 0.25rem;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        color: #ffffff;
+        box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
+    .timeline-content {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 0.85rem 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cockpit-container">
+    <!-- 1. HIGH-LEVEL KPI METRIC CARDS (INTERACTIVE & CLICKABLE) -->
+    <div class="manager-stats-grid">
+        <div class="m-stat-card active-card" id="cardStatAll" onclick="filterByMetricCard('ALL')" title="Click to view all Field Force Reps">
+            <span class="m-stat-badge"><i class="fa-solid fa-list-check"></i> All</span>
+            <div class="m-stat-icon" style="background: rgba(79, 70, 229, 0.15); color: #4f46e5;">
+                <i class="fa-solid fa-users"></i>
+            </div>
+            <div>
+                <div class="m-stat-val" id="statTotalEmployees">{{ stats.total_field_force }}</div>
+                <div class="m-stat-lbl">Field Force Reps</div>
+            </div>
+        </div>
+
+        <div class="m-stat-card" id="cardStatPresent" onclick="filterByMetricCard('PRESENT')" title="Click to filter Punched In reps">
+            <span class="m-stat-badge" style="color: #10b981;"><i class="fa-solid fa-filter"></i> Filter</span>
+            <div class="m-stat-icon" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">
+                <i class="fa-solid fa-fingerprint"></i>
+            </div>
+            <div>
+                <div class="m-stat-val" id="statPresentToday">{{ stats.present_count }}</div>
+                <div class="m-stat-lbl">Punched In Today</div>
+            </div>
+        </div>
+
+        <div class="m-stat-card" id="cardStatInProgress" onclick="filterByMetricCard('IN_PROGRESS')" title="Click to filter Active in Detailing">
+            <span class="m-stat-badge" style="color: #06b6d4;"><i class="fa-solid fa-filter"></i> Filter</span>
+            <div class="m-stat-icon" style="background: rgba(6, 182, 212, 0.15); color: #06b6d4;">
+                <i class="fa-solid fa-person-walking-luggage"></i>
+            </div>
+            <div>
+                <div class="m-stat-val" id="statActiveField">{{ stats.in_progress_visits }}</div>
+                <div class="m-stat-lbl">Active in Detailing</div>
+            </div>
+        </div>
+
+        <div class="m-stat-card" id="cardStatCalls" onclick="filterByMetricCard('CALLS')" title="Click to focus on Doctor Calls">
+            <span class="m-stat-badge" style="color: #a855f7;"><i class="fa-solid fa-stethoscope"></i> Feed</span>
+            <div class="m-stat-icon" style="background: rgba(168, 85, 247, 0.15); color: #a855f7;">
+                <i class="fa-solid fa-clipboard-check"></i>
+            </div>
+            <div>
+                <div class="m-stat-val" id="statCompletedVisits">{{ stats.completed_visits }} / {{ stats.planned_visits }}</div>
+                <div class="m-stat-lbl">Doctor Calls Done</div>
+            </div>
+        </div>
+
+        <div class="m-stat-card" id="cardStatPob" onclick="filterByMetricCard('POB')" title="Click to filter POB Orders Booked">
+            <span class="m-stat-badge" style="color: #f59e0b;"><i class="fa-solid fa-filter"></i> Filter</span>
+            <div class="m-stat-icon" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;">
+                <i class="fa-solid fa-indian-rupee-sign"></i>
+            </div>
+            <div>
+                <div class="m-stat-val">₹{{ stats.total_pob_amount|floatformat:0 }}</div>
+                <div class="m-stat-lbl">POB Booked Today</div>
+            </div>
+        </div>
+
+        <div class="m-stat-card" id="cardStatFlagged" onclick="filterByMetricCard('FLAGGED')" title="Click to filter Geofence Flags & Review exceptions">
+            <span class="m-stat-badge" style="color: #f43f5e;"><i class="fa-solid fa-triangle-exclamation"></i> Alert</span>
+            <div class="m-stat-icon" style="background: rgba(244, 63, 94, 0.15); color: #f43f5e;">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div>
+                <div class="m-stat-val" style="color: #f43f5e;">{{ stats.exception_count }}</div>
+                <div class="m-stat-lbl">Geofence Flags</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. INTERACTIVE LIVE MAP & ACTIVITY COCKPIT -->
+    <div class="cockpit-layout">
+        <!-- Interactive High-Performance CARTO Map -->
+        <div class="map-panel">
+            <div class="map-header">
+                <div style="font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fa-solid fa-map-location-dot" style="color: var(--color-accent);"></i>
+                    Real-time Geographic Field Deployment
+                </div>
+                <div style="display: flex; gap: 0.75rem; font-size: 0.78rem; align-items: center; flex-wrap: wrap;">
+                    <span><i class="fa-solid fa-circle" style="color: #10b981; font-size: 0.65rem;"></i> Valid Geofence</span>
+                    <span><i class="fa-solid fa-circle" style="color: #06b6d4; font-size: 0.65rem;"></i> Detailing Visit</span>
+                    <span><i class="fa-solid fa-circle" style="color: #f59e0b; font-size: 0.65rem;"></i> Deviation / Flagged</span>
+                    <button class="btn btn-secondary" onclick="centerMapOnTeam()" style="padding: 0.2rem 0.5rem; font-size: 0.72rem;">
+                        <i class="fa-solid fa-crosshairs"></i> Reset View
+                    </button>
+                </div>
+            </div>
+            <div id="fieldCockpitMap"></div>
+        </div>
+
+        <!-- Live Detailing & Punch Activity Feed -->
+        <div class="live-feed-panel">
+            <div class="feed-header-flex">
+                <span style="font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fa-solid fa-tower-broadcast" style="color: var(--color-accent);"></i> Live Activity Feed
+                </span>
+                <div class="feed-filter-group">
+                    <button id="feedFilterToday" class="feed-chip active" onclick="loadTodayFeed()" title="Click to view today's complete live activity feed">
+                        <i class="fa-solid fa-clock-rotate-left"></i> Today
+                    </button>
+                    <button id="feedFilterVisits" class="feed-chip" onclick="filterFeedCategory('VISIT')" title="Filter to Doctor Calls">
+                        <i class="fa-solid fa-stethoscope"></i> Calls
+                    </button>
+                    <button id="feedFilterPunch" class="feed-chip" onclick="filterFeedCategory('ATTENDANCE')" title="Filter to Attendance Punches">
+                        <i class="fa-solid fa-fingerprint"></i> Punches
+                    </button>
+                </div>
+            </div>
+
+            <div class="feed-items-list" id="cockpitFeedList">
+                {% for item in activity_feed %}
+                <div class="feed-item" data-feed-type="{{ item.type }}" onclick="focusFeedActivity('{{ item.employee_id }}', '{{ item.employee_name }}', '{{ item.lat|default:'' }}', '{{ item.lng|default:'' }}')">
+                    <div class="feed-icon" style="background: {{ item.icon_bg }}; color: {{ item.icon_color }};">
+                        <i class="fa-solid {{ item.icon }}"></i>
+                    </div>
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+                            {{ item.title }}
+                        </div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.15rem;">
+                            {{ item.time }} | {{ item.subtitle }}
+                            {% if item.is_flagged %}
+                            <span style="color: #f59e0b; margin-left: 0.35rem;"><i class="fa-solid fa-triangle-exclamation"></i> {{ item.flag_reason|slice:":25" }}</span>
+                            {% else %}
+                            <span style="color: #10b981; margin-left: 0.35rem;"><i class="fa-solid fa-shield-check"></i> Geofence OK</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600;">
+                        {{ item.status }}
+                    </div>
+                </div>
+                {% empty %}
+                <div id="feedEmptyState" style="text-align: center; padding: 2.5rem 1rem; color: var(--text-muted); font-size: 0.85rem;">
+                    <i class="fa-solid fa-satellite-dish" style="font-size: 2rem; margin-bottom: 0.75rem; opacity: 0.4; display: block;"></i>
+                    No activities recorded yet today.<br>
+                    <button class="btn btn-secondary" style="margin-top: 0.85rem; font-size: 0.76rem; padding: 0.35rem 0.85rem;" onclick="loadTodayFeed()">
+                        <i class="fa-solid fa-arrows-rotate"></i> Refresh Today's Feed
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. TEAM TRACKING & ATTENDANCE TABLE -->
+    <div class="panel">
+        <div class="filter-toolbar">
+            <div style="flex: 1; min-width: 220px; position: relative;">
+                <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
+                <input type="text" id="teamSearchInput" class="form-control" placeholder="Search representative name, code, territory..." style="padding-left: 2.5rem;" onkeyup="filterTeamTable()">
+            </div>
+
+            <select id="territoryFilter" class="form-control" style="width: auto; min-width: 180px;" onchange="filterTeamTable()">
+                <option value="">All Territories</option>
+                {% for t in territories %}
+                <option value="{{ t.name }}">{{ t.name }}</option>
+                {% endfor %}
+            </select>
+
+            <select id="statusFilter" class="form-control" style="width: auto; min-width: 160px;" onchange="filterTeamTable()">
+                <option value="">All Duty States</option>
+                <option value="PRESENT">Checked In</option>
+                <option value="IN_PROGRESS">Active in Detailing</option>
+                <option value="FLAGGED">Flagged / Review</option>
+                <option value="NOT_CHECKED_IN">Pending Check-in</option>
+            </select>
+
+            <div id="activeFilterBadgeContainer" style="display: none;">
+                <span class="active-filter-indicator">
+                    <span id="activeFilterBadgeText">Filter</span>
+                    <button type="button" onclick="resetMetricFilter()" title="Clear metric filter">&times;</button>
+                </span>
+            </div>
+
+            <span style="font-size: 0.85rem; color: var(--text-muted); margin-left: auto;">
+                Showing <strong id="visibleRepCount">{{ team_data|length }}</strong> of {{ team_data|length }} field reps
+            </span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table" id="teamTrackingTable">
+                <thead>
+                    <tr>
+                        <th>Employee</th>
+                        <th>Designation / Tier</th>
+                        <th>Territory</th>
+                        <th>Attendance</th>
+                        <th>Check-In</th>
+                        <th>Visits (Done/Plan)</th>
+                        <th>POB Orders (₹)</th>
+                        <th>Status</th>
+                        <th style="text-align: right;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in team_data %}
+                    <tr data-emp-id="{{ row.employee.id }}" data-territory="{{ row.employee.territory.name|default:'' }}" data-status="{{ row.attendance_status }}" data-pob="{{ row.pob_booked_amount|floatformat:0 }}" data-in-visit="{% if row.is_active_in_visit %}1{% else %}0{% endif %}">
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <div style="width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #4f46e5, #06b6d4); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 0.85rem;">
+                                    {{ row.employee.first_name|slice:":1" }}
+                                </div>
+                                <div>
+                                    <strong style="color: var(--text-primary); font-size: 0.9rem;">{{ row.employee.first_name }} {{ row.employee.last_name }}</strong>
+                                    <div style="font-size: 0.75rem; color: var(--text-muted);">{{ row.employee.employee_code }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span style="font-size: 0.82rem; color: var(--text-primary);">{{ row.employee.designation|default:"MR" }}</span>
+                            <span class="badge badge-info" style="font-size: 0.65rem; margin-left: 0.3rem;">{{ row.employee.sales_tier|default:"MR" }}</span>
+                        </td>
+                        <td>{{ row.employee.territory.name|default:"Unassigned" }}</td>
+                        <td>
+                            {% if row.attendance_status == 'PRESENT' %}
+                            <span class="badge badge-success"><i class="fa-solid fa-circle-check"></i> Present</span>
+                            {% elif row.attendance_status == 'REQUIRES_REVIEW' or row.attendance_status == 'POOR_ACCURACY' %}
+                            <span class="badge badge-warning"><i class="fa-solid fa-triangle-exclamation"></i> Flagged</span>
+                            {% else %}
+                            <span class="badge" style="background: rgba(148, 163, 184, 0.15); color: #94a3b8;">Not Checked In</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if row.attendance and row.attendance.check_in_time %}
+                            <strong>{{ row.attendance.check_in_time|time:"H:i" }}</strong>
+                            <div style="font-size: 0.72rem; color: var(--text-muted);">{{ row.attendance.work_mode }}</div>
+                            {% elif row.attendance and row.attendance.in_time %}
+                            <strong>{{ row.attendance.in_time|slice:":5" }}</strong>
+                            <div style="font-size: 0.72rem; color: var(--text-muted);">{{ row.attendance.work_mode }}</div>
+                            {% else %}
+                            <span style="color: var(--text-muted);">--:--</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <strong style="color: #10b981;">{{ row.completed_visits }}</strong> / {{ row.planned_visits }}
+                        </td>
+                        <td>
+                            <strong>₹{{ row.pob_booked_amount|floatformat:0 }}</strong>
+                        </td>
+                        <td>
+                            {% if row.is_active_in_visit %}
+                            <span class="badge" style="background: rgba(6, 182, 212, 0.15); color: #06b6d4; border: 1px solid rgba(6, 182, 212, 0.3);">
+                                <i class="fa-solid fa-spinner fa-spin"></i> In Detailing
+                            </span>
+                            {% elif row.attendance_status == 'PRESENT' %}
+                            <span class="badge badge-success">On Field Duty</span>
+                            {% else %}
+                            <span class="badge" style="background: rgba(148, 163, 184, 0.12); color: #94a3b8;">Idle</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: right;">
+                            <button class="btn btn-secondary" onclick="viewEmployeeTimeline('{{ row.employee.id }}', '{{ row.employee.first_name }} {{ row.employee.last_name }}')" style="padding: 0.35rem 0.75rem; font-size: 0.78rem;">
+                                <i class="fa-solid fa-timeline"></i> Timeline
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">
+                            No field representatives registered.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- MODAL: EMPLOYEE DAILY TIMELINE & GPS AUDIT TRAIL         -->
+<!-- ======================================================== -->
+<div id="employeeTimelineModal" class="modal-overlay" style="display: none; align-items: center; justify-content: center; z-index: 1050;">
+    <div class="modal-container" style="max-width: 650px; width: 92%; max-height: 85vh; overflow-y: auto;">
+        <div class="modal-header">
+            <div>
+                <h3 id="timelineModalEmpName" style="margin: 0; font-size: 1.15rem; color: var(--text-primary);">
+                    Employee Timeline
+                </h3>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">Daily GPS verification & visit sequence</span>
+            </div>
+            <button type="button" class="modal-close" onclick="closeModal('employeeTimelineModal')">&times;</button>
+        </div>
+
+        <div class="modal-body" style="padding: 1.25rem;">
+            <!-- Timeline Stepper List -->
+            <div id="timelineStepperContainer" class="timeline-stepper">
+                <div style="text-align: center; padding: 1.5rem; color: var(--text-muted);">
+                    <i class="fa-solid fa-circle-notch fa-spin"></i> Loading timeline...
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('employeeTimelineModal')">Close</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Google Maps JavaScript API with user API Key -->
+<script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key|default:'AIzaSyB51aYJiic2l5j0grNJsbd-WIoH2M-D0L0' }}&callback=initGoogleMap&loading=async" async defer></script>
+
+<script>
+    let cockpitMap = null;
+    let googleMarkers = [];
+    let googleInfoWindow = null;
+    let currentMapBounds = null;
+    let activeMetricCard = 'ALL';
+
+    // Premium Google Maps Dark Theme Styles
+    const googleMapDarkStyles = [
+        { "elementType": "geometry", "stylers": [{ "color": "#1e293b" }] },
+        { "elementType": "labels.text.stroke", "stylers": [{ "color": "#1e293b" }] },
+        { "elementType": "labels.text.fill", "stylers": [{ "color": "#94a3b8" }] },
+        { "featureType": "administrative.locality", "elementType": "labels.text.fill", "stylers": [{ "color": "#cbd5e1" }] },
+        { "featureType": "poi", "elementType": "labels.text.fill", "stylers": [{ "color": "#94a3b8" }] },
+        { "featureType": "poi.park", "elementType": "geometry", "stylers": [{ "color": "#0f172a" }] },
+        { "featureType": "road", "elementType": "geometry", "stylers": [{ "color": "#334155" }] },
+        { "featureType": "road", "elementType": "geometry.stroke", "stylers": [{ "color": "#1e293b" }] },
+        { "featureType": "road", "elementType": "labels.text.fill", "stylers": [{ "color": "#94a3b8" }] },
+        { "featureType": "road.highway", "elementType": "geometry", "stylers": [{ "color": "#475569" }] },
+        { "featureType": "road.highway", "elementType": "geometry.stroke", "stylers": [{ "color": "#1e293b" }] },
+        { "featureType": "transit", "elementType": "geometry", "stylers": [{ "color": "#1e293b" }] },
+        { "featureType": "water", "elementType": "geometry", "stylers": [{ "color": "#0f172a" }] },
+        { "featureType": "water", "elementType": "labels.text.fill", "stylers": [{ "color": "#64748b" }] }
+    ];
+
+    // Clean Google Maps Light Theme Styles
+    const googleMapLightStyles = [
+        { "featureType": "water", "elementType": "geometry", "stylers": [{ "color": "#e0f2fe" }] },
+        { "featureType": "landscape", "elementType": "geometry", "stylers": [{ "color": "#f8fafc" }] },
+        { "featureType": "road", "elementType": "geometry", "stylers": [{ "color": "#ffffff" }] },
+        { "featureType": "poi", "elementType": "geometry", "stylers": [{ "color": "#f1f5f9" }] }
+    ];
+
+    function getGoogleMapStyles() {
+        const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+        return isDark ? googleMapDarkStyles : googleMapLightStyles;
+    }
+
+    // =========================================================================
+    // 1. GOOGLE MAPS INITIALIZATION
+    // =========================================================================
+
+    function initGoogleMap() {
+        const mapContainer = document.getElementById('fieldCockpitMap');
+        if (!mapContainer || cockpitMap) return;
+
+        // Default Center: Delhi NCR HQ (28.6280, 77.3780)
+        cockpitMap = new google.maps.Map(mapContainer, {
+            center: { lat: 28.6280, lng: 77.3780 },
+            zoom: 11,
+            mapTypeId: google.maps.MapTypeId.ROADMAP,
+            mapTypeControl: true,
+            mapTypeControlOptions: {
+                style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+                position: google.maps.ControlPosition.TOP_RIGHT
+            },
+            zoomControl: true,
+            zoomControlOptions: {
+                position: google.maps.ControlPosition.RIGHT_CENTER
+            },
+            streetViewControl: false,
+            fullscreenControl: true,
+            fullscreenControlOptions: {
+                position: google.maps.ControlPosition.RIGHT_TOP
+            },
+            styles: getGoogleMapStyles()
+        });
+
+        googleInfoWindow = new google.maps.InfoWindow();
+
+        loadCockpitMapData();
+    }
+
+    function updateMapTheme() {
+        if (cockpitMap) {
+            cockpitMap.setOptions({ styles: getGoogleMapStyles() });
+        }
+    }
+
+    // =========================================================================
+    // 2. REAL-TIME TEAM GPS MARKERS ON GOOGLE MAP
+    // =========================================================================
+
+    async function loadCockpitMapData() {
+        if (!cockpitMap) return;
+
+        try {
+            const res = await fetch('/api/v1/tracking/employees/current/', {
+                headers: { 'Accept': 'application/json' }
+            });
+            const body = await res.json();
+            if (body.success && body.data) {
+                const team = body.data.team || body.data.employees || [];
+                renderMapMarkers(team);
+
+                // Update live feed if available in payload
+                if (body.data.activity_feed && body.data.activity_feed.length > 0) {
+                    renderFeedItems(body.data.activity_feed);
+                }
+            }
+        } catch (e) {
+            console.warn("Telemetry ping notice:", e);
+        }
+    }
+
+    function renderMapMarkers(employees) {
+        if (!cockpitMap) return;
+
+        // Clear existing markers
+        googleMarkers.forEach(item => {
+            if (item.marker) item.marker.setMap(null);
+        });
+        googleMarkers = [];
+        currentMapBounds = new google.maps.LatLngBounds();
+        let validLocationsCount = 0;
+
+        (employees || []).forEach(emp => {
+            const loc = emp.last_known_location;
+            if (loc && (loc.latitude || loc.lat) && (loc.longitude || loc.lng)) {
+                const lat = parseFloat(loc.latitude || loc.lat);
+                const lng = parseFloat(loc.longitude || loc.lng);
+                const pos = { lat, lng };
+                currentMapBounds.extend(pos);
+                validLocationsCount++;
+
+                const isActiveVisit = emp.is_active_in_visit;
+                const isPresent = emp.attendance_status === 'PRESENT' || emp.is_checked_in;
+                const markerColor = isActiveVisit ? '#06b6d4' : (isPresent ? '#10b981' : '#f59e0b');
+                const statusLabel = isActiveVisit ? 'In Detailing' : (isPresent ? 'Punched In' : 'Idle');
+
+                // Custom SVG Pin Marker
+                const marker = new google.maps.Marker({
+                    position: pos,
+                    map: cockpitMap,
+                    title: `${emp.name || (emp.first_name + ' ' + emp.last_name)} (${emp.employee_code})`,
+                    icon: {
+                        path: google.maps.SymbolPath.CIRCLE,
+                        scale: 10,
+                        fillColor: markerColor,
+                        fillOpacity: 1,
+                        strokeColor: '#ffffff',
+                        strokeWeight: 2.5
+                    }
+                });
+
+                const contentHtml = `
+                    <div class="map-popup-card">
+                        <div class="map-popup-header">
+                            <strong style="color: #0f172a; font-size: 0.9rem;">${emp.name || (emp.first_name + ' ' + emp.last_name)}</strong>
+                            <span class="badge" style="background: ${markerColor}22; color: ${markerColor}; font-size: 0.68rem; padding: 2px 6px; font-weight: 700;">
+                                ${statusLabel}
+                            </span>
+                        </div>
+                        <div class="map-popup-meta" style="font-size: 0.75rem; color: #64748b; margin: 0.25rem 0 0.4rem 0;">
+                            <span>EMP: ${emp.employee_code}</span> &bull;
+                            <span>Territory: ${emp.territory || 'Unassigned'}</span>
+                        </div>
+                        <div class="map-popup-info" style="padding: 0.35rem 0; border-top: 1px solid #e2e8f0; font-size: 0.75rem; color: #334155; line-height: 1.4;">
+                            <div>Status: <strong>${emp.current_activity || 'Field Duty'}</strong></div>
+                            <div>Check-In: <strong>${emp.check_in_time || '--:--'}</strong></div>
+                        </div>
+                        <button class="map-popup-btn" onclick="viewEmployeeTimeline('${emp.employee_id}', '${emp.name || (emp.first_name + ' ' + emp.last_name)}')">
+                            <i class="fa-solid fa-timeline"></i> View Audit Timeline
+                        </button>
+                    </div>
+                `;
+
+                marker.addListener('click', () => {
+                    googleInfoWindow.setContent(contentHtml);
+                    googleInfoWindow.open(cockpitMap, marker);
+                });
+
+                googleMarkers.push({
+                    empId: emp.employee_id,
+                    marker: marker
+                });
+            }
+        });
+
+        if (validLocationsCount > 0 && cockpitMap) {
+            cockpitMap.fitBounds(currentMapBounds);
+            if (validLocationsCount === 1) {
+                cockpitMap.setZoom(14);
+            }
+        }
+    }
+
+    function centerMapOnTeam() {
+        if (!cockpitMap) return;
+        if (currentMapBounds && !currentMapBounds.isEmpty()) {
+            cockpitMap.fitBounds(currentMapBounds);
+        } else {
+            cockpitMap.setCenter({ lat: 28.6280, lng: 77.3780 });
+            cockpitMap.setZoom(11);
+        }
+    }
+
+    // =========================================================================
+    // 3. CLICKABLE METRIC CARDS LOGIC
+    // =========================================================================
+
+    function filterByMetricCard(type) {
+        activeMetricCard = type;
+        
+        // Remove active class from all cards
+        document.querySelectorAll('.m-stat-card').forEach(c => c.classList.remove('active-card'));
+        
+        const cardMap = {
+            'ALL': 'cardStatAll',
+            'PRESENT': 'cardStatPresent',
+            'IN_PROGRESS': 'cardStatInProgress',
+            'CALLS': 'cardStatCalls',
+            'POB': 'cardStatPob',
+            'FLAGGED': 'cardStatFlagged'
+        };
+        const targetCard = document.getElementById(cardMap[type]);
+        if (targetCard) targetCard.classList.add('active-card');
+
+        const badgeContainer = document.getElementById('activeFilterBadgeContainer');
+        const badgeText = document.getElementById('activeFilterBadgeText');
+
+        if (type === 'ALL') {
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('teamSearchInput').value = '';
+            document.getElementById('territoryFilter').value = '';
+            badgeContainer.style.display = 'none';
+            filterTeamTable();
+            return;
+        }
+
+        badgeContainer.style.display = 'inline-flex';
+
+        if (type === 'PRESENT') {
+            document.getElementById('statusFilter').value = 'PRESENT';
+            badgeText.textContent = "Punched In Today";
+            filterTeamTable();
+        } else if (type === 'IN_PROGRESS') {
+            document.getElementById('statusFilter').value = 'IN_PROGRESS';
+            badgeText.textContent = "Active in Detailing";
+            filterTeamTable();
+        } else if (type === 'CALLS') {
+            badgeText.textContent = "Doctor Calls Today";
+            filterFeedCategory('VISIT');
+            // Scroll to feed
+            document.querySelector('.live-feed-panel').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        } else if (type === 'POB') {
+            badgeText.textContent = "POB Orders Booked";
+            filterTeamTableSpecial('POB');
+        } else if (type === 'FLAGGED') {
+            document.getElementById('statusFilter').value = 'FLAGGED';
+            badgeText.textContent = "Geofence Exceptions";
+            filterTeamTable();
+        }
+
+        // Smooth scroll to table
+        const table = document.getElementById('teamTrackingTable');
+        if (table) {
+            table.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    }
+
+    function resetMetricFilter() {
+        filterByMetricCard('ALL');
+    }
+
+    function filterTeamTableSpecial(mode) {
+        const rows = document.querySelectorAll('#teamTrackingTable tbody tr');
+        let visibleCount = 0;
+
+        rows.forEach(r => {
+            if (mode === 'POB') {
+                const pob = parseFloat(r.getAttribute('data-pob') || 0);
+                const show = pob > 0;
+                r.style.display = show ? '' : 'none';
+                if (show) visibleCount++;
+            }
+        });
+
+        document.getElementById('visibleRepCount').textContent = visibleCount;
+    }
+
+    function filterTeamTable() {
+        const search = document.getElementById('teamSearchInput').value.toLowerCase();
+        const terr = document.getElementById('territoryFilter').value.toLowerCase();
+        const stat = document.getElementById('statusFilter').value;
+        const rows = document.querySelectorAll('#teamTrackingTable tbody tr');
+        let visibleCount = 0;
+
+        rows.forEach(r => {
+            const text = r.innerText.toLowerCase();
+            const rTerr = (r.getAttribute('data-territory') || '').toLowerCase();
+            const rStat = r.getAttribute('data-status') || '';
+            const inVisit = r.getAttribute('data-in-visit') === '1';
+
+            const matchesSearch = !search || text.includes(search);
+            const matchesTerr = !terr || rTerr.includes(terr);
+
+            let matchesStat = true;
+            if (stat === 'PRESENT') {
+                matchesStat = rStat === 'PRESENT';
+            } else if (stat === 'IN_PROGRESS') {
+                matchesStat = inVisit;
+            } else if (stat === 'FLAGGED') {
+                matchesStat = rStat === 'REQUIRES_REVIEW' || rStat === 'POOR_ACCURACY';
+            } else if (stat === 'NOT_CHECKED_IN') {
+                matchesStat = rStat === 'NOT_CHECKED_IN' || rStat === 'ABSENT';
+            }
+
+            const show = matchesSearch && matchesTerr && matchesStat;
+            r.style.display = show ? '' : 'none';
+            if (show) visibleCount++;
+        });
+
+        document.getElementById('visibleRepCount').textContent = visibleCount;
+    }
+
+    // =========================================================================
+    // 4. LIVE ACTIVITY FEED (CLICK TODAY TO SHOW & REFRESH)
+    // =========================================================================
+
+    async function loadTodayFeed() {
+        // Set Today filter active
+        document.querySelectorAll('.feed-chip').forEach(c => c.classList.remove('active'));
+        document.getElementById('feedFilterToday').classList.add('active');
+
+        // Show all items currently in DOM
+        const items = document.querySelectorAll('#cockpitFeedList .feed-item');
+        items.forEach(el => el.style.display = 'flex');
+
+        // Refresh feed data via live API
+        const btn = document.getElementById('feedFilterToday');
+        const origHtml = btn.innerHTML;
+        btn.innerHTML = `<i class="fa-solid fa-arrows-rotate fa-spin"></i> Today`;
+
+        try {
+            const res = await fetch('/api/v1/tracking/employees/current/', {
+                headers: { 'Accept': 'application/json' }
+            });
+            const body = await res.json();
+            if (body.success && body.data) {
+                if (body.data.activity_feed) {
+                    renderFeedItems(body.data.activity_feed);
+                }
+                if (body.data.team) {
+                    renderMapMarkers(body.data.team);
+                }
+            }
+        } catch (e) {
+            console.warn("Feed refresh error:", e);
+        } finally {
+            setTimeout(() => {
+                btn.innerHTML = origHtml;
+            }, 600);
+        }
+    }
+
+    function filterFeedCategory(category) {
+        document.querySelectorAll('.feed-chip').forEach(c => c.classList.remove('active'));
+        if (category === 'VISIT') {
+            document.getElementById('feedFilterVisits').classList.add('active');
+        } else if (category === 'ATTENDANCE') {
+            document.getElementById('feedFilterPunch').classList.add('active');
+        }
+
+        const items = document.querySelectorAll('#cockpitFeedList .feed-item');
+        let visibleCount = 0;
+
+        items.forEach(el => {
+            const type = el.getAttribute('data-feed-type');
+            if (type === category) {
+                el.style.display = 'flex';
+                visibleCount++;
+            } else {
+                el.style.display = 'none';
+            }
+        });
+
+        const empty = document.getElementById('feedEmptyState');
+        if (empty) {
+            empty.style.display = visibleCount === 0 ? 'block' : 'none';
+        }
+    }
+
+    function renderFeedItems(feedList) {
+        const container = document.getElementById('cockpitFeedList');
+        if (!container || !feedList || feedList.length === 0) return;
+
+        container.innerHTML = feedList.map(item => {
+            const isVisit = item.type === 'VISIT';
+            const icon = isVisit ? (item.status === 'COMPLETED' ? 'fa-check' : 'fa-stethoscope') : 'fa-fingerprint';
+            const iconBg = isVisit ? (item.is_flagged ? 'rgba(245, 158, 11, 0.15)' : 'rgba(16, 185, 129, 0.15)') : 'rgba(79, 70, 229, 0.15)';
+            const iconColor = isVisit ? (item.is_flagged ? '#f59e0b' : '#10b981') : '#6366f1';
+
+            const geofenceBadge = item.is_flagged ?
+                `<span style="color: #f59e0b; margin-left: 0.35rem;"><i class="fa-solid fa-triangle-exclamation"></i> ${(item.flag_reason || 'Deviation').slice(0, 25)}</span>` :
+                `<span style="color: #10b981; margin-left: 0.35rem;"><i class="fa-solid fa-shield-check"></i> Geofence OK</span>`;
+
+            return `
+                <div class="feed-item" data-feed-type="${item.type}" onclick="focusFeedActivity('${item.employee_id}', '${item.employee_name}', '${item.lat || ''}', '${item.lng || ''}')">
+                    <div class="feed-icon" style="background: ${iconBg}; color: ${iconColor};">
+                        <i class="fa-solid ${icon}"></i>
+                    </div>
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+                            ${item.title}
+                        </div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.15rem;">
+                            ${item.time} | ${item.subtitle} ${geofenceBadge}
+                        </div>
+                    </div>
+                    <div style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600;">
+                        ${item.status}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function focusFeedActivity(empId, empName, lat, lng) {
+        if (lat && lng && cockpitMap) {
+            const pos = { lat: parseFloat(lat), lng: parseFloat(lng) };
+            cockpitMap.panTo(pos);
+            cockpitMap.setZoom(15);
+            const match = googleMarkers.find(m => m.empId === empId);
+            if (match && match.marker) {
+                google.maps.event.trigger(match.marker, 'click');
+            }
+        }
+        viewEmployeeTimeline(empId, empName);
+    }
+
+    // =========================================================================
+    // 5. LIVE TELEMETRY SYNC & TIMELINE MODAL
+    // =========================================================================
+
+    async function refreshTrackingCockpit() {
+        const icon = document.getElementById('refreshBtnIcon');
+        const text = document.getElementById('refreshBtnText');
+        if (icon) icon.className = "fa-solid fa-arrows-rotate fa-spin";
+        if (text) text.textContent = "Syncing...";
+
+        await Promise.all([
+            loadCockpitMapData(),
+            loadTodayFeed()
+        ]);
+
+        setTimeout(() => {
+            if (icon) icon.className = "fa-solid fa-arrows-rotate";
+            if (text) text.textContent = "Live Refresh";
+        }, 800);
+    }
+
+    async function viewEmployeeTimeline(empId, empName) {
+        document.getElementById('timelineModalEmpName').textContent = `${empName} - Daily Audit Timeline`;
+        const container = document.getElementById('timelineStepperContainer');
+        container.innerHTML = `<div style="text-align: center; padding: 2rem; color: var(--text-muted);"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading timeline events...</div>`;
+        openModal('employeeTimelineModal');
+
+        if (!empId || empId === 'None' || empId === 'null') {
+            container.innerHTML = `<div style="text-align:center; color:#f59e0b; padding:1.5rem;"><i class="fa-solid fa-triangle-exclamation"></i> No employee ID associated with this profile.</div>`;
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/v1/tracking/employees/${empId}/timeline/`, {
+                headers: { 'Accept': 'application/json' }
+            });
+            const body = await res.json();
+            if (body.success && body.data) {
+                renderTimelineNodes(body.data);
+            } else {
+                const errMsg = body.message || body.detail || (body.error && body.error.message) || 'Unable to load timeline.';
+                container.innerHTML = `<div style="text-align:center; color:#ef4444; padding:1.5rem;"><i class="fa-solid fa-circle-exclamation"></i> ${errMsg}</div>`;
+            }
+        } catch (e) {
+            container.innerHTML = `<div style="text-align:center; color:#ef4444; padding:1.5rem;"><i class="fa-solid fa-circle-exclamation"></i> Failed to connect to tracking server.</div>`;
+        }
+    }
+
+    function renderTimelineNodes(data) {
+        const container = document.getElementById('timelineStepperContainer');
+        const timeline = data.timeline || data.events || [];
+
+        if (timeline.length === 0) {
+            container.innerHTML = `<div style="text-align: center; padding: 2.5rem; color: var(--text-muted);"><i class="fa-solid fa-route" style="font-size: 1.8rem; margin-bottom: 0.5rem; opacity: 0.4; display: block;"></i>No GPS telemetry recorded for this employee today.</div>`;
+            return;
+        }
+
+        container.innerHTML = timeline.map(item => {
+            const ev = item.event || item.event_type || 'GPS_PING';
+            const isVisitStart = ev === 'VISIT_START';
+            const isVisitEnd = ev === 'VISIT_END';
+            const isCheckIn = ev === 'CHECK_IN';
+            const isCheckOut = ev === 'CHECK_OUT';
+
+            let dotColor = '#4f46e5';
+            let icon = 'fa-location-dot';
+
+            if (isVisitStart) {
+                dotColor = '#06b6d4';
+                icon = 'fa-stethoscope';
+            } else if (isVisitEnd) {
+                dotColor = '#10b981';
+                icon = 'fa-check';
+            } else if (isCheckIn) {
+                dotColor = '#6366f1';
+                icon = 'fa-fingerprint';
+            } else if (isCheckOut) {
+                dotColor = '#f43f5e';
+                icon = 'fa-right-from-bracket';
+            }
+
+            const isFlagged = item.geofence_status === 'OUTSIDE_GEOFENCE' || item.geofence_status === 'REQUIRES_REVIEW' || item.is_flagged;
+            const statusBadge = isFlagged ? 
+                `<span class="badge badge-warning" style="font-size:0.7rem;"><i class="fa-solid fa-triangle-exclamation"></i> ${item.geofence_status || 'FLAGGED'}</span>` :
+                `<span class="badge badge-success" style="font-size:0.7rem;"><i class="fa-solid fa-shield-check"></i> VALID GEOFENCE</span>`;
+
+            return `
+                <div class="timeline-node">
+                    <div class="timeline-dot" style="background: ${dotColor};">
+                        <i class="fa-solid ${icon}"></i>
+                    </div>
+                    <div class="timeline-content">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                            <strong style="color: var(--text-primary); font-size: 0.88rem;">${ev}</strong>
+                            <span style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600;">${item.time || ''}</span>
+                        </div>
+                        <div style="font-size: 0.8rem; color: var(--text-secondary);">
+                            ${item.customer ? `Customer: <strong>${item.customer}</strong>` : (item.work_mode ? `Mode: <strong>${item.work_mode}</strong>` : 'Audit Ping')}
+                        </div>
+                        <div style="margin-top: 0.4rem; display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                            ${statusBadge}
+                            ${item.duration_minutes ? `<span style="font-size: 0.75rem; color: #10b981;"><i class="fa-solid fa-stopwatch"></i> ${item.duration_minutes} mins</span>` : ''}
+                            ${item.doctor_response ? `<span class="badge badge-info" style="font-size: 0.68rem;">Response: ${item.doctor_response}</span>` : ''}
+                            ${item.flag_reason ? `<div style="font-size: 0.75rem; color: #f59e0b; width: 100%; margin-top: 0.2rem;"><i class="fa-solid fa-triangle-exclamation"></i> Reason: ${item.flag_reason}</div>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // Modal Helpers
+    function openModal(id) {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'flex';
+    }
+    function closeModal(id) {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        if (typeof google !== 'undefined' && google.maps && !cockpitMap) {
+            initGoogleMap();
+        }
+
+        // Listen for theme toggle to swap map styles smoothly
+        const themeBtn = document.getElementById('themeToggleBtn');
+        if (themeBtn) {
+            themeBtn.addEventListener('click', () => {
+                setTimeout(updateMapTheme, 150);
+            });
+        }
+    });
+</script>
+{% endblock %}

@@ -31,7 +31,7 @@
             <tbody>
                 {% for cat in categories %}
                 <tr>
-                    <td style="color: var(--text-muted);">#{{ cat.id }}</td>
+                    <td style="color: var(--text-muted); font-weight: 600; font-family: monospace;">#{{ forloop.counter }}</td>
                     <td><strong style="color: var(--text-primary);">{{ cat.name }}</strong></td>
                     <td style="color: var(--text-secondary);">{{ cat.description|default:"No description" }}</td>
                     <td>

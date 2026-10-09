@@ -1219,7 +1219,7 @@ def dashboard_masters(request):
     boms = BOMHeader.objects.select_related('product', 'batch_uom').order_by('bom_code')
     specs = QualitySpecification.objects.select_related('item').order_by('spec_code')
     warehouses = Warehouse.objects.select_related('branch').prefetch_related('bins').order_by('code')
-    bins = StorageBin.objects.select_related('warehouse').order_by('warehouse__code', 'bin_code')
+    bins = StorageBin.objects.select_related('warehouse').order_by('-created_at')
     uoms = UnitOfMeasure.objects.all().order_by('code')
     branches = Branch.objects.filter(is_active=True).order_by('name')
     products = ItemMaster.objects.filter(item_type__in=['WIP', 'FINISHED_GOOD'])
@@ -1239,6 +1239,7 @@ def dashboard_masters(request):
         'storage_conditions': ItemMaster.STORAGE_CONDITIONS,
         'supplier_status_choices': SupplierMaster.STATUS_CHOICES,
         'customer_type_choices': CustomerMaster.CUSTOMER_TYPE_CHOICES,
+        'warehouse_type_choices': Warehouse.WAREHOUSE_TYPE_CHOICES,
     }
     return render(request, 'dashboard/erp_masters.html', context)
 
@@ -1303,7 +1304,7 @@ def dashboard_supplier_create(request):
     if request.method == "POST":
         code = request.POST.get('supplier_code', '').strip().upper()
         name = request.POST.get('legal_name', '').strip()
-        gstin = request.POST.get('gstin', '').strip().upper()
+        gstin = request.POST.get('gstin', '').strip().upper()[:15]
         city = request.POST.get('city', '').strip()
         state = request.POST.get('state', '').strip()
         contact = request.POST.get('contact_person', '').strip()
@@ -1314,11 +1315,11 @@ def dashboard_supplier_create(request):
 
         if not code or not name:
             messages.error(request, "Supplier Code and Legal Name are required.")
-            return redirect('dashboard_masters')
+            return redirect('/dashboard/masters/?tab=suppliers')
 
         if SupplierMaster.objects.filter(supplier_code=code).exists():
             messages.warning(request, f"Supplier code '{code}' already exists.")
-            return redirect('dashboard_masters')
+            return redirect('/dashboard/masters/?tab=suppliers')
 
         try:
             supplier = SupplierMaster.objects.create(
@@ -1348,7 +1349,7 @@ def dashboard_supplier_create(request):
         except Exception as e:
             messages.error(request, f"Error registering supplier: {str(e)}")
 
-    return redirect('dashboard_masters')
+    return redirect('/dashboard/masters/?tab=suppliers')
 
 
 @staff_required
@@ -1362,7 +1363,7 @@ def dashboard_customer_create(request):
         address = request.POST.get('billing_address', '').strip() or 'Registered Office'
         city = request.POST.get('city', '').strip()
         state = request.POST.get('state', '').strip()
-        gstin = request.POST.get('gstin', '').strip().upper()
+        gstin = request.POST.get('gstin', '').strip().upper()[:15]
         drug_license = request.POST.get('drug_license_20b', '').strip()
         contact = request.POST.get('contact_person', '').strip()
         phone = request.POST.get('phone', '').strip()
@@ -1419,7 +1420,7 @@ def dashboard_customer_edit(request, customer_id):
         address = request.POST.get('billing_address', '').strip()
         city = request.POST.get('city', '').strip()
         state = request.POST.get('state', '').strip()
-        gstin = request.POST.get('gstin', '').strip().upper()
+        gstin = request.POST.get('gstin', '').strip().upper()[:15]
         drug_license = request.POST.get('drug_license_20b', '').strip()
         contact = request.POST.get('contact_person', '').strip()
         phone = request.POST.get('phone', '').strip()
@@ -2029,12 +2030,14 @@ def dashboard_field_portal(request):
 
     today = timezone.now().date()
     items = ItemMaster.objects.filter(is_active=True).order_by('name')
+    customers = CustomerMaster.objects.filter(is_active=True).order_by('name')
     is_mgr = is_sales_manager(request.user) or is_system_or_hr_admin(request.user)
 
     context = {
         'employee': employee,
         'today': today,
         'items': items,
+        'customers': customers,
         'is_manager_or_admin': is_mgr,
     }
     return render(request, 'dashboard/field_portal.html', context)

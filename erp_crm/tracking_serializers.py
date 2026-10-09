@@ -105,8 +105,7 @@ class DailyBeatPlanSerializer(serializers.ModelSerializer):
     customer = CustomerBriefSerializer(read_only=True)
     customer_id = serializers.PrimaryKeyRelatedField(
         queryset=CustomerMaster.objects.all(),
-        source='customer',
-        write_only=True
+        source='customer'
     )
     employee_name = serializers.SerializerMethodField()
 
@@ -117,6 +116,9 @@ class DailyBeatPlanSerializer(serializers.ModelSerializer):
             'date', 'sequence', 'planned_time', 'priority', 'status', 'notes'
         ]
         read_only_fields = ['code', 'employee']
+        extra_kwargs = {
+            'date': {'required': False}
+        }
 
     def get_employee_name(self, obj):
         return f"{obj.employee.first_name} {obj.employee.last_name}"
@@ -152,15 +154,31 @@ class FieldVisitEndSerializer(serializers.Serializer):
     lat = CoordinateField(min_val=-90.0, max_val=90.0, required=True)
     lng = CoordinateField(min_val=-180.0, max_val=180.0, required=True)
     accuracy = serializers.FloatField(required=False, default=10.0)
-    doctor_response = serializers.ChoiceField(
-        choices=[
-            'HIGHLY_INTERESTED', 'POSITIVE', 'NEUTRAL',
-            'NOT_INTERESTED', 'BUSY'
-        ],
+    doctor_response = serializers.CharField(
         required=False,
         allow_blank=True,
         default='POSITIVE'
     )
+
+    def validate_doctor_response(self, value):
+        valid = {'HIGHLY_INTERESTED', 'POSITIVE', 'NEUTRAL', 'NOT_INTERESTED', 'BUSY'}
+        if not value:
+            return 'POSITIVE'
+        val_upper = str(value).strip().upper()
+        if val_upper in valid:
+            return val_upper
+        mapping = {
+            '5': 'HIGHLY_INTERESTED',
+            '4': 'POSITIVE',
+            '3': 'NEUTRAL',
+            '2': 'NOT_INTERESTED',
+            '1': 'BUSY'
+        }
+        clean_val = str(value).strip()
+        if clean_val in mapping:
+            return mapping[clean_val]
+        # Fallback to POSITIVE for free-form remarks or unexpected inputs
+        return 'POSITIVE'
     remarks = serializers.CharField(required=False, allow_blank=True, default='')
     next_follow_up_date = serializers.DateField(required=False, allow_null=True)
     products_discussed = ProductDiscussedItemSerializer(many=True, required=False, default=[])

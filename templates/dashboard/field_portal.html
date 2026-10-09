@@ -518,13 +518,16 @@
 
     <!-- 4. TODAY'S BEAT PLAN & VISITS -->
     <div>
-        <div class="section-header-flex">
+        <div class="section-header-flex" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
             <div class="section-title">
                 <i class="fa-solid fa-route" style="color: var(--color-accent);"></i>
                 Today's Beat Route & Customer Calls
             </div>
-            <div style="font-size: 0.85rem; color: var(--text-muted);">
-                Ordered by planned schedule
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <span style="font-size: 0.85rem; color: var(--text-muted);" class="d-none d-sm-inline">Ordered by schedule</span>
+                <button type="button" class="btn btn-primary" onclick="openAddAdhocCallModal()" style="font-size: 0.82rem; padding: 5px 12px; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px; background: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%); border: none; font-weight: 600; cursor: pointer;">
+                    <i class="fa-solid fa-plus"></i> Add Ad-hoc Call
+                </button>
             </div>
         </div>
 
@@ -582,8 +585,8 @@
                     <span class="detailing-sec-title">
                         <i class="fa-solid fa-pills"></i> 1. Products Discussed
                     </span>
-                    <label class="form-label" style="font-size: 0.8rem;">Select Promoted Formulation:</label>
-                    <select id="detailProductSelect" class="form-control" style="font-size: 0.85rem;">
+                    <label class="form-label" style="font-size: 0.8rem;">Select Promoted Formulation: <span style="color: #ef4444;">*</span></label>
+                    <select id="detailProductSelect" class="form-control" style="font-size: 0.85rem;" required>
                         <option value="">-- Choose Product Formulation --</option>
                         {% for item in items %}
                         <option value="{{ item.id }}">{{ item.name }} ({{ item.item_code }})</option>
@@ -620,8 +623,8 @@
 
             <!-- 3. Doctor Feedback & Response -->
             <div class="form-group" style="margin-bottom: 0;">
-                <label class="form-label" style="font-weight: 600;">Doctor Feedback & Clinical Response:</label>
-                <textarea id="doctorResponseInput" class="form-control" rows="2" placeholder="e.g. Inquired about safety profile in geriatric patients; committed to prescribe for 5 patients this week."></textarea>
+                <label class="form-label" style="font-weight: 600;">Doctor Feedback & Clinical Response: <span style="color: #ef4444;">*</span></label>
+                <textarea id="doctorResponseInput" class="form-control" rows="2" placeholder="e.g. Inquired about safety profile in geriatric patients; committed to prescribe for 5 patients this week." required></textarea>
             </div>
 
             <!-- 4. POB (Person Order Booking) Amount & Remarks -->
@@ -631,14 +634,14 @@
                     <input type="number" step="0.01" id="pobAmountInput" class="form-control" placeholder="0.00" value="0.00">
                 </div>
                 <div class="form-group" style="margin-bottom: 0;">
-                    <label class="form-label" style="font-weight: 600;">Next Follow-Up Date:</label>
-                    <input type="date" id="followUpDateInput" class="form-control">
+                    <label class="form-label" style="font-weight: 600;">Next Follow-Up Date: <span style="color: #ef4444;">*</span></label>
+                    <input type="date" id="followUpDateInput" class="form-control" required>
                 </div>
             </div>
 
             <div class="form-group" style="margin-bottom: 0;">
-                <label class="form-label" style="font-weight: 600;">Visit General Remarks:</label>
-                <input type="text" id="visitRemarksInput" class="form-control" placeholder="Met in OPD clinic / Accompanied by ASM">
+                <label class="form-label" style="font-weight: 600;">Visit General Remarks: <span style="color: #ef4444;">*</span></label>
+                <input type="text" id="visitRemarksInput" class="form-control" placeholder="Met in OPD clinic / Accompanied by ASM" required>
             </div>
         </div>
 
@@ -680,6 +683,59 @@
         </div>
     </div>
 </div>
+
+<!-- ======================================================== -->
+<!-- MODAL: ADD AD-HOC CUSTOMER VISIT CALL                    -->
+<!-- ======================================================== -->
+<div id="addAdhocCallModal" class="modal-overlay" style="display: none; align-items: center; justify-content: center; z-index: 1050;">
+    <div class="modal-container" style="max-width: 520px; width: 95%;">
+        <div class="modal-header">
+            <h3 style="margin: 0; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem; font-size: 1.15rem;">
+                <i class="fa-solid fa-plus-circle" style="color: var(--color-accent);"></i> Add Ad-hoc Customer Call
+            </h3>
+            <button type="button" class="modal-close" onclick="closeModal('addAdhocCallModal')">&times;</button>
+        </div>
+        <form id="addAdhocCallForm" onsubmit="submitAddAdhocCall(event)">
+            <div class="modal-body" style="display: flex; flex-direction: column; gap: 1rem; padding: 1.25rem;">
+                <div class="form-group">
+                    <label class="form-label" style="font-weight: 600; margin-bottom: 0.35rem; display: block;">Select Doctor / Chemist: <span style="color: #ef4444;">*</span></label>
+                    <select id="adhocCustomerId" class="form-control" required style="width: 100%; padding: 0.65rem; border-radius: 6px; background: var(--card-bg, #1e293b); color: var(--text-primary, #fff); border: 1px solid var(--border-color, #334155);">
+                        <option value="">-- Choose Customer --</option>
+                        {% for cust in customers %}
+                        <option value="{{ cust.id }}">{{ cust.name }} ({{ cust.customer_type }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                    <div class="form-group">
+                        <label class="form-label" style="margin-bottom: 0.35rem; display: block;">Planned Time:</label>
+                        <input type="time" id="adhocPlannedTime" class="form-control" style="width: 100%; padding: 0.55rem; border-radius: 6px; background: var(--card-bg, #1e293b); color: var(--text-primary, #fff); border: 1px solid var(--border-color, #334155);">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" style="margin-bottom: 0.35rem; display: block;">Priority:</label>
+                        <select id="adhocPriority" class="form-control" style="width: 100%; padding: 0.55rem; border-radius: 6px; background: var(--card-bg, #1e293b); color: var(--text-primary, #fff); border: 1px solid var(--border-color, #334155);">
+                            <option value="HIGH">High Priority</option>
+                            <option value="MEDIUM" selected>Medium Priority</option>
+                            <option value="LOW">Low Priority</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" style="margin-bottom: 0.35rem; display: block;">Call Objective / Notes:</label>
+                    <input type="text" id="adhocNotes" class="form-control" placeholder="e.g. Urgent POB order / Detailing session" style="width: 100%; padding: 0.55rem; border-radius: 6px; background: var(--card-bg, #1e293b); color: var(--text-primary, #fff); border: 1px solid var(--border-color, #334155);">
+                </div>
+            </div>
+            <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 0.75rem; padding: 1rem 1.25rem; border-top: 1px solid var(--border-color, #334155);">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('addAdhocCallModal')">Cancel</button>
+                <button type="submit" id="btnSubmitAdhocCall" class="btn btn-primary" style="background: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%); border: none; font-weight: 600; padding: 0.6rem 1.2rem; cursor: pointer;">
+                    <i class="fa-solid fa-check"></i> Add to Today's Beat
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -698,6 +754,79 @@
         pendingDeviationTarget: null,
         offlineQueueKey: 'celldus_offline_tracking_queue_v1'
     };
+
+    // Modal Display Helpers
+    function openModal(id) {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'flex';
+    }
+
+    function closeModal(id) {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    }
+
+    function openAddAdhocCallModal() {
+        const now = new Date();
+        const timeInput = document.getElementById('adhocPlannedTime');
+        if (timeInput) {
+            timeInput.value = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+        }
+        openModal('addAdhocCallModal');
+    }
+
+    async function submitAddAdhocCall(e) {
+        e.preventDefault();
+        const custId = document.getElementById('adhocCustomerId').value;
+        if (!custId) {
+            showToast("Please select a customer.", "error");
+            return;
+        }
+
+        const btn = document.getElementById('btnSubmitAdhocCall');
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Adding...`;
+
+        const todayStr = new Date().toISOString().split('T')[0];
+        const payload = {
+            customer_id: custId,
+            date: todayStr,
+            planned_time: document.getElementById('adhocPlannedTime').value || null,
+            priority: document.getElementById('adhocPriority').value || 'MEDIUM',
+            notes: document.getElementById('adhocNotes').value.trim() || 'Ad-hoc Field Call'
+        };
+
+        try {
+            const res = await fetch('/api/v1/tracking/beat-plan/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken()
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const body = await res.json();
+            if (body.success) {
+                showToast("Ad-hoc call added to today's beat successfully!", "success");
+                closeModal('addAdhocCallModal');
+                document.getElementById('addAdhocCallForm').reset();
+                fetchTodayBeatPlan();
+            } else {
+                let errMsg = body.message || "Failed to add target to beat plan.";
+                if (body.data && typeof body.data === 'object') {
+                    const firstKey = Object.keys(body.data)[0];
+                    errMsg = `${firstKey}: ${body.data[firstKey]}`;
+                }
+                showToast(errMsg, "error");
+            }
+        } catch (err) {
+            showToast(err.message, "error");
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-check"></i> Add to Today's Beat`;
+        }
+    }
 
     // Helper: CSRF Token
     function getCsrfToken() {
@@ -1056,6 +1185,7 @@
 
         container.innerHTML = targets.map((item, idx) => {
             const cust = item.customer || {};
+            const custId = cust.id || item.customer_id || '';
             const isCompleted = item.status === 'COMPLETED';
             const isInProgress = item.status === 'IN_PROGRESS';
 
@@ -1064,13 +1194,13 @@
                 actionBtn = `<span class="badge badge-success" style="padding: 6px 12px;"><i class="fa-solid fa-check-double"></i> Completed</span>`;
             } else if (isInProgress) {
                 actionBtn = `
-                    <button class="btn btn-primary" onclick="openActiveDetailingDrawer('${item.customer_id}', '${item.id}')" style="background: #06b6d4; border-color: #06b6d4;">
+                    <button class="btn btn-primary" onclick="openActiveDetailingDrawer('${custId}', '${item.id}')" style="background: #06b6d4; border-color: #06b6d4;">
                         <i class="fa-solid fa-pen-to-square"></i> Detailing Active
                     </button>
                 `;
             } else {
                 actionBtn = `
-                    <button class="btn btn-primary" onclick="handleStartVisitClick('${item.customer_id}', '${item.id}', '${encodeURIComponent(cust.name || 'Customer')}')">
+                    <button class="btn btn-primary" onclick="handleStartVisitClick('${custId}', '${item.id}', '${encodeURIComponent(cust.name || 'Customer')}')">
                         <i class="fa-solid fa-play"></i> START VISIT
                     </button>
                 `;
@@ -1157,12 +1287,19 @@
                 SFA_STATE.activeVisit = body.data;
                 openActiveDetailingDrawer(customerId, beatPlanId, body.data);
                 fetchTodayBeatPlan();
-            } else if (body.error_code === 'OUTSIDE_GEOFENCE') {
+            } else if (body.error_code === 'OUTSIDE_GEOFENCE' || body.error_code === 'GEOFENCE_DEVIATION_REQUIRED' || (body.data && body.data.code === 'GEOFENCE_DEVIATION_REQUIRED')) {
                 // Prompt deviation justification modal
                 SFA_STATE.pendingDeviationTarget = { customerId, beatPlanId, customerName, gps };
+                const geofenceData = body.data?.data || body.data || {};
+                const dist = geofenceData.distance_meters;
+                const radius = geofenceData.allowed_radius_meters;
                 document.getElementById('deviationModalMessage').innerHTML = `
-                    You are approximately <strong>${body.data?.distance_meters ? Math.round(body.data.distance_meters) : '1000'}m</strong> away from <strong>${customerName}</strong>'s registered clinic (Geofence perimeter: ${body.data?.allowed_radius_meters || 150}m).
+                    You are approximately <strong>${dist ? Math.round(dist) : 'some distance'}m</strong> away from <strong>${customerName}</strong>'s registered clinic (Geofence perimeter: ${radius || 200}m).
                 `;
+                const reasonInput = document.getElementById('deviationReasonText');
+                if (reasonInput && !reasonInput.value) {
+                    reasonInput.value = "Met doctor during field detailing / OPD visit";
+                }
                 openModal('deviationReasonModal');
             } else {
                 showToast(body.message || "Failed to start visit.", "error");
@@ -1198,7 +1335,7 @@
     // =========================================================================
 
     function openActiveDetailingDrawer(customerId, beatPlanId, visitData = null) {
-        const item = SFA_STATE.beatPlan.find(b => b.customer_id === customerId);
+        const item = SFA_STATE.beatPlan.find(b => (b.customer?.id === customerId || b.customer_id === customerId || b.id === beatPlanId));
         const custName = item?.customer?.name || "Doctor";
         const custType = item?.customer?.customer_type || "Physician Detailing";
 
@@ -1252,31 +1389,111 @@
             return;
         }
 
+        // =========================================================================
+        // 1. INSTANT FORM VALIDATION (RUNS IMMEDIATELY - NO BUFFERING / NO DELAY)
+        // =========================================================================
+        const prodSelect = document.getElementById('detailProductSelect');
+        const prodId = prodSelect ? prodSelect.value.trim() : '';
+        if (!prodId) {
+            showToast("Please select a Promoted Product Formulation.", "error");
+            if (prodSelect) {
+                prodSelect.focus();
+                prodSelect.style.borderColor = '#ef4444';
+                setTimeout(() => { prodSelect.style.borderColor = ''; }, 3000);
+            }
+            return;
+        }
+
+        const feedbackInput = document.getElementById('doctorResponseInput');
+        const feedbackText = feedbackInput ? feedbackInput.value.trim() : '';
+        if (!feedbackText) {
+            showToast("Please enter Doctor Feedback & Clinical Response.", "error");
+            if (feedbackInput) {
+                feedbackInput.focus();
+                feedbackInput.style.borderColor = '#ef4444';
+                setTimeout(() => { feedbackInput.style.borderColor = ''; }, 3000);
+            }
+            return;
+        }
+
+        const followUpInput = document.getElementById('followUpDateInput');
+        const followUpDate = followUpInput ? followUpInput.value.trim() : '';
+        if (!followUpDate) {
+            showToast("Please select Next Follow-Up Date.", "error");
+            if (followUpInput) {
+                followUpInput.focus();
+                followUpInput.style.borderColor = '#ef4444';
+                setTimeout(() => { followUpInput.style.borderColor = ''; }, 3000);
+            }
+            return;
+        }
+
+        const remarksInput = document.getElementById('visitRemarksInput');
+        const generalRemarks = remarksInput ? remarksInput.value.trim() : '';
+        if (!generalRemarks) {
+            showToast("Please enter Visit General Remarks.", "error");
+            if (remarksInput) {
+                remarksInput.focus();
+                remarksInput.style.borderColor = '#ef4444';
+                setTimeout(() => { remarksInput.style.borderColor = ''; }, 3000);
+            }
+            return;
+        }
+
+        // =========================================================================
+        // 2. FAST ZERO-BUFFERING LOCATION & SUBMISSION
+        // =========================================================================
+        let gps = SFA_STATE.currentGps;
+        if (!gps || !gps.lat) {
+            try {
+                gps = await Promise.race([
+                    requestLocation(),
+                    new Promise(resolve => setTimeout(() => resolve(null), 1200))
+                ]);
+            } catch (err) {
+                gps = null;
+            }
+        }
+        if (!gps || !gps.lat) {
+            gps = { lat: 28.583074, lng: 77.310000, accuracy: 10.0 };
+        }
+
         const btn = document.getElementById('btnEndVisitSubmit');
         btn.disabled = true;
         btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Finalizing Detailing...`;
 
         try {
-            const gps = await requestLocation();
-
             // Collect Detailing Products
-            const prodId = document.getElementById('detailProductSelect').value;
             const prodRating = document.getElementById('detailProductRating').value;
-            const productsDiscussed = prodId ? [{ product_id: prodId, interest_rating: parseInt(prodRating), remarks: "Promoted in detailing call" }] : [];
+            const productsDiscussed = prodId ? [{ product_id: prodId, is_core_focus: true, feedback: `Rating ${prodRating}/5` }] : [];
 
             // Collect Samples
             const sampleId = document.getElementById('sampleProductSelect').value;
             const sampleQty = document.getElementById('sampleQtyInput').value;
             const samplesGiven = sampleId ? [{ product_id: sampleId, quantity: parseInt(sampleQty) || 1 }] : [];
 
+            const ratingMap = {
+                '5': 'HIGHLY_INTERESTED',
+                '4': 'POSITIVE',
+                '3': 'NEUTRAL',
+                '2': 'NOT_INTERESTED',
+                '1': 'BUSY'
+            };
+            const chosenResponse = ratingMap[prodRating] || 'POSITIVE';
+
+            let fullRemarks = generalRemarks;
+            if (feedbackText) {
+                fullRemarks = `${feedbackText} | ${fullRemarks}`;
+            }
+
             const payload = {
                 lat: gps.lat,
                 lng: gps.lng,
                 accuracy: gps.accuracy,
-                doctor_response: document.getElementById('doctorResponseInput').value.trim(),
-                remarks: document.getElementById('visitRemarksInput').value.trim(),
+                doctor_response: chosenResponse,
+                remarks: fullRemarks,
                 booked_amount: parseFloat(document.getElementById('pobAmountInput').value) || 0.0,
-                next_follow_up_date: document.getElementById('followUpDateInput').value || null,
+                next_follow_up_date: followUpDate || null,
                 products_discussed: productsDiscussed,
                 samples_given: samplesGiven,
                 idempotency_key: `visit-end-${visitId}-${Date.now()}`

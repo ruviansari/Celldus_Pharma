@@ -59,8 +59,8 @@
 <!-- Master Data Tabs -->
 <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; overflow-x: auto;">
     <button class="btn btn-primary tab-trigger" onclick="showTab('itemsTab', this);"><i class="fa-solid fa-pills"></i> Items & APIs ({{ items|length }})</button>
-    <button class="btn btn-secondary tab-trigger" onclick="showTab('suppliersTab', this);"><i class="fa-solid fa-truck-field"></i> Qualified Suppliers ({{ suppliers|length }})</button>
-    <button class="btn btn-secondary tab-trigger" onclick="showTab('customersTab', this);"><i class="fa-solid fa-hospital-user"></i> Licensed Customers ({{ customers|length }})</button>
+    <button class="btn btn-secondary tab-trigger" onclick="showTab('suppliersTab', this);"><i class="fa-solid fa-truck-field"></i> View Suppliers ({{ suppliers|length }})</button>
+    <button class="btn btn-secondary tab-trigger" onclick="showTab('customersTab', this);"><i class="fa-solid fa-hospital-user"></i> View Customers ({{ customers|length }})</button>
     <button class="btn btn-secondary tab-trigger" onclick="showTab('warehousesTab', this);"><i class="fa-solid fa-warehouse"></i> Warehouses ({{ warehouses|length }})</button>
     <button class="btn btn-secondary tab-trigger" onclick="showTab('bomsTab', this);"><i class="fa-solid fa-layer-group"></i> Master BOMs ({{ boms|length }})</button>
     <button class="btn btn-secondary tab-trigger" onclick="showTab('specsTab', this);"><i class="fa-solid fa-clipboard-check"></i> Quality Specs ({{ specs|length }})</button>
@@ -111,16 +111,40 @@
 
 <!-- Tab 2: Suppliers -->
 <div id="suppliersTab" class="master-tab-content panel" style="display: none;">
-    <div class="panel-header">
-        <h2 class="panel-title">Approved & Qualified Vendors</h2>
-        <button class="btn btn-primary" onclick="openModal('addSupplierModal')" style="padding: 0.4rem 0.85rem; font-size: 0.8rem;">
-            <i class="fa-solid fa-plus"></i> New Supplier
-        </button>
+    <div class="panel-header" style="border-bottom: 1px solid var(--border-color); padding: 1.25rem 1.5rem; background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(16, 185, 129, 0.03) 50%, transparent 100%); border-radius: 12px 12px 0 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <!-- Premium Glowing Icon Box -->
+            <div style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 1.35rem; box-shadow: 0 8px 20px -4px rgba(79, 70, 229, 0.4); flex-shrink: 0;">
+                <i class="fa-solid fa-truck-field"></i>
+            </div>
+            <div>
+                <div style="display: flex; align-items: center; gap: 0.65rem; flex-wrap: wrap;">
+                    <h2 class="panel-title" style="margin: 0; font-size: 1.25rem; font-weight: 800; letter-spacing: -0.3px; color: var(--text-primary);">
+                        Approved &amp; Qualified Vendors
+                    </h2>
+                    <span style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.35); font-size: 0.73rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; display: inline-flex; align-items: center; gap: 0.35rem; letter-spacing: 0.3px;">
+                        <i class="fa-solid fa-circle-check"></i> WHO-GMP Verified
+                    </span>
+                    <span style="background: rgba(99, 102, 241, 0.12); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.3); font-size: 0.73rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; display: inline-flex; align-items: center; gap: 0.35rem;">
+                        <i class="fa-solid fa-boxes-packing"></i> {{ suppliers|length }} Active Vendors
+                    </span>
+                </div>
+                <div style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 0.35rem; display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap;">
+                    <span>Licensed suppliers &amp; audited manufacturers for:</span>
+                    <span style="color: var(--text-primary); font-weight: 600; background: rgba(255,255,255,0.06); padding: 1px 7px; border-radius: 4px; font-size: 0.75rem; border: 1px solid var(--border-color);">APIs</span>
+                    <span style="color: var(--text-muted);">&bull;</span>
+                    <span style="color: var(--text-primary); font-weight: 600; background: rgba(255,255,255,0.06); padding: 1px 7px; border-radius: 4px; font-size: 0.75rem; border: 1px solid var(--border-color);">Excipients</span>
+                    <span style="color: var(--text-muted);">&bull;</span>
+                    <span style="color: var(--text-primary); font-weight: 600; background: rgba(255,255,255,0.06); padding: 1px 7px; border-radius: 4px; font-size: 0.75rem; border: 1px solid var(--border-color);">Primary &amp; Secondary Packaging</span>
+                </div>
+            </div>
+        </div>
     </div>
     <div class="table-container">
         <table class="custom-table">
             <thead>
                 <tr>
+                    <th style="width: 50px;">#</th>
                     <th>Supplier Code</th>
                     <th>Legal Name</th>
                     <th>GSTIN</th>
@@ -133,6 +157,7 @@
             <tbody>
                 {% for sup in suppliers %}
                 <tr>
+                    <td style="color: var(--text-muted); font-weight: 600; font-family: monospace;">{{ forloop.counter }}</td>
                     <td><strong style="color: #60a5fa; font-family: monospace;">{{ sup.supplier_code }}</strong></td>
                     <td style="color: var(--text-primary); font-weight: 500;">{{ sup.legal_name }}</td>
                     <td style="font-family: monospace; font-size: 0.8rem;">{{ sup.gstin }}</td>
@@ -265,6 +290,7 @@
         <table class="custom-table">
             <thead>
                 <tr>
+                    <th style="width: 50px;">#</th>
                     <th>Warehouse Code</th>
                     <th>Facility Name</th>
                     <th>Branch / Site</th>
@@ -275,10 +301,11 @@
             <tbody>
                 {% for wh in warehouses %}
                 <tr>
+                    <td style="color: var(--text-muted); font-weight: 600; font-family: monospace;">{{ forloop.counter }}</td>
                     <td><strong style="color: #60a5fa; font-family: monospace;">{{ wh.code }}</strong></td>
                     <td style="color: #fff; font-weight: 600;">{{ wh.name }}</td>
                     <td>{{ wh.branch.name|default:"Central Site" }}</td>
-                    <td><span style="background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem;">{{ wh.warehouse_type }}</span></td>
+                    <td><span style="background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem;">{{ wh.get_warehouse_type_display }}</span></td>
                     <td><span style="color: #10b981; font-weight: 600; font-size: 0.75rem;"><i class="fa-solid fa-check"></i> Operational</span></td>
                 </tr>
                 {% endfor %}
@@ -300,6 +327,7 @@
             <table class="custom-table">
                 <thead>
                     <tr>
+                        <th style="width: 50px;">#</th>
                         <th>Bin Code</th>
                         <th>Warehouse</th>
                         <th>Zone</th>
@@ -309,6 +337,7 @@
                 <tbody>
                     {% for bin in bins %}
                     <tr>
+                        <td style="color: var(--text-muted); font-weight: 600; font-family: monospace;">{{ forloop.counter }}</td>
                         <td><strong style="color: #06b6d4; font-family: monospace;">{{ bin.bin_code }}</strong></td>
                         <td style="color: #fff;">{{ bin.warehouse.name }} ({{ bin.warehouse.code }})</td>
                         <td><span style="background: rgba(255,255,255,0.06); padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">{{ bin.zone }}</span></td>
@@ -316,7 +345,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 2rem;">No storage bins configured yet.</td>
+                        <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">No storage bins configured yet.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -510,7 +539,7 @@
             <div class="form-grid-3">
                 <div class="form-group">
                     <label class="form-label">GSTIN (15 Digits)</label>
-                    <input type="text" name="gstin" class="form-control" placeholder="e.g. 27AABCS1429B1ZX">
+                    <input type="text" name="gstin" class="form-control" maxlength="15" placeholder="e.g. 27AABCS1429B1ZX" oninput="this.value = this.value.toUpperCase().slice(0, 15);">
                 </div>
                 <div class="form-group">
                     <label class="form-label">GMP Certificate No</label>
@@ -599,8 +628,8 @@
                     <input type="text" name="drug_license_20b" class="form-control" placeholder="e.g. DL-MH-PUN-98765">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">GSTIN</label>
-                    <input type="text" name="gstin" class="form-control" placeholder="e.g. 27AABCR5678C1ZY">
+                    <label class="form-label">GSTIN (15 Digits)</label>
+                    <input type="text" name="gstin" class="form-control" maxlength="15" placeholder="e.g. 27AABCR5678C1ZY" oninput="this.value = this.value.toUpperCase().slice(0, 15);">
                 </div>
             </div>
 
@@ -685,8 +714,8 @@
                     <input type="text" name="drug_license_20b" id="edit_drug_license" class="form-control" placeholder="e.g. DL-MH-PUN-98765">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">GSTIN</label>
-                    <input type="text" name="gstin" id="edit_gstin" class="form-control" placeholder="e.g. 27AABCR5678C1ZY">
+                    <label class="form-label">GSTIN (15 Digits)</label>
+                    <input type="text" name="gstin" id="edit_gstin" class="form-control" maxlength="15" placeholder="e.g. 27AABCR5678C1ZY" oninput="this.value = this.value.toUpperCase().slice(0, 15);">
                 </div>
             </div>
 
@@ -761,10 +790,9 @@
                 <div class="form-group">
                     <label class="form-label">Facility Type</label>
                     <select name="warehouse_type" class="form-control">
-                        <option value="GENERAL">General Ambient Warehouse</option>
-                        <option value="COLD_CHAIN">Cold Chain (2°C - 8°C)</option>
-                        <option value="QUARANTINE">Quarantine Holding Area</option>
-                        <option value="FINISHED_GOODS">Finished Goods Central</option>
+                        {% for code, label in warehouse_type_choices %}
+                        <option value="{{ code }}">{{ label }}</option>
+                        {% endfor %}
                     </select>
                 </div>
                 <div class="form-group">
@@ -906,28 +934,41 @@ function showTab(tabId, btn) {
     document.querySelectorAll('.tab-trigger').forEach(function(b) {
         b.className = 'btn btn-secondary tab-trigger';
     });
-    document.getElementById(tabId).style.display = 'block';
+    const target = document.getElementById(tabId);
+    if (target) {
+        target.style.display = 'block';
+    }
+    if (!btn) {
+        btn = document.querySelector(`.tab-trigger[onclick*="${tabId}"]`);
+    }
     if (btn) {
         btn.className = 'btn btn-primary tab-trigger';
     }
+    try {
+        localStorage.setItem('active_master_tab', tabId);
+        const cleanName = tabId.replace('Tab', '');
+        const newUrl = new URL(window.location);
+        newUrl.searchParams.set('tab', cleanName);
+        window.history.replaceState({}, '', newUrl);
+    } catch (e) {}
 }
 
-// Auto open tab from query parameter if present
+// Auto open tab on load or refresh from URL or localStorage
 window.addEventListener('DOMContentLoaded', function() {
     const params = new URLSearchParams(window.location.search);
-    const tab = params.get('tab');
-    if (tab) {
-        const tabEl = document.getElementById(tab + 'Tab');
-        if (tabEl) {
-            document.querySelectorAll('.master-tab-content').forEach(el => el.style.display = 'none');
-            tabEl.style.display = 'block';
-            document.querySelectorAll('.tab-trigger').forEach(b => {
-                b.className = 'btn btn-secondary tab-trigger';
-                if (b.getAttribute('onclick') && b.getAttribute('onclick').includes(tab + 'Tab')) {
-                    b.className = 'btn btn-primary tab-trigger';
-                }
-            });
-        }
+    let tabName = params.get('tab');
+    let targetTabId = null;
+
+    if (tabName) {
+        targetTabId = tabName.endsWith('Tab') ? tabName : (tabName + 'Tab');
+    } else {
+        try {
+            targetTabId = localStorage.getItem('active_master_tab');
+        } catch (e) {}
+    }
+
+    if (targetTabId && document.getElementById(targetTabId)) {
+        showTab(targetTabId);
     }
 });
 

@@ -54,3 +54,4 @@ Desktop.ini
 # Binaries & Executables
 *.exe
 cloudflared.exe
+config.yml

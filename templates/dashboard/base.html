@@ -15,7 +15,7 @@
                 if (localStorage.getItem('celldus_sidebar_collapsed') === 'true') {
                     document.documentElement.classList.add('sidebar-collapsed');
                 }
-            } catch (e) {}
+            } catch (e) { }
         })();
     </script>
     <!-- Google Fonts & Font Awesome -->
@@ -24,16 +24,19 @@
     <!-- Dashboard CSS with Cache-Bust -->
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v={% now 'U' %}">
     <style>
-        html, body {
+        html,
+        body {
             overflow-x: hidden;
             max-width: 100%;
         }
+
         .dashboard-wrapper {
             display: block !important;
             width: 100% !important;
             min-height: 100vh !important;
             position: relative !important;
         }
+
         .sidebar {
             width: 275px !important;
             position: fixed !important;
@@ -44,6 +47,7 @@
             box-sizing: border-box !important;
             transition: width 0.28s cubic-bezier(0.4, 0, 0.2, 1), padding 0.28s cubic-bezier(0.4, 0, 0.2, 1) !important;
         }
+
         .main-content {
             margin-left: 275px !important;
             box-sizing: border-box !important;
@@ -53,11 +57,13 @@
             padding: 2rem 2.5rem !important;
             transition: margin-left 0.28s cubic-bezier(0.4, 0, 0.2, 1) !important;
         }
+
         @media (max-width: 1280px) {
             .main-content {
                 padding: 1.75rem 1.5rem !important;
             }
         }
+
         .stats-grid {
             width: 100% !important;
             box-sizing: border-box !important;
@@ -73,15 +79,19 @@
             margin-bottom: 1.25rem !important;
             padding: 0.25rem 0.5rem !important;
         }
+
         .sidebar-logo:hover {
             opacity: 0.88;
         }
+
         .sidebar-logo:active {
             transform: scale(0.96);
         }
+
         .sidebar-logo i {
             transition: transform 0.2s ease, filter 0.2s ease;
         }
+
         .sidebar-logo:hover i {
             transform: scale(1.12);
             filter: drop-shadow(0 0 8px var(--color-accent));
@@ -94,10 +104,12 @@
             padding-left: 0.6rem !important;
             padding-right: 0.6rem !important;
         }
+
         html.sidebar-collapsed .main-content,
         body.sidebar-collapsed .main-content {
             margin-left: 78px !important;
         }
+
         html.sidebar-collapsed .sidebar-logo,
         body.sidebar-collapsed .sidebar-logo {
             display: flex !important;
@@ -106,38 +118,46 @@
             padding: 0.5rem 0 !important;
             margin: 0 0 1.25rem 0 !important;
         }
+
         html.sidebar-collapsed .sidebar-logo h2,
         body.sidebar-collapsed .sidebar-logo h2 {
             display: none !important;
         }
+
         html.sidebar-collapsed .sidebar-logo i,
         body.sidebar-collapsed .sidebar-logo i {
             margin: 0 !important;
             font-size: 1.5rem !important;
         }
+
         html.sidebar-collapsed .sidebar-menu-header,
         body.sidebar-collapsed .sidebar-menu-header {
             display: none !important;
         }
+
         html.sidebar-collapsed .sidebar-menu-item a,
         body.sidebar-collapsed .sidebar-menu-item a {
             justify-content: center !important;
             padding: 0.75rem 0 !important;
         }
+
         html.sidebar-collapsed .sidebar-menu-item a span,
         body.sidebar-collapsed .sidebar-menu-item a span {
             display: none !important;
         }
+
         html.sidebar-collapsed .sidebar-menu-item a i,
         body.sidebar-collapsed .sidebar-menu-item a i {
             margin: 0 !important;
             font-size: 1.2rem !important;
         }
+
         html.sidebar-collapsed .sidebar-footer,
         body.sidebar-collapsed .sidebar-footer {
             padding: 0.6rem 0 !important;
             justify-content: center !important;
         }
+
         html.sidebar-collapsed .sidebar-user-info,
         body.sidebar-collapsed .sidebar-user-info,
         html.sidebar-collapsed .logout-btn,
@@ -151,10 +171,12 @@
             color: #0f172a !important;
             font-weight: 600 !important;
         }
+
         [data-theme="light"] .sidebar-menu-item.active:hover a,
         [data-theme="light"] .sidebar-menu-item.active:hover a span {
             color: #0f172a !important;
         }
+
         [data-theme="light"] .sidebar-menu-item.active a i {
             color: #4f46e5 !important;
             text-shadow: none !important;
@@ -189,27 +211,31 @@
 
             <ul class="sidebar-menu">
                 <li class="sidebar-menu-header">Overview & Operations</li>
-                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_index' %}active{% endif %}">
+                <li
+                    class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_index' %}active{% endif %}">
                     <a href="{% url 'dashboard_index' %}">
                         <i class="fa-solid fa-chart-pie"></i>
-                        <span>ERP Executive Cockpit</span>
+                        <span>ERP Executive Dashboard</span>
                     </a>
                 </li>
 
                 <li class="sidebar-menu-header">Master Data & Catalog</li>
-                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_masters' %}active{% endif %}">
+                <li
+                    class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_masters' %}active{% endif %}">
                     <a href="{% url 'dashboard_masters' %}">
                         <i class="fa-solid fa-layer-group"></i>
                         <span>Master Data Admin Control</span>
                     </a>
                 </li>
-                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_products' %}active{% endif %}">
+                <li
+                    class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_products' %}active{% endif %}">
                     <a href="{% url 'dashboard_products' %}">
                         <i class="fa-solid fa-pills"></i>
                         <span>Products & Formulations</span>
                     </a>
                 </li>
-                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_categories' %}active{% endif %}">
+                <li
+                    class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_categories' %}active{% endif %}">
                     <a href="{% url 'dashboard_categories' %}">
                         <i class="fa-solid fa-tags"></i>
                         <span>Categories (Therapeutic)</span>
@@ -217,25 +243,29 @@
                 </li>
 
                 <li class="sidebar-menu-header">Pharma Supply & Quality</li>
-                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_procurement' or request.resolver_match.url_name == 'dashboard_po_view' %}active{% endif %}">
+                <li
+                    class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_procurement' or request.resolver_match.url_name == 'dashboard_po_view' %}active{% endif %}">
                     <a href="{% url 'dashboard_procurement' %}">
                         <i class="fa-solid fa-file-invoice-dollar"></i>
                         <span>Purchase Orders (PO & GRN)</span>
                     </a>
                 </li>
-                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_quality' %}active{% endif %}">
+                <li
+                    class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_quality' %}active{% endif %}">
                     <a href="{% url 'dashboard_quality' %}">
                         <i class="fa-solid fa-microscope"></i>
                         <span>QC & QA Dispositions</span>
                     </a>
                 </li>
-                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_inventory_lots' %}active{% endif %}">
+                <li
+                    class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_inventory_lots' %}active{% endif %}">
                     <a href="{% url 'dashboard_inventory_lots' %}">
                         <i class="fa-solid fa-boxes-stacked"></i>
                         <span>Inventory Lots (FEFO)</span>
                     </a>
                 </li>
-                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_production' %}active{% endif %}">
+                <li
+                    class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_production' %}active{% endif %}">
                     <a href="{% url 'dashboard_production' %}">
                         <i class="fa-solid fa-industry"></i>
                         <span>BMR Production Orders</span>
@@ -243,76 +273,97 @@
                 </li>
 
                 <li class="sidebar-menu-header">Commercial & Users</li>
-                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_crm' %}active{% endif %}">
+                <li
+                    class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_crm' %}active{% endif %}">
                     <a href="{% url 'dashboard_crm' %}">
                         <i class="fa-solid fa-address-book"></i>
                         <span>CRM Leads & Pipeline</span>
                     </a>
                 </li>
-                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_sales' %}active{% endif %}">
+                <li
+                    class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_sales' %}active{% endif %}">
                     <a href="{% url 'dashboard_sales' %}">
                         <i class="fa-solid fa-truck-fast"></i>
                         <span>Sales Orders & FEFO</span>
                     </a>
                 </li>
-                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_invoices' or request.resolver_match.url_name == 'dashboard_invoice_view' %}active{% endif %}">
+                <li
+                    class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_invoices' or request.resolver_match.url_name == 'dashboard_invoice_view' %}active{% endif %}">
                     <a href="{% url 'dashboard_invoices' %}">
                         <i class="fa-solid fa-receipt"></i>
                         <span>Tax Invoices System</span>
                     </a>
                 </li>
-                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_employee' or '/employee' in request.path %}active{% endif %}">
+                <li
+                    class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_employee' or '/employee' in request.path %}active{% endif %}">
                     <a href="{% url 'dashboard_employee' %}">
                         <i class="fa-solid fa-users-gear"></i>
-                        <span>Employee</span>
+                        <span>Employee Dashboard</span>
+                    </a>
+                </li>
+                <li
+                    class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_expenses' or '/expenses' in request.path %}active{% endif %}">
+                    <a href="{% url 'dashboard_expenses' %}">
+                        <i class="fa-solid fa-money-bill-transfer"></i>
+                        <span>Expense Tracker</span>
+                        <span
+                            style="background: #8b5cf6; color: #fff; font-size: 0.62rem; font-weight: 700; padding: 2px 5px; border-radius: 4px; margin-left: auto; flex-shrink: 0; line-height: 1.2;">GL</span>
                     </a>
                 </li>
 
+
                 <li class="sidebar-menu-header">Field Force SFA & Tracking</li>
-                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_field_portal' %}active{% endif %}">
+                <li
+                    class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_field_portal' %}active{% endif %}">
                     <a href="{% url 'dashboard_field_portal' %}" style="padding-right: 0.5rem; gap: 0.55rem;">
                         <i class="fa-solid fa-mobile-screen"></i>
                         <span style="font-size: 0.84rem; white-space: nowrap;">Field Force Portal (MR)</span>
-                        <span style="background: #06b6d4; color: #fff; font-size: 0.62rem; font-weight: 700; padding: 2px 5px; border-radius: 4px; margin-left: auto; flex-shrink: 0; line-height: 1.2;">GPS</span>
+                        <span
+                            style="background: #06b6d4; color: #fff; font-size: 0.62rem; font-weight: 700; padding: 2px 5px; border-radius: 4px; margin-left: auto; flex-shrink: 0; line-height: 1.2;">GPS</span>
                     </a>
                 </li>
-                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_field_tracking' %}active{% endif %}">
+                <li
+                    class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_field_tracking' %}active{% endif %}">
                     <a href="{% url 'dashboard_field_tracking' %}">
                         <i class="fa-solid fa-map-location-dot"></i>
-                        <span>Manager Live Cockpit</span>
+                        <span>Manager Live Dashboard </span>
                     </a>
                 </li>
-                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_field_reports' %}active{% endif %}">
+                <li
+                    class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_field_reports' %}active{% endif %}">
                     <a href="{% url 'dashboard_field_reports' %}">
                         <i class="fa-solid fa-chart-line"></i>
                         <span>SFA Reports & Audit</span>
                     </a>
                 </li>
-                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_customers' or '/customers' in request.path %}active{% endif %}">
+                <li
+                    class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_customers' or '/customers' in request.path %}active{% endif %}">
                     <a href="{% url 'dashboard_customers' %}">
                         <i class="fa-solid fa-users-viewfinder"></i>
                         <span>Website Inquiries</span>
                     </a>
                 </li>
-                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_users' or '/users' in request.path %}active{% endif %}">
+                <li
+                    class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_users' or '/users' in request.path %}active{% endif %}">
                     <a href="{% url 'dashboard_users' %}">
                         <i class="fa-solid fa-user-shield"></i>
-                        <span>10 Enterprise Roles</span>
+                        <span>Roles Enterprises </span>
                     </a>
                 </li>
-                <li class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_audit_trail' %}active{% endif %}">
+                <li
+                    class="sidebar-menu-item {% if request.resolver_match.url_name == 'dashboard_audit_trail' %}active{% endif %}">
                     <a href="{% url 'dashboard_audit_trail' %}">
                         <i class="fa-solid fa-shield-halved"></i>
-                        <span>21 CFR Part 11 Audit</span>
+                        <span>CFR Part 11 Audit</span>
                     </a>
                 </li>
-                <li class="sidebar-menu-item">
+                <!-- <li class="sidebar-menu-item">
                     <a href="/api/docs/" target="_blank">
                         <i class="fa-solid fa-code"></i>
                         <span>Swagger REST APIs</span>
                         <span style="background: #10b981; color: #fff; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; margin-left: auto;">v1.0</span>
                     </a>
-                </li>
+                </li> -->
                 <li class="sidebar-menu-item">
                     <a href="{% url 'home' %}" target="_blank">
                         <i class="fa-solid fa-arrow-up-right-from-square"></i>
@@ -352,7 +403,8 @@
                 <div class="top-bar-actions" style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
                     {% block top_actions %}{% endblock %}
                     {% block theme_toggle_block %}
-                    <button id="themeToggleBtn" class="theme-toggle-btn" type="button" title="Switch Theme (Dark / Light)" aria-label="Toggle theme">
+                    <button id="themeToggleBtn" class="theme-toggle-btn" type="button"
+                        title="Switch Theme (Dark / Light)" aria-label="Toggle theme">
                         <i id="themeToggleIcon" class="fa-solid fa-sun"></i>
                         <span id="themeToggleText">Light Mode</span>
                     </button>
@@ -377,7 +429,7 @@
                 document.documentElement.setAttribute('data-theme', theme);
                 try {
                     localStorage.setItem('celldus_theme', theme);
-                } catch (e) {}
+                } catch (e) { }
 
                 if (theme === 'light') {
                     if (toggleIcon) toggleIcon.className = 'fa-solid fa-moon';
@@ -430,28 +482,28 @@
         });
 
         // Global Executive Premium Delete Modal Helper
-        window.triggerGlobalDelete = function(options) {
+        window.triggerGlobalDelete = function (options) {
             options = options || {};
             const modal = document.getElementById('globalDeleteModal');
             if (!modal) return;
-            
+
             document.getElementById('globalDelModalTitle').innerText = options.title || 'Confirm Deletion';
             document.getElementById('globalDelModalType').innerText = options.itemType || 'record';
             document.getElementById('globalDelModalItem').innerText = options.itemName || 'Selected Item';
-            
+
             const warnEl = document.getElementById('globalDelModalWarning');
             if (options.warning) {
                 warnEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation" style="margin-right: 0.35rem; color: #ef4444;"></i> ' + options.warning;
             } else {
                 warnEl.innerHTML = '<i class="fa-solid fa-shield-halved" style="margin-right: 0.35rem;"></i> This action cannot be reversed and will remove the item permanently.';
             }
-            
+
             const confirmBtn = document.getElementById('globalConfirmDeleteBtn');
             confirmBtn.disabled = false;
             confirmBtn.style.opacity = '1';
             confirmBtn.innerHTML = options.actionBtnHtml || '<i class="fa-solid fa-trash-can"></i> <span>Yes, Delete</span>';
 
-            confirmBtn.onclick = function() {
+            confirmBtn.onclick = function () {
                 confirmBtn.disabled = true;
                 confirmBtn.style.opacity = '0.8';
                 confirmBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> <span>' + (options.processingText || 'Processing...') + '</span>';
@@ -463,12 +515,12 @@
                     if (form) form.submit();
                 }
             };
-            
+
             openModal('globalDeleteModal');
         };
 
         // ESC key dismiss modal
-        document.addEventListener('keydown', function(e) {
+        document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape') {
                 const modal = document.getElementById('globalDeleteModal');
                 if (modal && modal.style.display === 'flex') {
@@ -491,7 +543,7 @@
                 updateToggleTitles(isCollapsed);
                 try {
                     localStorage.setItem('celldus_sidebar_collapsed', isCollapsed ? 'true' : 'false');
-                } catch (e) {}
+                } catch (e) { }
             }
 
             const logo = document.getElementById('sidebarLogoToggle');
@@ -555,7 +607,9 @@
     <div id="globalDeleteModal" class="modal-overlay global-del-modal">
         <div class="modal-content" style="position: relative;">
             <!-- Close button -->
-            <button type="button" onclick="closeModal('globalDeleteModal');" style="position: absolute; right: 1.25rem; top: 1.25rem; background: transparent; border: none; font-size: 1.25rem; color: var(--text-muted); cursor: pointer; padding: 0.25rem; transition: color 0.15s ease;" title="Cancel">
+            <button type="button" onclick="closeModal('globalDeleteModal');"
+                style="position: absolute; right: 1.25rem; top: 1.25rem; background: transparent; border: none; font-size: 1.25rem; color: var(--text-muted); cursor: pointer; padding: 0.25rem; transition: color 0.15s ease;"
+                title="Cancel">
                 <i class="fa-solid fa-xmark"></i>
             </button>
 
@@ -564,27 +618,33 @@
                 <i class="fa-solid fa-trash-can"></i>
             </div>
 
-            <h3 id="globalDelModalTitle" style="font-size: 1.3rem; font-weight: 800; margin: 0 0 0.45rem 0; color: var(--text-primary); letter-spacing: -0.01em;">
+            <h3 id="globalDelModalTitle"
+                style="font-size: 1.3rem; font-weight: 800; margin: 0 0 0.45rem 0; color: var(--text-primary); letter-spacing: -0.01em;">
                 Confirm Deletion
             </h3>
-            
+
             <p style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5; margin: 0;">
-                Are you sure you want to permanently delete this <span id="globalDelModalType" style="font-weight: 600; color: var(--text-primary);">record</span>?
+                Are you sure you want to permanently delete this <span id="globalDelModalType"
+                    style="font-weight: 600; color: var(--text-primary);">record</span>?
             </p>
 
             <!-- Target item preview box -->
             <div class="del-modal-target-card">
                 <i class="fa-solid fa-triangle-exclamation" style="font-size: 0.95rem; flex-shrink: 0;"></i>
-                <span id="globalDelModalItem" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Item Name</span>
+                <span id="globalDelModalItem"
+                    style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Item Name</span>
             </div>
 
-            <p id="globalDelModalWarning" style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.45; margin: 0 0 1.6rem 0;">
-                <i class="fa-solid fa-shield-halved" style="margin-right: 0.3rem;"></i> This action cannot be reversed and will remove the item permanently.
+            <p id="globalDelModalWarning"
+                style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.45; margin: 0 0 1.6rem 0;">
+                <i class="fa-solid fa-shield-halved" style="margin-right: 0.3rem;"></i> This action cannot be reversed
+                and will remove the item permanently.
             </p>
 
             <!-- Action Buttons -->
             <div style="display: flex; gap: 0.75rem; align-items: center;">
-                <button type="button" class="btn btn-secondary del-modal-btn-cancel" onclick="closeModal('globalDeleteModal');">
+                <button type="button" class="btn btn-secondary del-modal-btn-cancel"
+                    onclick="closeModal('globalDeleteModal');">
                     Cancel
                 </button>
                 <button type="button" id="globalConfirmDeleteBtn" class="btn del-modal-btn-confirm">

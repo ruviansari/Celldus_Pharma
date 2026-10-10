@@ -40,10 +40,28 @@ class EmployeeViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
 
+class IsSuperAdminOrHRForAttendance(permissions.BasePermission):
+    """
+    Pharma Compliance Rule:
+    Allows read access (GET) to authenticated staff/auditors.
+    Write access (POST, PUT, PATCH, DELETE) is strictly restricted to
+    Super Admin or users with System ADMIN / HR_PAYROLL roles.
+    """
+    def has_permission(self, request, view):
+        if not request.user or not request.user.is_authenticated:
+            return False
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        if request.user.is_superuser or request.user.username.lower() in ['admin', 'superadmin']:
+            return True
+        from erp_core.models import ERPUserRole
+        return ERPUserRole.objects.filter(user=request.user, role__in=['ADMIN', 'HR_PAYROLL']).exists()
+
+
 class AttendanceRecordViewSet(viewsets.ModelViewSet):
     queryset = AttendanceRecord.objects.select_related('employee').all()
     serializer_class = AttendanceRecordSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsSuperAdminOrHRForAttendance]
 
 
 class LeaveApplicationViewSet(viewsets.ModelViewSet):

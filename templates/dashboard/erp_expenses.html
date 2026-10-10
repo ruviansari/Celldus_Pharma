@@ -1,0 +1,1072 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Expense Tracking & GL Ledger | Celldus Pharma{% endblock %}
+{% block page_title %}Expense Tracking & GL Ledger Integration{% endblock %}
+{% block page_subtitle %}Production-grade employee claims lifecycle, multi-tier approvals (Manager & Finance), anti-fraud receipt verification, and automated double-entry General Ledger posting.{% endblock %}
+
+{% block top_actions %}
+<div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+    <button type="button" class="btn btn-primary" onclick="openModal('claimExpenseModal')" style="display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+        <i class="fa-solid fa-plus-circle"></i> + New Expense Claim
+    </button>
+    <a href="/api/docs/#/erp_finance" target="_blank" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 0.4rem; text-decoration: none; font-size: 0.85rem;">
+        <i class="fa-solid fa-code"></i> Expense APIs
+    </a>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Stats & KPI Grid */
+    .stats-card-link {
+        text-decoration: none !important;
+        color: inherit !important;
+        display: block !important;
+        height: 100%;
+        outline: none;
+    }
+    .stats-card-link .stat-card {
+        background: #0f172a;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.15rem;
+        transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+        height: 100%;
+        box-sizing: border-box;
+        position: relative;
+        overflow: hidden;
+    }
+    .stats-card-link:hover .stat-card {
+        transform: translateY(-4px);
+    }
+    .stats-card-link:hover .card-arrow {
+        transform: translate(2px, -2px);
+        opacity: 1 !important;
+    }
+    .card-arrow {
+        transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+
+    [data-theme="light"] .stats-card-link .stat-card {
+        background: #ffffff;
+        border-color: #e2e8f0;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+    [data-theme="light"] .stats-card-link:hover .stat-card {
+        background: #ffffff;
+        box-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Tabs Styling */
+    .expense-tabs-bar {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 0.75rem;
+        overflow-x: auto;
+    }
+    .exp-tab-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.6rem 1.15rem;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border-color);
+        color: var(--text-secondary);
+        font-weight: 600;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+    .exp-tab-btn:hover {
+        color: var(--text-primary);
+        border-color: var(--border-hover);
+        background: rgba(255, 255, 255, 0.06);
+    }
+    .exp-tab-btn.active {
+        background: var(--color-primary);
+        border-color: var(--color-primary);
+        color: #ffffff;
+        box-shadow: 0 4px 15px var(--color-primary-glow);
+    }
+
+    /* Filter Bar */
+    .filter-card {
+        background: var(--bg-card, #0f172a);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+    [data-theme="light"] .filter-card {
+        background: #ffffff;
+        border-color: #e2e8f0;
+    }
+
+    /* Status Badges */
+    .badge-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.3rem 0.65rem;
+        border-radius: 6px;
+        font-size: 0.74rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+    }
+    .badge-draft { background: rgba(148, 163, 184, 0.15); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.3); }
+    .badge-submitted { background: rgba(6, 182, 212, 0.15); color: #06b6d4; border: 1px solid rgba(6, 182, 212, 0.3); }
+    .badge-under_review { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-approved { background: rgba(59, 130, 246, 0.15); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); }
+    .badge-paid { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-rejected { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+    /* Modal Overlays & Cards */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.75);
+        backdrop-filter: blur(5px);
+        z-index: 1200;
+        align-items: center;
+        justify-content: center;
+        padding: 1.25rem;
+        box-sizing: border-box;
+    }
+    .modal-card-custom {
+        background: #0f172a;
+        border: 1px solid var(--border-color);
+        border-radius: 14px;
+        max-width: 680px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        padding: 1.5rem;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+        box-sizing: border-box;
+    }
+    [data-theme="light"] .modal-card-custom {
+        background: #ffffff;
+        border-color: #e2e8f0;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    }
+    [data-theme="light"] .modal-card-custom label {
+        color: #1e293b;
+    }
+    [data-theme="light"] .modal-card-custom input,
+    [data-theme="light"] .modal-card-custom select,
+    [data-theme="light"] .modal-card-custom textarea {
+        background: #f8fafc;
+        border-color: #cbd5e1;
+        color: #0f172a;
+    }
+
+    /* Claims Table Card & Rows (Dark Mode Default) */
+    .claims-table-card {
+        background: #0f172a;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 2rem;
+    }
+    .claims-card-header {
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #0f172a;
+    }
+    .claims-card-header h3 {
+        color: var(--text-primary);
+    }
+    .claims-card-header span.count-info {
+        color: var(--text-muted);
+    }
+    .badge-live {
+        background: rgba(14, 165, 233, 0.12);
+        color: var(--color-accent);
+        font-size: 0.75rem;
+        padding: 4px 10px;
+        border-radius: 6px;
+    }
+    .claims-table-card .custom-table {
+        background: #0f172a;
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+        font-size: 0.85rem;
+    }
+    .claims-table-card .custom-table th {
+        background: #0f172a;
+        color: var(--text-secondary);
+        border-bottom: 1px solid var(--border-color);
+        padding: 0.85rem 1rem;
+    }
+    .claims-table-card .custom-table td {
+        background: #0f172a;
+        color: var(--text-primary);
+        border-bottom: 1px solid var(--border-color);
+        padding: 0.85rem 1rem;
+        transition: background-color 0.15s ease;
+    }
+    .claims-table-card .custom-table tbody tr {
+        background: #0f172a;
+    }
+    .claims-table-card .custom-table tbody tr:hover td {
+        background: rgba(255, 255, 255, 0.04) !important;
+    }
+
+    /* Light Mode Overrides for Claims Table Card */
+    [data-theme="light"] .claims-table-card {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    [data-theme="light"] .claims-card-header {
+        background: #ffffff !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+    }
+    [data-theme="light"] .claims-card-header h3 {
+        color: #0f172a !important;
+    }
+    [data-theme="light"] .claims-card-header span.count-info {
+        color: #64748b !important;
+    }
+    [data-theme="light"] .badge-live {
+        background: #e0f2fe !important;
+        color: #0284c7 !important;
+    }
+    [data-theme="light"] .claims-table-card .custom-table {
+        background: #ffffff !important;
+    }
+    [data-theme="light"] .claims-table-card .custom-table th {
+        background: #f8fafc !important;
+        color: #475569 !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+    }
+    [data-theme="light"] .claims-table-card .custom-table td {
+        background: #ffffff !important;
+        color: #1e293b !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+    }
+    [data-theme="light"] .claims-table-card .custom-table tbody tr {
+        background: #ffffff !important;
+    }
+    [data-theme="light"] .claims-table-card .custom-table tbody tr:hover td {
+        background: #f1f5f9 !important; /* Soft, crisp light-grey hover in light mode */
+    }
+    [data-theme="light"] .claims-table-card .claim-primary-text {
+        color: #0f172a !important;
+    }
+    [data-theme="light"] .claims-table-card .claim-muted-text {
+        color: #64748b !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- KPI Stats Row (Clickable Cards) -->
+<div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-bottom: 2rem;">
+    <!-- 1. Total Incurred Month -->
+    <a href="?tab=all_claims" class="stats-card-link" title="Total sanctioned claims this month">
+        <div class="stat-card" style="border-left: 4px solid #10b981;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
+                    Sanctioned Spend (MTD)
+                </div>
+                <i class="fa-solid fa-arrow-up-right-from-square card-arrow" style="font-size: 0.75rem; color: #10b981; opacity: 0.6;"></i>
+            </div>
+            <div style="font-size: 1.6rem; font-weight: 800; color: #10b981; font-family: monospace;">
+                ₹{{ total_incurred_month|floatformat:2 }}
+            </div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.35rem;">
+                Approved & Reimbursed in {{ today|date:"F Y" }}
+            </div>
+        </div>
+    </a>
+
+    <!-- 2. Pending Approvals Queue -->
+    <a href="?tab=approvals" class="stats-card-link" title="Claims requiring review or audit">
+        <div class="stat-card" style="border-left: 4px solid #f59e0b; {% if approvals_count > 0 %}background: rgba(245, 158, 11, 0.06);{% endif %}">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
+                    Pending Approval Queue
+                </div>
+                <i class="fa-solid fa-arrow-up-right-from-square card-arrow" style="font-size: 0.75rem; color: #f59e0b; opacity: 0.6;"></i>
+            </div>
+            <div style="font-size: 1.6rem; font-weight: 800; color: #f59e0b;">
+                {{ approvals_count }}
+            </div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.35rem;">
+                {% if user_is_finance %}Manager / Finance audit queue{% else %}Subordinate claims awaiting you{% endif %}
+            </div>
+        </div>
+    </a>
+
+    <!-- 3. Disbursed & Posted to GL -->
+    <a href="?tab=all_claims&status=PAID" class="stats-card-link" title="Disbursed claims posted into General Ledger">
+        <div class="stat-card" style="border-left: 4px solid #8b5cf6;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
+                    Reimbursed & GL Posted
+                </div>
+                <i class="fa-solid fa-arrow-up-right-from-square card-arrow" style="font-size: 0.75rem; color: #8b5cf6; opacity: 0.6;"></i>
+            </div>
+            <div style="font-size: 1.6rem; font-weight: 800; color: #8b5cf6; font-family: monospace;">
+                ₹{{ total_reimbursed_month|floatformat:2 }}
+            </div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.35rem;">
+                Disbursed with Bank UTR & GL Voucher
+            </div>
+        </div>
+    </a>
+
+    <!-- 4. Rejections & Audit Queries -->
+    <a href="?tab=all_claims&status=REJECTED" class="stats-card-link" title="View rejected or queried claims">
+        <div class="stat-card" style="border-left: 4px solid #ef4444;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
+                    Audit Rejections (MTD)
+                </div>
+                <i class="fa-solid fa-arrow-up-right-from-square card-arrow" style="font-size: 0.75rem; color: #ef4444; opacity: 0.6;"></i>
+            </div>
+            <div style="font-size: 1.6rem; font-weight: 800; color: #ef4444;">
+                {{ rejected_count_month }}
+            </div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.35rem;">
+                Claims flagged for policy/tax deviance
+            </div>
+        </div>
+    </a>
+</div>
+
+<!-- Tabs Navigation -->
+<div class="expense-tabs-bar">
+    <a href="?tab=my_claims" class="exp-tab-btn {% if active_tab == 'my_claims' %}active{% endif %}">
+        <i class="fa-solid fa-user-tag"></i> My Expense Claims
+    </a>
+    <a href="?tab=approvals" class="exp-tab-btn {% if active_tab == 'approvals' %}active{% endif %}">
+        <i class="fa-solid fa-clipboard-check"></i> Approval Queue
+        {% if approvals_count > 0 %}
+        <span style="background: #ef4444; color: #fff; font-size: 0.68rem; font-weight: 800; padding: 2px 7px; border-radius: 10px; margin-left: 0.3rem;">{{ approvals_count }}</span>
+        {% endif %}
+    </a>
+    <a href="?tab=all_claims" class="exp-tab-btn {% if active_tab == 'all_claims' %}active{% endif %}">
+        <i class="fa-solid fa-list-check"></i> All Claims Ledger
+    </a>
+    <a href="?tab=analytics" class="exp-tab-btn {% if active_tab == 'analytics' %}active{% endif %}">
+        <i class="fa-solid fa-chart-pie"></i> GL & Policy Analytics
+    </a>
+</div>
+
+{% if active_tab == 'analytics' %}
+<!-- ========================================== -->
+<!-- ANALYTICS & POLICY VIEW                    -->
+<!-- ========================================== -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+    <!-- Category Spend Breakdown -->
+    <div class="filter-card">
+        <h3 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fa-solid fa-tags" style="color: #3b82f6;"></i> Monthly Spend by Expense Category
+        </h3>
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+            {% for item in category_analytics %}
+            <div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.35rem;">
+                    <span><strong>{{ item.category.name }}</strong> ({{ item.category.code }})</span>
+                    <span style="font-family: monospace; font-weight: 700; color: #10b981;">₹{{ item.total|floatformat:2 }}</span>
+                </div>
+                <div style="height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden;">
+                    <div style="height: 100%; background: #3b82f6; width: {% if total_incurred_month > 0 %}{% widthratio item.total total_incurred_month 100 %}{% else %}0{% endif %}%;"></div>
+                </div>
+                <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.2rem;">
+                    GL Account: {{ item.category.gl_account.account_code }} - {{ item.category.gl_account.name }} | Cap: ₹{{ item.category.max_limit_per_claim|default:"No limit" }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Regulatory Compliance & SOD Policies -->
+    <div class="filter-card">
+        <h3 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fa-solid fa-shield-halved" style="color: #10b981;"></i> Regulatory Policies & Compliance Guardrails
+        </h3>
+        <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.85rem; font-size: 0.83rem;">
+            <li style="padding: 0.75rem; background: rgba(6, 182, 212, 0.08); border-left: 3px solid #06b6d4; border-radius: 4px;">
+                <strong>UCPMP 2024 Pharma Compliance:</strong> Promotional, doctor gifts, and medical conference expenses strictly capped with zero-tolerance audit trail.
+            </li>
+            <li style="padding: 0.75rem; background: rgba(245, 158, 11, 0.08); border-left: 3px solid #f59e0b; border-radius: 4px;">
+                <strong>Segregation of Duties (SOD):</strong> Rigorous self-approval prevention. Submitting employees cannot approve, sanction, or disburse their own claims.
+            </li>
+            <li style="padding: 0.75rem; background: rgba(139, 92, 246, 0.08); border-left: 3px solid #8b5cf6; border-radius: 4px;">
+                <strong>Automated Double-Entry General Ledger:</strong> Disbursement auto-posts balanced journals Dr. Expense Account + Dr. Input GST vs. Cr. Bank Account.
+            </li>
+            <li style="padding: 0.75rem; background: rgba(239, 68, 68, 0.08); border-left: 3px solid #ef4444; border-radius: 4px;">
+                <strong>SHA-256 Claim Fingerprinting:</strong> Prevents duplicate submissions of the same bill amount, invoice, and date across employees.
+            </li>
+        </ul>
+    </div>
+</div>
+
+{% else %}
+
+<!-- ========================================== -->
+<!-- CLAIMS LIST & FILTERS                      -->
+<!-- ========================================== -->
+<div class="filter-card">
+    <form method="GET" action="" style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+        <input type="hidden" name="tab" value="{{ active_tab }}">
+
+        <!-- Search input -->
+        <div style="flex: 1; min-width: 220px;">
+            <label style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.35rem; display: block;">Search</label>
+            <input type="text" name="q" value="{{ search }}" class="form-control" placeholder="Search claim #, employee, vendor, bill #..." style="padding: 0.5rem 0.85rem; font-size: 0.85rem; width: 100%;">
+        </div>
+
+        <!-- Status Filter -->
+        <div style="min-width: 170px;">
+            <label style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.35rem; display: block;">Status</label>
+            <select name="status" class="form-control" style="padding: 0.5rem 0.85rem; font-size: 0.85rem; width: 100%;">
+                <option value="">All Statuses</option>
+                <option value="DRAFT" {% if status_filter == 'DRAFT' %}selected{% endif %}>Draft</option>
+                <option value="SUBMITTED" {% if status_filter == 'SUBMITTED' %}selected{% endif %}>Submitted (Mgr Review)</option>
+                <option value="UNDER_REVIEW" {% if status_filter == 'UNDER_REVIEW' %}selected{% endif %}>Under Review (Finance)</option>
+                <option value="APPROVED" {% if status_filter == 'APPROVED' %}selected{% endif %}>Approved (Ready to Pay)</option>
+                <option value="PAID" {% if status_filter == 'PAID' %}selected{% endif %}>Paid (GL Posted)</option>
+                <option value="REJECTED" {% if status_filter == 'REJECTED' %}selected{% endif %}>Rejected</option>
+            </select>
+        </div>
+
+        <!-- Category Filter -->
+        <div style="min-width: 190px;">
+            <label style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.35rem; display: block;">Category</label>
+            <select name="category" class="form-control" style="padding: 0.5rem 0.85rem; font-size: 0.85rem; width: 100%;">
+                <option value="">All Categories</option>
+                {% for cat in categories %}
+                <option value="{{ cat.id }}" {% if category_filter == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }} ({{ cat.code }})</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div style="display: flex; gap: 0.5rem;">
+            <button type="submit" class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.85rem;">
+                <i class="fa-solid fa-filter"></i> Filter
+            </button>
+            <a href="?tab={{ active_tab }}" class="btn btn-secondary" style="padding: 0.5rem 0.85rem; font-size: 0.85rem; text-decoration: none;">
+                Reset
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Claims Data Table -->
+<div class="claims-table-card">
+    <div class="claims-card-header">
+        <div>
+            <h3 style="font-size: 1rem; font-weight: 700; margin: 0;">
+                {% if active_tab == 'my_claims' %}My Submitted Expense Claims
+                {% elif active_tab == 'approvals' %}Claims Awaiting Your Review & Sanction
+                {% else %}Master Enterprise Expense Ledger{% endif %}
+            </h3>
+            <span class="count-info" style="font-size: 0.75rem;">Showing {{ claims|length }} of {{ total_claims_count }} records</span>
+        </div>
+        <div>
+            <span class="badge badge-live">
+                Live Database Records
+            </span>
+        </div>
+    </div>
+
+    <div class="table-container" style="overflow-x: auto;">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Document # & Date</th>
+                    <th>Employee</th>
+                    <th>Category / GL Account</th>
+                    <th>Vendor & Purpose</th>
+                    <th style="text-align: right;">Amount (Base + GST)</th>
+                    <th style="text-align: center;">Receipt</th>
+                    <th style="text-align: center;">Status</th>
+                    <th style="text-align: right;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in claims %}
+                <tr>
+                    <!-- Document # & Date -->
+                    <td>
+                        <div style="font-weight: 700; font-family: monospace; color: var(--color-accent);">{{ c.document_no }}</div>
+                        <div class="claim-muted-text" style="font-size: 0.75rem;">{{ c.expense_date|date:"d M Y" }}</div>
+                    </td>
+
+                    <!-- Employee -->
+                    <td>
+                        <div class="claim-primary-text" style="font-weight: 600;">{{ c.employee.first_name }} {{ c.employee.last_name }}</div>
+                        <div class="claim-muted-text" style="font-size: 0.75rem;">{{ c.employee.employee_code }} • {{ c.employee.department }}</div>
+                    </td>
+
+                    <!-- Category & GL -->
+                    <td>
+                        <div><strong class="claim-primary-text">{{ c.expense_category.name }}</strong></div>
+                        <div class="claim-muted-text" style="font-size: 0.72rem;">
+                            GL: {{ c.expense_category.gl_account.account_code }}
+                            {% if c.sub_category %} • {{ c.sub_category.name }}{% endif %}
+                        </div>
+                    </td>
+
+                    <!-- Vendor & Purpose -->
+                    <td style="max-width: 240px;">
+                        <div class="claim-primary-text" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500;">
+                            {{ c.business_purpose }}
+                        </div>
+                        <div class="claim-muted-text" style="font-size: 0.72rem;">
+                            {% if c.vendor_name %}{{ c.vendor_name }}{% else %}Direct Claim{% endif %}
+                            {% if c.invoice_reference %} | Inv: {{ c.invoice_reference }}{% endif %}
+                        </div>
+                    </td>
+
+                    <!-- Amount -->
+                    <td style="text-align: right;">
+                        <div style="font-weight: 800; font-family: monospace; font-size: 0.95rem; color: #10b981;">
+                            ₹{{ c.amount|floatformat:2 }}
+                        </div>
+                        <div class="claim-muted-text" style="font-size: 0.7rem;">
+                            Base: ₹{{ c.base_amount|floatformat:2 }}
+                            {% if c.tax_amount > 0 %}+ GST: ₹{{ c.tax_amount|floatformat:2 }}{% endif %}
+                        </div>
+                    </td>
+
+                    <!-- Receipt -->
+                    <td style="text-align: center;">
+                        {% with c.attachments.first as att %}
+                        {% if att %}
+                        <a href="{{ att.file.url }}" target="_blank" class="badge" style="background: rgba(14, 165, 233, 0.15); color: #0284c7; text-decoration: none; padding: 4px 8px; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 4px;" title="View Receipt: {{ att.filename }}">
+                            <i class="fa-solid fa-paperclip"></i> Receipt
+                        </a>
+                        {% else %}
+                        <span class="claim-muted-text" style="font-size: 0.75rem;">-</span>
+                        {% endif %}
+                        {% endwith %}
+                    </td>
+
+                    <!-- Status Badge -->
+                    <td style="text-align: center;">
+                        <span class="badge-status badge-{{ c.status|lower }}">
+                            {% if c.status == 'DRAFT' %}<i class="fa-solid fa-pen"></i> Draft
+                            {% elif c.status == 'SUBMITTED' %}<i class="fa-solid fa-clock"></i> Manager Review
+                            {% elif c.status == 'UNDER_REVIEW' %}<i class="fa-solid fa-scale-balanced"></i> Finance Audit
+                            {% elif c.status == 'APPROVED' %}<i class="fa-solid fa-check"></i> Approved
+                            {% elif c.status == 'PAID' %}<i class="fa-solid fa-check-double"></i> Paid & GL Posted
+                            {% elif c.status == 'REJECTED' %}<i class="fa-solid fa-ban"></i> Rejected
+                            {% endif %}
+                        </span>
+                        {% if c.status == 'PAID' and c.linked_journal %}
+                        <div style="font-size: 0.68rem; color: #10b981; font-family: monospace; margin-top: 2px;">
+                            JRN: {{ c.linked_journal.document_no }}
+                        </div>
+                        {% endif %}
+                    </td>
+
+                    <!-- Action Buttons -->
+                    <td style="text-align: right; white-space: nowrap;">
+                    <!-- Manager Review Action -->
+                    {% if c.status == 'SUBMITTED' and user_is_manager %}
+                    <button type="button" class="btn btn-primary" onclick="openManagerReviewModal('{{ c.id }}', '{{ c.document_no }}', '{{ c.employee.first_name }} {{ c.employee.last_name }}', '{{ c.amount }}', '{{ c.business_purpose|escapejs }}')" style="font-size: 0.75rem; padding: 4px 10px;">
+                        <i class="fa-solid fa-user-check"></i> Review
+                    </button>
+                    {% endif %}
+
+                    <!-- Finance Audit Action -->
+                    {% if c.status == 'UNDER_REVIEW' and user_is_finance %}
+                    <button type="button" class="btn btn-primary" onclick="openFinanceAuditModal('{{ c.id }}', '{{ c.document_no }}', '{{ c.employee.first_name }} {{ c.employee.last_name }}', '{{ c.amount }}', '{{ c.base_amount }}', '{{ c.tax_amount }}', '{{ c.invoice_reference|escapejs }}')" style="font-size: 0.75rem; padding: 4px 10px; background: #f59e0b; border-color: #f59e0b;">
+                        <i class="fa-solid fa-clipboard-check"></i> Audit
+                    </button>
+                    {% endif %}
+
+                    <!-- Finance Disbursement Action -->
+                    {% if c.status == 'APPROVED' and user_is_finance %}
+                    <button type="button" class="btn btn-primary" onclick="openDisburseModal('{{ c.id }}', '{{ c.document_no }}', '{{ c.employee.first_name }} {{ c.employee.last_name }}', '{{ c.amount }}', '{{ c.expense_category.name }}', '{{ c.expense_category.gl_account.account_code }}')" style="font-size: 0.75rem; padding: 4px 10px; background: #10b981; border-color: #10b981;">
+                        <i class="fa-solid fa-money-bill-transfer"></i> Disburse & GL
+                    </button>
+                    {% endif %}
+
+                    <!-- Draft Actions -->
+                    {% if c.status == 'DRAFT' and c.employee == current_emp %}
+                    <form method="POST" action="{% url 'dashboard_expense_delete' c.id %}" style="display: inline-block; margin-left: 4px;" onsubmit="return confirm('Are you sure you want to delete this draft claim?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger" style="font-size: 0.72rem; padding: 4px 8px;" title="Delete Draft">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </form>
+                    {% endif %}
+
+                    <!-- Detail Modal trigger -->
+                    <button type="button" class="btn btn-secondary" onclick="openClaimDetailModal('{{ c.document_no }}', '{{ c.employee.first_name }} {{ c.employee.last_name }}', '{{ c.expense_category.name }}', '{{ c.expense_date|date:'Y-m-d' }}', '{{ c.base_amount }}', '{{ c.tax_amount }}', '{{ c.amount }}', '{{ c.business_purpose|escapejs }}', '{{ c.vendor_name|escapejs }}', '{{ c.invoice_reference|escapejs }}', '{{ c.status }}', '{{ c.manager_remarks|escapejs }}', '{{ c.finance_remarks|escapejs }}', '{{ c.payment_utr|escapejs }}')" style="font-size: 0.75rem; padding: 4px 8px; margin-left: 4px;">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8" style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+                    <i class="fa-solid fa-receipt" style="font-size: 2.5rem; opacity: 0.3; margin-bottom: 0.75rem; display: block;"></i>
+                    <p style="font-size: 0.95rem; margin: 0;">No expense claims found matching this criteria.</p>
+                    <button type="button" class="btn btn-primary" onclick="openModal('claimExpenseModal')" style="margin-top: 1rem; font-size: 0.85rem;">
+                        <i class="fa-solid fa-plus-circle"></i> Create First Expense Claim
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<!-- ========================================== -->
+<!-- MODAL: + CLAIM EXPENSE                     -->
+<!-- ========================================== -->
+<div id="claimExpenseModal" class="modal-overlay">
+    <div class="modal-card-custom">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.85rem; margin-bottom: 1.25rem;">
+            <div>
+                <h3 style="font-size: 1.15rem; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fa-solid fa-file-invoice-dollar" style="color: #3b82f6;"></i> Submit New Expense Claim
+                </h3>
+                <span style="font-size: 0.75rem; color: var(--text-muted);">Employee Expense Reimbursement Request</span>
+            </div>
+            <button type="button" onclick="closeModal('claimExpenseModal')" style="background: none; border: none; color: var(--text-muted); font-size: 1.25rem; cursor: pointer;">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <form method="POST" action="{% url 'dashboard_expense_create' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                <!-- Category -->
+                <div>
+                    <label style="font-size: 0.8rem; font-weight: 700; margin-bottom: 0.35rem; display: block;">Expense Category *</label>
+                    <select id="expCategorySelect" name="category" class="form-control" required onchange="onCategoryChanged()" style="width: 100%; font-size: 0.85rem;">
+                        <option value="">-- Select Category --</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat.id }}" data-receipt-threshold="{{ cat.requires_receipt_above }}" data-limit="{{ cat.max_limit_per_claim }}">
+                            {{ cat.name }} (GL: {{ cat.gl_account.account_code }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- SubCategory -->
+                <div>
+                    <label style="font-size: 0.8rem; font-weight: 700; margin-bottom: 0.35rem; display: block;">Subcategory (Optional)</label>
+                    <select id="expSubCategorySelect" name="sub_category" class="form-control" style="width: 100%; font-size: 0.85rem;">
+                        <option value="">-- General / Direct --</option>
+                        {% for cat in categories %}
+                            {% for sub in cat.subcategories.all %}
+                            <option value="{{ sub.id }}" class="cat-sub-option cat-{{ cat.id }}">{{ sub.name }}</option>
+                            {% endfor %}
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                <!-- Date -->
+                <div>
+                    <label style="font-size: 0.8rem; font-weight: 700; margin-bottom: 0.35rem; display: block;">Expense Date *</label>
+                    <input type="date" name="expense_date" value="{{ today|date:'Y-m-d' }}" class="form-control" required style="width: 100%; font-size: 0.85rem;">
+                </div>
+
+                <!-- Base Amount -->
+                <div>
+                    <label style="font-size: 0.8rem; font-weight: 700; margin-bottom: 0.35rem; display: block;">Base Amount (₹) *</label>
+                    <input type="number" id="baseAmountInput" name="base_amount" step="0.01" min="0.01" class="form-control" required placeholder="0.00" oninput="calcTotalClaimAmount()" style="width: 100%; font-size: 0.85rem;">
+                </div>
+
+                <!-- Tax / GST Amount -->
+                <div>
+                    <label style="font-size: 0.8rem; font-weight: 700; margin-bottom: 0.35rem; display: block;">GST / Tax Amount (₹)</label>
+                    <input type="number" id="taxAmountInput" name="tax_amount" step="0.01" min="0" value="0.00" class="form-control" placeholder="0.00" oninput="calcTotalClaimAmount()" style="width: 100%; font-size: 0.85rem;">
+                </div>
+            </div>
+
+            <!-- Total Preview Banner -->
+            <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 0.65rem 1rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 0.85rem; font-weight: 600; color: #10b981;">Total Reimbursement Claim:</span>
+                <span id="totalClaimDisplay" style="font-size: 1.2rem; font-weight: 800; font-family: monospace; color: #10b981;">₹0.00</span>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                <!-- Vendor Name -->
+                <div>
+                    <label style="font-size: 0.8rem; font-weight: 700; margin-bottom: 0.35rem; display: block;">Vendor / Merchant Name</label>
+                    <input type="text" name="vendor_name" class="form-control" placeholder="e.g. Indian Railways, Hotel Taj, Bharat Biotech" style="width: 100%; font-size: 0.85rem;">
+                </div>
+
+                <!-- Invoice Number -->
+                <div>
+                    <label style="font-size: 0.8rem; font-weight: 700; margin-bottom: 0.35rem; display: block;">Bill / Tax Invoice Reference</label>
+                    <input type="text" name="invoice_number" class="form-control" placeholder="e.g. INV-98234 / Ticket PNR" style="width: 100%; font-size: 0.85rem;">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                <!-- Payment Mode -->
+                <div>
+                    <label style="font-size: 0.8rem; font-weight: 700; margin-bottom: 0.35rem; display: block;">Paid Via</label>
+                    <select name="payment_mode" class="form-control" style="width: 100%; font-size: 0.85rem;">
+                        <option value="BANK">Bank Transfer / IMPS / NEFT</option>
+                        <option value="UPI">UPI / GPay / PhonePe</option>
+                        <option value="CASH">Petty Cash</option>
+                        <option value="CHEQUE">Company Cheque</option>
+                    </select>
+                </div>
+
+                <!-- Receipt File Upload -->
+                <div>
+                    <label style="font-size: 0.8rem; font-weight: 700; margin-bottom: 0.35rem; display: block;">Receipt / Invoice File (Max 5MB)</label>
+                    <input type="file" name="receipt_file" class="form-control" accept=".pdf,.png,.jpg,.jpeg,.webp" style="width: 100%; font-size: 0.82rem; padding: 4px;">
+                </div>
+            </div>
+
+            <!-- Business Purpose -->
+            <div style="margin-bottom: 1.25rem;">
+                <label style="font-size: 0.8rem; font-weight: 700; margin-bottom: 0.35rem; display: block;">Business Purpose & Justification *</label>
+                <textarea name="business_purpose" rows="2" class="form-control" required placeholder="Detailed pharmaceutical business justification (e.g. Doctor visit transport in Delhi territory, QC sample reagents purchase)..." style="width: 100%; font-size: 0.85rem;"></textarea>
+            </div>
+
+            <!-- Actions -->
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('claimExpenseModal')">Cancel</button>
+                <button type="submit" name="action" value="draft" class="btn btn-secondary" style="font-weight: 600;">
+                    <i class="fa-solid fa-floppy-disk"></i> Save Draft
+                </button>
+                <button type="submit" name="action" value="submit" class="btn btn-primary" style="font-weight: 600;">
+                    <i class="fa-solid fa-paper-plane"></i> Submit for Approval
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- MODAL: MANAGER REVIEW                      -->
+<!-- ========================================== -->
+<div id="managerReviewModal" class="modal-overlay">
+    <div class="modal-card-custom" style="max-width: 520px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.85rem; margin-bottom: 1.25rem;">
+            <div>
+                <h3 style="font-size: 1.1rem; font-weight: 700; margin: 0;">Manager Claim Review</h3>
+                <span style="font-size: 0.75rem; color: var(--text-muted);" id="mgrReviewSubtitle">Review Subordinate Claim</span>
+            </div>
+            <button type="button" onclick="closeModal('managerReviewModal')" style="background: none; border: none; color: var(--text-muted); font-size: 1.25rem; cursor: pointer;">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 8px; padding: 0.85rem; margin-bottom: 1rem; font-size: 0.85rem;">
+            <div><strong>Employee:</strong> <span id="mgrModalEmp"></span></div>
+            <div><strong>Claim Amount:</strong> <span id="mgrModalAmount" style="color: #10b981; font-weight: 800; font-family: monospace;"></span></div>
+            <div style="margin-top: 0.35rem;"><strong>Purpose:</strong> <span id="mgrModalPurpose" style="color: var(--text-secondary);"></span></div>
+        </div>
+
+        <form id="managerReviewForm" method="POST" action="">
+            {% csrf_token %}
+            <div style="margin-bottom: 1rem;">
+                <label style="font-size: 0.8rem; font-weight: 700; margin-bottom: 0.35rem; display: block;">Remarks / Rejection Reason (Required if Rejecting)</label>
+                <textarea name="remarks" id="mgrRemarks" rows="2" class="form-control" placeholder="Approval feedback or reason for rejection..." style="width: 100%; font-size: 0.85rem;"></textarea>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('managerReviewModal')">Cancel</button>
+                <button type="submit" name="action" value="manager_reject" class="btn btn-danger" style="font-weight: 600;">
+                    <i class="fa-solid fa-ban"></i> Reject Claim
+                </button>
+                <button type="submit" name="action" value="manager_approve" class="btn btn-primary" style="font-weight: 600;">
+                    <i class="fa-solid fa-check"></i> Approve Claim
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- MODAL: FINANCE AUDIT                       -->
+<!-- ========================================== -->
+<div id="financeAuditModal" class="modal-overlay">
+    <div class="modal-card-custom" style="max-width: 540px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.85rem; margin-bottom: 1.25rem;">
+            <div>
+                <h3 style="font-size: 1.1rem; font-weight: 700; margin: 0; color: #f59e0b;">
+                    <i class="fa-solid fa-scale-balanced"></i> Finance & Accounts Sanction Audit
+                </h3>
+                <span style="font-size: 0.75rem; color: var(--text-muted);" id="finAuditSubtitle">Verify GST & Policy Compliance</span>
+            </div>
+            <button type="button" onclick="closeModal('financeAuditModal')" style="background: none; border: none; color: var(--text-muted); font-size: 1.25rem; cursor: pointer;">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 8px; padding: 0.85rem; margin-bottom: 1rem; font-size: 0.85rem;">
+            <div><strong>Employee:</strong> <span id="finModalEmp"></span></div>
+            <div><strong>Tax Invoice / Bill Reference:</strong> <span id="finModalInv"></span></div>
+            <div style="display: flex; justify-content: space-between; margin-top: 0.35rem; border-top: 1px dashed rgba(245, 158, 11, 0.3); padding-top: 0.35rem;">
+                <span>Base: <strong id="finModalBase"></strong> | GST: <strong id="finModalTax"></strong></span>
+                <span>Total: <strong id="finModalTotal" style="color: #10b981; font-family: monospace;"></strong></span>
+            </div>
+        </div>
+
+        <form id="financeAuditForm" method="POST" action="">
+            {% csrf_token %}
+            <div style="margin-bottom: 1rem;">
+                <label style="font-size: 0.8rem; font-weight: 700; margin-bottom: 0.35rem; display: block;">Finance Audit Remarks</label>
+                <textarea name="remarks" id="finRemarks" rows="2" class="form-control" placeholder="Tax verification notes, GST reconciliation, or audit observations..." style="width: 100%; font-size: 0.85rem;"></textarea>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('financeAuditModal')">Cancel</button>
+                <button type="submit" name="action" value="finance_reject" class="btn btn-danger" style="font-weight: 600;">
+                    <i class="fa-solid fa-ban"></i> Reject Claim
+                </button>
+                <button type="submit" name="action" value="finance_approve" class="btn btn-primary" style="background: #f59e0b; border-color: #f59e0b; font-weight: 600;">
+                    <i class="fa-solid fa-stamp"></i> Sanction Claim
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- MODAL: DISBURSEMENT & GL JOURNAL POSTING   -->
+<!-- ========================================== -->
+<div id="disburseExpenseModal" class="modal-overlay">
+    <div class="modal-card-custom" style="max-width: 580px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.85rem; margin-bottom: 1.25rem;">
+            <div>
+                <h3 style="font-size: 1.15rem; font-weight: 700; margin: 0; color: #10b981; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fa-solid fa-money-bill-transfer"></i> Disburse Funds & Post GL Journal
+                </h3>
+                <span style="font-size: 0.75rem; color: var(--text-muted);" id="disburseSubtitle">Automated Double-Entry General Ledger</span>
+            </div>
+            <button type="button" onclick="closeModal('disburseExpenseModal')" style="background: none; border: none; color: var(--text-muted); font-size: 1.25rem; cursor: pointer;">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <form id="disburseExpenseForm" method="POST" action="">
+            {% csrf_token %}
+
+            <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 0.85rem; margin-bottom: 1rem; font-size: 0.85rem;">
+                <div>Beneficiary Employee: <strong id="disburseEmp"></strong></div>
+                <div style="font-size: 1.1rem; font-weight: 800; font-family: monospace; color: #10b981; margin-top: 0.25rem;">
+                    Net Disbursable: ₹<span id="disburseAmount"></span>
+                </div>
+            </div>
+
+            <!-- Double-Entry GL Ledger Preview Box -->
+            <div style="background: #020617; border: 1px solid var(--border-color); border-radius: 8px; padding: 0.85rem; margin-bottom: 1rem; font-size: 0.78rem; font-family: monospace;">
+                <div style="color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase; margin-bottom: 0.4rem; font-weight: 700;">
+                    Double-Entry GL Ledger Posting Scheme:
+                </div>
+                <div style="color: #38bdf8;">• DR. Expense A/c (<span id="disburseGlCode"></span> - <span id="disburseCatName"></span>)</div>
+                <div style="color: #38bdf8;">• DR. 2100 - Input GST / Tax Receivable (if GST > 0)</div>
+                <div style="color: #4ade80;">• CR. Selected Bank / Cash Disbursing Account</div>
+            </div>
+
+            <div style="margin-bottom: 1rem;">
+                <label style="font-size: 0.8rem; font-weight: 700; margin-bottom: 0.35rem; display: block;">Disbursing Bank / Cash Account *</label>
+                <select name="bank_account_id" class="form-control" required style="width: 100%; font-size: 0.85rem;">
+                    <option value="">-- Select Bank / Cash Account --</option>
+                    {% for acc in payment_accounts %}
+                    <option value="{{ acc.id }}" {% if acc.account_code == '1002' %}selected{% endif %}>
+                        {{ acc.account_code }} - {{ acc.name }} (₹{{ acc.current_balance|floatformat:2 }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="margin-bottom: 1.25rem;">
+                <label style="font-size: 0.8rem; font-weight: 700; margin-bottom: 0.35rem; display: block;">Payment UTR / IMPS / Cheque Reference #</label>
+                <input type="text" name="payment_utr" class="form-control" placeholder="e.g. UTR-HDFC-982348234 / CASH-DISB-01" required style="width: 100%; font-size: 0.85rem;">
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('disburseExpenseModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary" style="background: #10b981; border-color: #10b981; font-weight: 600;">
+                    <i class="fa-solid fa-check-double"></i> Confirm & Post GL Journal
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- MODAL: CLAIM DETAIL VIEW                   -->
+<!-- ========================================== -->
+<div id="claimDetailModal" class="modal-overlay">
+    <div class="modal-card-custom" style="max-width: 560px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.85rem; margin-bottom: 1rem;">
+            <div>
+                <h3 style="font-size: 1.1rem; font-weight: 700; margin: 0; font-family: monospace;" id="detailClaimId"></h3>
+                <span style="font-size: 0.75rem; color: var(--text-muted);">21 CFR Audit Trail & Claim Details</span>
+            </div>
+            <button type="button" onclick="closeModal('claimDetailModal')" style="background: none; border: none; color: var(--text-muted); font-size: 1.25rem; cursor: pointer;">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.85rem;">
+            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 0.4rem;">
+                <span style="color: var(--text-muted);">Employee:</span>
+                <span id="detailEmp" style="font-weight: 600;"></span>
+            </div>
+            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 0.4rem;">
+                <span style="color: var(--text-muted);">Category & Date:</span>
+                <span id="detailCatDate"></span>
+            </div>
+            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 0.4rem;">
+                <span style="color: var(--text-muted);">Vendor / Invoice:</span>
+                <span id="detailVendor"></span>
+            </div>
+            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 0.4rem;">
+                <span style="color: var(--text-muted);">Base Amount + Tax:</span>
+                <span id="detailBreakdown"></span>
+            </div>
+            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 0.4rem;">
+                <span style="color: var(--text-muted);">Net Claim Total:</span>
+                <span id="detailTotal" style="font-weight: 800; font-family: monospace; color: #10b981; font-size: 1rem;"></span>
+            </div>
+            <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.4rem;">
+                <span style="color: var(--text-muted); display: block; margin-bottom: 0.2rem;">Business Purpose:</span>
+                <div id="detailPurpose" style="font-size: 0.82rem; color: var(--text-secondary); background: rgba(255,255,255,0.03); padding: 0.5rem; border-radius: 6px;"></div>
+            </div>
+            <div id="detailManagerBlock" style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.4rem; display: none;">
+                <span style="color: var(--text-muted); display: block; margin-bottom: 0.2rem;">Manager Remarks:</span>
+                <div id="detailManagerRemarks" style="font-size: 0.82rem; color: #06b6d4;"></div>
+            </div>
+            <div id="detailFinanceBlock" style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.4rem; display: none;">
+                <span style="color: var(--text-muted); display: block; margin-bottom: 0.2rem;">Finance Audit Remarks:</span>
+                <div id="detailFinanceRemarks" style="font-size: 0.82rem; color: #f59e0b;"></div>
+            </div>
+            <div id="detailUtrBlock" style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.4rem; display: none;">
+                <span style="color: var(--text-muted); display: block; margin-bottom: 0.2rem;">Payment UTR:</span>
+                <div id="detailUtr" style="font-size: 0.82rem; font-family: monospace; color: #10b981;"></div>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; margin-top: 1.25rem;">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('claimDetailModal')">Close</button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Live total calculation in Claim Modal
+    function calcTotalClaimAmount() {
+        const base = parseFloat(document.getElementById('baseAmountInput').value) || 0;
+        const tax = parseFloat(document.getElementById('taxAmountInput').value) || 0;
+        const total = base + tax;
+        document.getElementById('totalClaimDisplay').innerText = '₹' + total.toFixed(2);
+    }
+
+    // Filter subcategories dynamically
+    function onCategoryChanged() {
+        const catSelect = document.getElementById('expCategorySelect');
+        const subSelect = document.getElementById('expSubCategorySelect');
+        const selectedCatId = catSelect.value;
+
+        const options = subSelect.querySelectorAll('.cat-sub-option');
+        options.forEach(opt => {
+            if (!selectedCatId || opt.classList.contains('cat-' + selectedCatId)) {
+                opt.style.display = 'block';
+            } else {
+                opt.style.display = 'none';
+            }
+        });
+        subSelect.value = '';
+    }
+
+    // Open Manager Review Modal
+    function openManagerReviewModal(claimId, docNo, empName, amount, purpose) {
+        document.getElementById('mgrReviewSubtitle').innerText = 'Claim: ' + docNo;
+        document.getElementById('mgrModalEmp').innerText = empName;
+        document.getElementById('mgrModalAmount').innerText = '₹' + parseFloat(amount).toFixed(2);
+        document.getElementById('mgrModalPurpose').innerText = purpose;
+        document.getElementById('managerReviewForm').action = '/dashboard/expenses/action/' + claimId + '/';
+        openModal('managerReviewModal');
+    }
+
+    // Open Finance Audit Modal
+    function openFinanceAuditModal(claimId, docNo, empName, total, base, tax, inv) {
+        document.getElementById('finAuditSubtitle').innerText = 'Claim: ' + docNo;
+        document.getElementById('finModalEmp').innerText = empName;
+        document.getElementById('finModalInv').innerText = inv || 'N/A';
+        document.getElementById('finModalBase').innerText = '₹' + parseFloat(base).toFixed(2);
+        document.getElementById('finModalTax').innerText = '₹' + parseFloat(tax).toFixed(2);
+        document.getElementById('finModalTotal').innerText = '₹' + parseFloat(total).toFixed(2);
+        document.getElementById('financeAuditForm').action = '/dashboard/expenses/action/' + claimId + '/';
+        openModal('financeAuditModal');
+    }
+
+    // Open Disburse Modal
+    function openDisburseModal(claimId, docNo, empName, amount, catName, glCode) {
+        document.getElementById('disburseSubtitle').innerText = 'Claim: ' + docNo;
+        document.getElementById('disburseEmp').innerText = empName;
+        document.getElementById('disburseAmount').innerText = parseFloat(amount).toFixed(2);
+        document.getElementById('disburseCatName').innerText = catName;
+        document.getElementById('disburseGlCode').innerText = glCode;
+        document.getElementById('disburseExpenseForm').action = '/dashboard/expenses/disburse/' + claimId + '/';
+        openModal('disburseExpenseModal');
+    }
+
+    // Open Claim Detail Modal
+    function openClaimDetailModal(docNo, emp, cat, date, base, tax, total, purpose, vendor, inv, status, mgrRemarks, finRemarks, utr) {
+        document.getElementById('detailClaimId').innerText = docNo;
+        document.getElementById('detailEmp').innerText = emp;
+        document.getElementById('detailCatDate').innerText = cat + ' • ' + date;
+        document.getElementById('detailVendor').innerText = (vendor || 'Direct') + (inv ? ' (Inv: ' + inv + ')' : '');
+        document.getElementById('detailBreakdown').innerText = '₹' + parseFloat(base).toFixed(2) + ' + ₹' + parseFloat(tax).toFixed(2);
+        document.getElementById('detailTotal').innerText = '₹' + parseFloat(total).toFixed(2);
+        document.getElementById('detailPurpose').innerText = purpose;
+
+        const mgrBlock = document.getElementById('detailManagerBlock');
+        if (mgrRemarks) {
+            mgrBlock.style.display = 'block';
+            document.getElementById('detailManagerRemarks').innerText = mgrRemarks;
+        } else {
+            mgrBlock.style.display = 'none';
+        }
+
+        const finBlock = document.getElementById('detailFinanceBlock');
+        if (finRemarks) {
+            finBlock.style.display = 'block';
+            document.getElementById('detailFinanceRemarks').innerText = finRemarks;
+        } else {
+            finBlock.style.display = 'none';
+        }
+
+        const utrBlock = document.getElementById('detailUtrBlock');
+        if (utr) {
+            utrBlock.style.display = 'block';
+            document.getElementById('detailUtr').innerText = utr;
+        } else {
+            utrBlock.style.display = 'none';
+        }
+
+        openModal('claimDetailModal');
+    }
+</script>
+{% endblock %}

@@ -2,22 +2,33 @@
 {% load static %}
 
 {% block title %}Field Force Reports & Compliance | Celldus Pharma{% endblock %}
-{% block page_title %}SFA Field Analytics & Compliance Reports{% endblock %}
+{% block page_title %}
+<span class="sfa-title-container">
+    <span class="sfa-badge-row">
+        <span class="sfa-pill-badge sfa-pill-live"><span class="sfa-live-dot"></span> SFA FIELD INTELLIGENCE</span>
+        <span class="sfa-pill-badge sfa-pill-audit"><i class="fa-solid fa-shield-halved"></i> 21 CFR AUDIT-READY</span>
+    </span>
+    <span class="sfa-heading-text">SFA Field Analytics & Compliance Reports</span>
+</span>
+{% endblock %}
 {% block page_subtitle %}Audit-Ready Field Force Performance: Doctor Coverage, Detailing POB, Geofence Deviations, and Working Hours Tracking{% endblock %}
 
 {% block top_actions %}
-<div class="top-actions-grid" style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
-    <a href="{% url 'dashboard_field_tracking' %}" class="btn btn-secondary">
-        <i class="fa-solid fa-map-location-dot"></i> Live Cockpit
+<div class="sfa-top-actions">
+    <a href="{% url 'dashboard_field_tracking' %}" class="sfa-btn" title="Live Cockpit">
+        <i class="fa-solid fa-map-location-dot" style="color: #60a5fa;"></i>
+        <span>Live Cockpit</span>
     </a>
-    <a href="{% url 'dashboard_field_portal' %}" class="btn btn-secondary">
-        <i class="fa-solid fa-mobile-screen"></i> MR Mobile View
+    <a href="{% url 'dashboard_field_portal' %}" class="sfa-btn" title="MR Mobile View">
+        <i class="fa-solid fa-mobile-screen" style="color: #34d399;"></i>
+        <span>MR Mobile View</span>
     </a>
-    <button class="btn btn-secondary" onclick="exportActiveTableToCsv()">
-        <i class="fa-solid fa-file-csv"></i> Export CSV
+    <button class="sfa-btn" onclick="exportActiveTableToCsv()" type="button" title="Export CSV">
+        <i class="fa-solid fa-file-csv" style="color: #fbbf24;"></i>
+        <span>Export CSV</span>
     </button>
-    <button id="themeToggleBtn" class="theme-toggle-btn" type="button" title="Switch Theme (Dark / Light)">
-        <i id="themeToggleIcon" class="fa-solid fa-sun"></i>
+    <button id="themeToggleBtn" class="sfa-btn" type="button" title="Switch Theme (Dark / Light)">
+        <i id="themeToggleIcon" class="fa-solid fa-sun" style="color: #f59e0b;"></i>
         <span id="themeToggleText">Light Mode</span>
     </button>
 </div>
@@ -26,20 +37,119 @@
 
 {% block extra_css %}
 <style>
+    /* Header & Top Bar Enhancements */
+    .top-bar {
+        align-items: flex-start !important;
+        margin-bottom: 2rem !important;
+        gap: 1.5rem !important;
+    }
+    .top-bar-title {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+    .sfa-title-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0.45rem;
+    }
+    .sfa-badge-row {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+    }
+    .sfa-pill-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.25rem 0.65rem;
+        border-radius: 9999px;
+        line-height: 1.2;
+    }
+    .sfa-pill-live {
+        background: rgba(99, 102, 241, 0.15);
+        color: #818cf8;
+        border: 1px solid rgba(99, 102, 241, 0.35);
+    }
+    .sfa-live-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #6366f1;
+        box-shadow: 0 0 8px #6366f1;
+        animation: pulse-dot 1.5s infinite;
+    }
+    .sfa-pill-audit {
+        background: rgba(16, 185, 129, 0.12);
+        color: #34d399;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .sfa-heading-text {
+        font-size: 1.65rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        color: var(--text-primary, #ffffff);
+        line-height: 1.2;
+    }
+
+    /* Premium Top Header Actions */
+    .sfa-top-actions {
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.6rem !important;
+        flex-wrap: wrap !important;
+        justify-content: flex-end !important;
+    }
+    .sfa-btn {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 0.5rem !important;
+        height: 38px !important;
+        padding: 0 1.05rem !important;
+        border-radius: 10px !important;
+        font-size: 0.82rem !important;
+        font-weight: 600 !important;
+        line-height: 1 !important;
+        color: var(--text-primary, #e2e8f0) !important;
+        background: rgba(255, 255, 255, 0.04) !important;
+        border: 1px solid var(--border-color, rgba(255, 255, 255, 0.12)) !important;
+        cursor: pointer !important;
+        text-decoration: none !important;
+        white-space: nowrap !important;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18) !important;
+        backdrop-filter: blur(8px) !important;
+        width: auto !important;
+        box-sizing: border-box !important;
+    }
+    .sfa-btn:hover {
+        background: rgba(255, 255, 255, 0.08) !important;
+        border-color: rgba(99, 102, 241, 0.45) !important;
+        color: #ffffff !important;
+        transform: translateY(-1.5px) !important;
+        box-shadow: 0 4px 14px rgba(99, 102, 241, 0.2) !important;
+    }
+    .sfa-btn:active {
+        transform: translateY(0) !important;
+    }
+
     /* Report Navigation Tabs */
     .report-tabs {
         display: flex;
-        gap: 0.5rem;
+        gap: 0.6rem;
         margin-bottom: 1.5rem;
         border-bottom: 1px solid var(--border-color);
-        padding-bottom: 0.75rem;
+        padding-bottom: 0.85rem;
         overflow-x: auto;
     }
     .report-tab-btn {
         display: inline-flex;
         align-items: center;
-        gap: 0.5rem;
-        padding: 0.6rem 1.25rem;
+        gap: 0.55rem;
+        padding: 0.65rem 1.35rem;
         border-radius: 9999px;
         background: rgba(255, 255, 255, 0.03);
         border: 1px solid var(--border-color);
@@ -54,27 +164,309 @@
     .report-tab-btn:hover {
         color: var(--text-primary);
         border-color: var(--border-hover);
+        background: rgba(255, 255, 255, 0.06);
     }
     .report-tab-btn.active {
-        background: var(--color-primary);
-        border-color: var(--color-primary);
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        border-color: #6366f1;
         color: #ffffff;
-        box-shadow: 0 4px 15px var(--color-primary-glow);
+        box-shadow: 0 4px 16px rgba(99, 102, 241, 0.35);
     }
 
     /* Filter Form Card */
     .report-filter-panel {
-        background: var(--card-bg);
-        border: 1px solid var(--border-color);
-        border-radius: 14px;
-        padding: 1.25rem;
+        background: var(--card-bg, #0f172a);
+        border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+        border-radius: 16px;
+        padding: 1.35rem 1.5rem;
         margin-bottom: 1.5rem;
+        box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3);
     }
     .filter-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 1rem;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.15rem;
         align-items: flex-end;
+    }
+
+    /* Executive Metric KPI Bar */
+    .reports-kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+        gap: 0.85rem;
+        margin-bottom: 1.35rem;
+    }
+    .reports-kpi-card {
+        background: var(--card-bg, #0f172a);
+        border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+        border-radius: 14px;
+        padding: 0.95rem 1.15rem;
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        cursor: pointer !important;
+        user-select: none !important;
+        position: relative !important;
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease !important;
+    }
+    .reports-kpi-card:hover {
+        transform: translateY(-3px) !important;
+        border-color: rgba(99, 102, 241, 0.5) !important;
+        box-shadow: 0 8px 24px rgba(99, 102, 241, 0.2) !important;
+    }
+    .reports-kpi-card.active-kpi {
+        border-color: #6366f1 !important;
+        background: rgba(99, 102, 241, 0.12) !important;
+        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.45), 0 8px 24px rgba(99, 102, 241, 0.25) !important;
+        transform: translateY(-2px) !important;
+    }
+    .kpi-click-tag {
+        margin-left: auto;
+        font-size: 0.62rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 3px 8px;
+        border-radius: 9999px;
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text-muted, #94a3b8);
+        transition: all 0.2s ease;
+        white-space: nowrap;
+    }
+    .reports-kpi-card:hover .kpi-click-tag,
+    .reports-kpi-card.active-kpi .kpi-click-tag {
+        background: #6366f1;
+        color: #ffffff;
+    }
+    .kpi-icon-pill {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+    }
+    .kpi-data-box {
+        display: flex;
+        flex-direction: column;
+    }
+    .kpi-label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--text-muted, #94a3b8);
+        margin-bottom: 2px;
+    }
+    .kpi-val {
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: var(--text-primary, #ffffff);
+        line-height: 1.2;
+    }
+
+    /* Responsive Scrollable Container & Smooth Scrollbar */
+    .table-responsive {
+        width: 100% !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(99, 102, 241, 0.4) transparent;
+    }
+    .table-responsive::-webkit-scrollbar {
+        height: 7px;
+    }
+    .table-responsive::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 9999px;
+    }
+    .table-responsive::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.18);
+        border-radius: 9999px;
+    }
+    .table-responsive::-webkit-scrollbar-thumb:hover {
+        background: #6366f1;
+    }
+
+    /* Premium Table Styling */
+    .rep-table {
+        width: 100% !important;
+        min-width: 1220px !important;
+        border-collapse: separate !important;
+        border-spacing: 0 !important;
+    }
+    .rep-table th {
+        background: rgba(255, 255, 255, 0.02);
+        color: #94a3b8;
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 0.95rem 1.1rem;
+        border-bottom: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+        white-space: nowrap;
+        text-align: left;
+    }
+    .rep-table th:last-child {
+        text-align: center;
+        padding-right: 1.5rem;
+    }
+    .rep-table td {
+        padding: 0.95rem 1.1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        vertical-align: middle;
+        font-size: 0.84rem;
+        color: var(--text-primary, #f1f5f9);
+    }
+    .rep-table td:last-child {
+        text-align: center;
+        padding-right: 1.5rem;
+        white-space: nowrap;
+    }
+    .rep-table tr:hover td {
+        background: rgba(255, 255, 255, 0.025);
+    }
+    .rep-visit-id {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+        font-weight: 700 !important;
+        color: #60a5fa !important;
+        white-space: nowrap !important;
+        letter-spacing: 0.02em;
+        display: inline-block;
+    }
+
+    /* User Cell with Avatar */
+    .rep-user-flex {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    .rep-user-avatar {
+        width: 34px;
+        height: 34px;
+        border-radius: 9px;
+        background: linear-gradient(135deg, #6366f1, #06b6d4);
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.78rem;
+        font-weight: 700;
+        flex-shrink: 0;
+        box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+    }
+    .rep-user-name {
+        font-weight: 700;
+        color: var(--text-primary, #ffffff);
+        font-size: 0.86rem;
+        line-height: 1.3;
+    }
+    .rep-user-code {
+        font-size: 0.72rem;
+        color: var(--text-muted, #94a3b8);
+        font-family: monospace;
+    }
+
+    /* Pulse Dot for Live Active Duty */
+    @keyframes pulse-dot {
+        0% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.35; transform: scale(0.85); }
+        100% { opacity: 1; transform: scale(1); }
+    }
+    .pulse-dot-green {
+        display: inline-block;
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #10b981;
+        box-shadow: 0 0 8px #10b981;
+        animation: pulse-dot 1.4s infinite ease-in-out;
+        margin-right: 4px;
+        vertical-align: middle;
+    }
+
+    /* Light Theme Overrides */
+    [data-theme="light"] .sfa-heading-text {
+        color: #0f172a !important;
+    }
+    [data-theme="light"] .sfa-pill-live {
+        background: rgba(99, 102, 241, 0.1);
+        color: #4f46e5;
+        border-color: rgba(99, 102, 241, 0.25);
+    }
+    [data-theme="light"] .sfa-pill-audit {
+        background: rgba(16, 185, 129, 0.1);
+        color: #059669;
+        border-color: rgba(16, 185, 129, 0.25);
+    }
+    [data-theme="light"] .sfa-btn {
+        background: #ffffff !important;
+        border-color: #e2e8f0 !important;
+        color: #334155 !important;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+    }
+    [data-theme="light"] .sfa-btn:hover {
+        background: #f8fafc !important;
+        border-color: #6366f1 !important;
+        color: #4338ca !important;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.12) !important;
+    }
+    [data-theme="light"] .table-responsive::-webkit-scrollbar-track {
+        background: #f1f5f9;
+    }
+    [data-theme="light"] .table-responsive::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+    }
+    [data-theme="light"] .rep-visit-id {
+        color: #2563eb !important;
+    }
+    [data-theme="light"] .report-filter-panel {
+        background: #ffffff !important;
+        border-color: #e2e8f0 !important;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05) !important;
+    }
+    [data-theme="light"] .reports-kpi-card {
+        background: #ffffff !important;
+        border-color: #e2e8f0 !important;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04) !important;
+    }
+    [data-theme="light"] .reports-kpi-card:hover {
+        border-color: #6366f1 !important;
+        box-shadow: 0 8px 20px rgba(99, 102, 241, 0.12) !important;
+    }
+    [data-theme="light"] .reports-kpi-card.active-kpi {
+        background: rgba(99, 102, 241, 0.08) !important;
+        border-color: #6366f1 !important;
+        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.35), 0 8px 20px rgba(99, 102, 241, 0.12) !important;
+    }
+    [data-theme="light"] .kpi-click-tag {
+        background: #f1f5f9;
+        color: #64748b;
+    }
+    [data-theme="light"] .reports-kpi-card.active-kpi .kpi-click-tag {
+        background: #6366f1;
+        color: #ffffff;
+    }
+    [data-theme="light"] .kpi-val {
+        color: #0f172a !important;
+    }
+    [data-theme="light"] .rep-table th {
+        background: #f8fafc !important;
+        color: #475569 !important;
+        border-bottom-color: #e2e8f0 !important;
+    }
+    [data-theme="light"] .rep-table td {
+        border-bottom-color: #f1f5f9 !important;
+        color: #1e293b !important;
+    }
+    [data-theme="light"] .rep-table tr:hover td {
+        background: #f8fafc !important;
+    }
+    [data-theme="light"] .rep-user-name {
+        color: #0f172a !important;
     }
 </style>
 {% endblock %}
@@ -83,15 +475,15 @@
 <div class="reports-container">
     <!-- Tabs Header -->
     <div class="report-tabs">
-        <a href="?tab=visits&start_date={{ start_date }}&end_date={{ end_date }}" class="report-tab-btn {% if active_tab == 'visits' %}active{% endif %}">
+        <a href="?tab=visits&start_date={{ start_date }}&end_date={{ end_date }}{% if selected_territory %}&territory={{ selected_territory }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="report-tab-btn {% if active_tab == 'visits' %}active{% endif %}">
             <i class="fa-solid fa-stethoscope"></i> Doctor Detailing & Visits
             <span class="badge badge-info" style="font-size: 0.7rem; padding: 2px 6px;">{{ visits|length }}</span>
         </a>
-        <a href="?tab=attendance&start_date={{ start_date }}&end_date={{ end_date }}" class="report-tab-btn {% if active_tab == 'attendance' %}active{% endif %}">
+        <a href="?tab=attendance&start_date={{ start_date }}&end_date={{ end_date }}{% if selected_territory %}&territory={{ selected_territory }}{% endif %}{% if active_status_filter and active_status_filter != 'all' %}&status_filter={{ active_status_filter }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="report-tab-btn {% if active_tab == 'attendance' %}active{% endif %}">
             <i class="fa-solid fa-clock-rotate-left"></i> Duty Attendance & Hours
-            <span class="badge badge-success" style="font-size: 0.7rem; padding: 2px 6px;">{{ attendance_list|length }}</span>
+            <span class="badge badge-success" style="font-size: 0.7rem; padding: 2px 6px;">{{ att_stats.total }}</span>
         </a>
-        <a href="?tab=exceptions&start_date={{ start_date }}&end_date={{ end_date }}" class="report-tab-btn {% if active_tab == 'exceptions' %}active{% endif %}">
+        <a href="?tab=exceptions&start_date={{ start_date }}&end_date={{ end_date }}{% if selected_territory %}&territory={{ selected_territory }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="report-tab-btn {% if active_tab == 'exceptions' %}active{% endif %}">
             <i class="fa-solid fa-triangle-exclamation"></i> GPS Geofence Exceptions
             {% if exception_count > 0 %}
             <span class="badge badge-warning" style="font-size: 0.7rem; padding: 2px 6px;">{{ exception_count }}</span>
@@ -101,22 +493,28 @@
 
     <!-- Date Range & Filters Panel -->
     <div class="report-filter-panel">
-        <form method="GET" action="" class="filter-grid">
+        <form method="GET" action="{% url 'dashboard_field_reports' %}" class="filter-grid" id="sfaFilterForm">
             <input type="hidden" name="tab" value="{{ active_tab }}">
+            <input type="hidden" name="status_filter" id="statusFilterInput" value="{{ active_status_filter|default:'all' }}">
             
             <div class="form-group" style="margin-bottom: 0;">
-                <label class="form-label" style="font-size: 0.8rem;">From Date:</label>
-                <input type="date" name="start_date" value="{{ start_date }}" class="form-control" style="font-size: 0.85rem;">
+                <label class="form-label" style="font-size: 0.8rem; font-weight: 600;"><i class="fa-solid fa-magnifying-glass"></i> Search:</label>
+                <input type="text" name="q" id="sfaSearchInput" value="{{ search_query }}" placeholder="Search Doctor, Rep, Code, City..." class="form-control" style="font-size: 0.85rem; border-radius: 8px;">
             </div>
 
             <div class="form-group" style="margin-bottom: 0;">
-                <label class="form-label" style="font-size: 0.8rem;">To Date:</label>
-                <input type="date" name="end_date" value="{{ end_date }}" class="form-control" style="font-size: 0.85rem;">
+                <label class="form-label" style="font-size: 0.8rem; font-weight: 600;"><i class="fa-regular fa-calendar"></i> From Date:</label>
+                <input type="date" name="start_date" id="sfaStartDate" value="{{ start_date }}" class="form-control" style="font-size: 0.85rem; border-radius: 8px;">
             </div>
 
             <div class="form-group" style="margin-bottom: 0;">
-                <label class="form-label" style="font-size: 0.8rem;">Territory:</label>
-                <select name="territory" class="form-control" style="font-size: 0.85rem;">
+                <label class="form-label" style="font-size: 0.8rem; font-weight: 600;"><i class="fa-regular fa-calendar"></i> To Date:</label>
+                <input type="date" name="end_date" id="sfaEndDate" value="{{ end_date }}" class="form-control" style="font-size: 0.85rem; border-radius: 8px;">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" style="font-size: 0.8rem; font-weight: 600;"><i class="fa-solid fa-map-pin"></i> Territory:</label>
+                <select name="territory" id="sfaTerritorySelect" class="form-control" style="font-size: 0.85rem; border-radius: 8px;">
                     <option value="">All Territories</option>
                     {% for t in territories %}
                     <option value="{{ t.id }}" {% if selected_territory == t.id|stringformat:"s" %}selected{% endif %}>{{ t.name }}</option>
@@ -124,12 +522,39 @@
                 </select>
             </div>
 
-            <div style="display: flex; gap: 0.5rem;">
-                <button type="submit" class="btn btn-primary" style="flex: 1;">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" style="font-size: 0.8rem; font-weight: 600;"><i class="fa-solid fa-list-check"></i> Status:</label>
+                {% if active_tab == 'visits' %}
+                <select id="sfaStatusSelect" class="form-control" style="font-size: 0.85rem; border-radius: 8px;" onchange="onStatusSelectChange(this.value)">
+                    <option value="all" {% if active_status_filter == 'all' or not active_status_filter %}selected{% endif %}>All Visit Statuses</option>
+                    <option value="COMPLETED" {% if active_status_filter == 'COMPLETED' or active_status_filter == 'completed' %}selected{% endif %}>Completed</option>
+                    <option value="IN_PROGRESS" {% if active_status_filter == 'IN_PROGRESS' or active_status_filter == 'in_progress' %}selected{% endif %}>In Progress</option>
+                    <option value="PLANNED" {% if active_status_filter == 'PLANNED' or active_status_filter == 'planned' %}selected{% endif %}>Planned</option>
+                    <option value="CANCELLED" {% if active_status_filter == 'CANCELLED' or active_status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                </select>
+                {% elif active_tab == 'attendance' %}
+                <select id="sfaStatusSelect" class="form-control" style="font-size: 0.85rem; border-radius: 8px;" onchange="selectKpiCard(this.value)">
+                    <option value="all" {% if active_status_filter == 'all' or not active_status_filter %}selected{% endif %}>All Staff Records ({{ att_stats.total }})</option>
+                    <option value="checked_in" {% if active_status_filter == 'checked_in' %}selected{% endif %}>Checked In ({{ att_stats.punched }})</option>
+                    <option value="active" {% if active_status_filter == 'active' %}selected{% endif %}>Active on Duty ({{ att_stats.active }})</option>
+                    <option value="completed" {% if active_status_filter == 'completed' %}selected{% endif %}>Completed Shifts ({{ att_stats.completed }})</option>
+                    <option value="leave_absent" {% if active_status_filter == 'leave_absent' %}selected{% endif %}>Leave / Absent ({{ att_stats.leave_absent }})</option>
+                </select>
+                {% else %}
+                <select id="sfaStatusSelect" class="form-control" style="font-size: 0.85rem; border-radius: 8px;" onchange="onStatusSelectChange(this.value)">
+                    <option value="all" {% if active_status_filter == 'all' or not active_status_filter %}selected{% endif %}>All Exceptions</option>
+                    <option value="VISIT_GEOFENCE_DEVIATION" {% if active_status_filter == 'VISIT_GEOFENCE_DEVIATION' %}selected{% endif %}>Visit Deviation</option>
+                    <option value="ATTENDANCE_FLAG" {% if active_status_filter == 'ATTENDANCE_FLAG' %}selected{% endif %}>Attendance Flag</option>
+                </select>
+                {% endif %}
+            </div>
+
+            <div style="display: flex; gap: 0.5rem; align-items: flex-end;">
+                <button type="submit" class="btn btn-primary" style="flex: 1; border-radius: 8px; font-weight: 600; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); border: none; height: 38px;">
                     <i class="fa-solid fa-filter"></i> Apply Filter
                 </button>
-                <a href="?tab={{ active_tab }}" class="btn btn-secondary" title="Reset Filters">
-                    <i class="fa-solid fa-xmark"></i>
+                <a href="?tab={{ active_tab }}" class="btn btn-secondary" title="Reset Filters" style="border-radius: 8px; height: 38px; display: inline-flex; align-items: center; justify-content: center; padding: 0 1rem;">
+                    <i class="fa-solid fa-rotate-left"></i>
                 </a>
             </div>
         </form>
@@ -139,60 +564,71 @@
     <!-- TAB 1: DOCTOR DETAILING & VISITS REPORT                   -->
     <!-- ======================================================== -->
     {% if active_tab == 'visits' %}
-    <div class="panel">
+    <div class="panel" style="padding: 0; overflow: hidden; border-radius: 16px;">
         <div class="table-responsive">
-            <table class="table" id="reportExportTable">
+            <table class="rep-table" id="reportExportTable">
                 <thead>
                     <tr>
-                        <th>Visit #</th>
-                        <th>Date & Time</th>
-                        <th>Representative</th>
+                        <th style="white-space: nowrap;">Visit #</th>
+                        <th style="white-space: nowrap;">Date & Time</th>
+                        <th style="white-space: nowrap;">Representative</th>
                         <th>Customer / Doctor</th>
-                        <th>Type</th>
-                        <th>Duration</th>
+                        <th style="white-space: nowrap; text-align: center;">Type</th>
+                        <th style="white-space: nowrap;">Duration</th>
                         <th>Doctor Feedback</th>
-                        <th>POB Amount</th>
-                        <th>Geofence</th>
-                        <th>Status</th>
+                        <th style="white-space: nowrap;">POB Amount</th>
+                        <th style="white-space: nowrap;">Geofence</th>
+                        <th style="white-space: nowrap; text-align: center; padding-right: 1.5rem;">Status</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for v in visits %}
-                    <tr>
-                        <td><strong>{{ v.visit_no }}</strong></td>
-                        <td>
-                            <div>{{ v.visit_date }}</div>
-                            <span style="font-size: 0.75rem; color: var(--text-muted);">{{ v.start_time|time:"H:i" }} - {{ v.end_time|time:"H:i"|default:"Active" }}</span>
+                    <tr class="visit-row" data-status="{{ v.visit_status }}" data-geofence="{{ v.geofence_status }}" data-search="{{ v.visit_no|lower }} {{ v.customer.name|lower }} {{ v.customer.city|lower|default:'' }} {{ v.customer.customer_type|lower }} {{ v.employee.first_name|lower }} {{ v.employee.last_name|lower }} {{ v.employee.employee_code|lower }} {{ v.visit_status|lower }}">
+                        <td style="white-space: nowrap;"><strong class="rep-visit-id">{{ v.visit_no }}</strong></td>
+                        <td style="white-space: nowrap;">
+                            <div style="font-weight: 600;">{{ v.visit_date|date:"d M Y" }}</div>
+                            <span style="font-size: 0.72rem; color: var(--text-muted);">
+                                {{ v.start_time|time:"H:i" }}{% if v.end_time %} - {{ v.end_time|time:"H:i" }}{% else %} <span style="color: #10b981;">(Active)</span>{% endif %}
+                            </span>
                         </td>
-                        <td>
-                            <strong>{{ v.employee.first_name }} {{ v.employee.last_name }}</strong>
-                            <div style="font-size: 0.75rem; color: var(--text-muted);">{{ v.employee.employee_code }}</div>
+                        <td style="white-space: nowrap;">
+                            <div class="rep-user-flex">
+                                <div class="rep-user-avatar">
+                                    {{ v.employee.first_name|slice:":1" }}{{ v.employee.last_name|slice:":1"|default:"" }}
+                                </div>
+                                <div>
+                                    <div class="rep-user-name">{{ v.employee.first_name }} {{ v.employee.last_name }}</div>
+                                    <div class="rep-user-code">{{ v.employee.employee_code }}</div>
+                                </div>
+                            </div>
                         </td>
-                        <td>
+                        <td style="min-width: 170px;">
                             <strong style="color: var(--text-primary);">{{ v.customer.name }}</strong>
-                            <div style="font-size: 0.75rem; color: var(--text-secondary);">{{ v.customer.city|default:"Delhi NCR" }}</div>
+                            {% if v.customer.city %}
+                            <div style="font-size: 0.72rem; color: var(--text-muted);">{{ v.customer.city }}</div>
+                            {% endif %}
                         </td>
-                        <td><span class="badge badge-info" style="font-size: 0.7rem;">{{ v.customer.customer_type }}</span></td>
-                        <td>
+                        <td style="white-space: nowrap; text-align: center;"><span class="badge badge-info" style="font-size: 0.7rem;">{{ v.customer.customer_type }}</span></td>
+                        <td style="white-space: nowrap;">
                             {% if v.duration_minutes %}
                             <strong style="color: #10b981;">{{ v.duration_minutes }} min</strong>
                             {% else %}
-                            <span style="color: var(--text-muted);">In Progress</span>
+                            <span style="color: #06b6d4; font-weight: 600;">In Progress</span>
                             {% endif %}
                         </td>
-                        <td style="max-width: 200px; font-size: 0.8rem; color: var(--text-secondary); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
-                            {{ v.doctor_response|default:"Promoted cardiovascular & antibiotic portfolio." }}
+                        <td style="max-width: 200px; font-size: 0.8rem; color: var(--text-secondary); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" title="{{ v.doctor_response }}">
+                            {{ v.doctor_response|default:"--" }}
                         </td>
-                        <td>
+                        <td style="white-space: nowrap;">
                             {% with orders=v.orders_booked.all %}
                             {% if orders %}
-                                <strong>₹{{ orders.0.booked_amount|floatformat:2 }}</strong>
+                                <strong style="color: #10b981;">₹{{ orders.0.booked_amount|floatformat:2 }}</strong>
                             {% else %}
                                 <span style="color: var(--text-muted);">₹0.00</span>
                             {% endif %}
                             {% endwith %}
                         </td>
-                        <td>
+                        <td style="white-space: nowrap;">
                             {% if v.geofence_status == 'VALID' %}
                             <span class="badge badge-success"><i class="fa-solid fa-shield-check"></i> VALID ({{ v.distance_to_target_meters|floatformat:0 }}m)</span>
                             {% elif v.geofence_status == 'REQUIRES_REVIEW' %}
@@ -201,7 +637,7 @@
                             <span class="badge badge-danger">OUTSIDE</span>
                             {% endif %}
                         </td>
-                        <td>
+                        <td style="white-space: nowrap; text-align: center; padding-right: 1.5rem;">
                             <span class="badge {% if v.visit_status == 'COMPLETED' %}badge-success{% else %}badge-info{% endif %}">
                                 {{ v.visit_status }}
                             </span>
@@ -209,11 +645,21 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="10" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">
-                            No detailing visits match the selected date range.
+                        <td colspan="10" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                            <i class="fa-solid fa-clipboard-check" style="font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.4; display: block;"></i>
+                            No detailing visits match the selected filter criteria.
                         </td>
                     </tr>
                     {% endfor %}
+                    <tr id="visitEmptyRow" style="display: none;">
+                        <td colspan="10" style="text-align: center; padding: 2.8rem; color: var(--text-muted);">
+                            <i class="fa-solid fa-filter-circle-xmark" style="font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.5; display: block; color: #6366f1;"></i>
+                            <span>No doctor detailing visits match your search or filter.</span>
+                            <div style="margin-top: 0.6rem;">
+                                <button type="button" class="btn btn-secondary" onclick="resetLiveFilters()" style="font-size: 0.78rem; padding: 4px 12px; border-radius: 6px;">Clear Filter</button>
+                            </div>
+                        </td>
+                    </tr>
                 </tbody>
             </table>
         </div>
@@ -223,9 +669,63 @@
     <!-- TAB 2: DUTY ATTENDANCE & HOURS REPORT                     -->
     <!-- ======================================================== -->
     {% elif active_tab == 'attendance' %}
-    <div class="panel">
+    <!-- KPI Metric Summary Bar -->
+    <div class="reports-kpi-grid">
+        <div class="reports-kpi-card {% if not active_status_filter or active_status_filter == 'all' %}active-kpi{% endif %}" data-kpi-filter="all" onclick="selectKpiCard('all')" title="Click to view all staff records">
+            <div class="kpi-icon-pill" style="background: rgba(99, 102, 241, 0.12); color: #6366f1;">
+                <i class="fa-solid fa-users"></i>
+            </div>
+            <div class="kpi-data-box">
+                <span class="kpi-label">Staff Records</span>
+                <span class="kpi-val">{{ att_stats.total }}</span>
+            </div>
+            <span class="kpi-click-tag"><i class="fa-solid fa-list-check"></i> All</span>
+        </div>
+        <div class="reports-kpi-card {% if active_status_filter == 'checked_in' %}active-kpi{% endif %}" data-kpi-filter="checked_in" onclick="selectKpiCard('checked_in')" title="Click to filter Checked In records">
+            <div class="kpi-icon-pill" style="background: rgba(16, 185, 129, 0.12); color: #10b981;">
+                <i class="fa-solid fa-fingerprint"></i>
+            </div>
+            <div class="kpi-data-box">
+                <span class="kpi-label">Checked In</span>
+                <span class="kpi-val">{{ att_stats.punched }}</span>
+            </div>
+            <span class="kpi-click-tag"><i class="fa-solid fa-filter"></i> Filter</span>
+        </div>
+        <div class="reports-kpi-card {% if active_status_filter == 'active' %}active-kpi{% endif %}" data-kpi-filter="active" onclick="selectKpiCard('active')" title="Click to filter Active on Duty records">
+            <div class="kpi-icon-pill" style="background: rgba(6, 182, 212, 0.12); color: #06b6d4;">
+                <i class="fa-solid fa-person-walking"></i>
+            </div>
+            <div class="kpi-data-box">
+                <span class="kpi-label">Active on Duty</span>
+                <span class="kpi-val">{{ att_stats.active }}</span>
+            </div>
+            <span class="kpi-click-tag"><i class="fa-solid fa-filter"></i> Filter</span>
+        </div>
+        <div class="reports-kpi-card {% if active_status_filter == 'completed' %}active-kpi{% endif %}" data-kpi-filter="completed" onclick="selectKpiCard('completed')" title="Click to filter Completed Shifts">
+            <div class="kpi-icon-pill" style="background: rgba(168, 85, 247, 0.12); color: #a855f7;">
+                <i class="fa-solid fa-flag-checkered"></i>
+            </div>
+            <div class="kpi-data-box">
+                <span class="kpi-label">Completed Shifts</span>
+                <span class="kpi-val">{{ att_stats.completed }}</span>
+            </div>
+            <span class="kpi-click-tag"><i class="fa-solid fa-filter"></i> Filter</span>
+        </div>
+        <div class="reports-kpi-card {% if active_status_filter == 'leave_absent' %}active-kpi{% endif %}" data-kpi-filter="leave_absent" onclick="selectKpiCard('leave_absent')" title="Click to filter Leave / Absent records">
+            <div class="kpi-icon-pill" style="background: rgba(245, 158, 11, 0.12); color: #f59e0b;">
+                <i class="fa-solid fa-calendar-xmark"></i>
+            </div>
+            <div class="kpi-data-box">
+                <span class="kpi-label">Leave / Absent</span>
+                <span class="kpi-val">{{ att_stats.leave_absent }}</span>
+            </div>
+            <span class="kpi-click-tag"><i class="fa-solid fa-filter"></i> Filter</span>
+        </div>
+    </div>
+
+    <div class="panel" style="padding: 0; overflow: hidden; border-radius: 16px;">
         <div class="table-responsive">
-            <table class="table" id="reportExportTable">
+            <table class="rep-table" id="reportExportTable">
                 <thead>
                     <tr>
                         <th>Date</th>
@@ -241,60 +741,141 @@
                 </thead>
                 <tbody>
                     {% for att in attendance_list %}
-                    <tr>
-                        <td><strong>{{ att.date }}</strong></td>
-                        <td>
-                            <strong>{{ att.employee.first_name }} {{ att.employee.last_name }}</strong>
-                            <div style="font-size: 0.75rem; color: var(--text-muted);">{{ att.employee.employee_code }}</div>
+                    <tr class="att-row" data-punched="{% if att.is_punched %}1{% else %}0{% endif %}" data-active="{% if att.is_active_on_duty %}1{% else %}0{% endif %}" data-completed="{% if att.is_punched and att.is_checked_out %}1{% else %}0{% endif %}" data-leave="{% if not att.is_punched %}1{% else %}0{% endif %}" data-search="{{ att.employee.first_name|lower }} {{ att.employee.last_name|lower }} {{ att.employee.employee_code|lower }} {{ att.employee.designation|lower|default:'' }} {{ att.work_mode|lower|default:'' }} {{ att.status|lower }}">
+                        <td style="white-space: nowrap;">
+                            <strong style="color: var(--text-primary);">{{ att.date|date:"d M Y" }}</strong>
+                            <div style="font-size: 0.7rem; color: var(--text-muted);">{{ att.date|date:"l" }}</div>
                         </td>
-                        <td>{{ att.employee.designation|default:"MR" }}</td>
-                        <td><span class="badge badge-info" style="font-size: 0.7rem;">{{ att.work_mode }}</span></td>
                         <td>
-                            {% if att.check_in_time %}
-                            <strong>{{ att.check_in_time|time:"H:i" }}</strong>
-                            <div style="font-size: 0.72rem; color: var(--text-muted);">Lat: {{ att.check_in_lat|floatformat:4 }}</div>
+                            <div class="rep-user-flex">
+                                <div class="rep-user-avatar">
+                                    {{ att.employee.first_name|slice:":1" }}{{ att.employee.last_name|slice:":1"|default:"" }}
+                                </div>
+                                <div>
+                                    <div class="rep-user-name">{{ att.employee.first_name }} {{ att.employee.last_name }}</div>
+                                    <div class="rep-user-code">{{ att.employee.employee_code }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="color: var(--text-secondary); font-size: 0.82rem;">
+                            {{ att.employee.designation|default:"--" }}
+                        </td>
+                        <td>
+                            {% if att.is_punched %}
+                            <span class="badge" style="background: rgba(99, 102, 241, 0.12); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.25); font-size: 0.7rem; font-weight: 700;">
+                                {{ att.work_mode|default:"PUNCHED" }}
+                            </span>
+                            {% elif att.status == 'ON_LEAVE' %}
+                            <span class="badge" style="background: rgba(245, 158, 11, 0.12); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.25); font-size: 0.7rem; font-weight: 700;">
+                                On Leave
+                            </span>
+                            {% elif att.status == 'ABSENT' %}
+                            <span class="badge" style="background: rgba(239, 68, 68, 0.12); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.25); font-size: 0.7rem; font-weight: 700;">
+                                Absent
+                            </span>
+                            {% elif att.status == 'HALF_DAY' %}
+                            <span class="badge" style="background: rgba(6, 182, 212, 0.12); color: #06b6d4; border: 1px solid rgba(6, 182, 212, 0.25); font-size: 0.7rem; font-weight: 700;">
+                                Half Day
+                            </span>
                             {% else %}
-                            --:--
+                            <span style="color: var(--text-muted); font-size: 0.78rem;">--</span>
                             {% endif %}
                         </td>
                         <td>
-                            {% if att.check_out_time %}
-                            <strong>{{ att.check_out_time|time:"H:i" }}</strong>
+                            {% if att.display_in %}
+                            <strong style="color: var(--text-primary); font-size: 0.88rem;">{{ att.display_in }}</strong>
+                            {% if att.check_in_lat %}
+                            <div style="font-size: 0.7rem; color: var(--text-muted); font-family: monospace;">Lat: {{ att.check_in_lat|floatformat:4 }}</div>
+                            {% endif %}
                             {% else %}
-                            <span style="color: var(--text-muted);">Active / Not Punched</span>
+                            <span style="color: var(--text-muted); font-size: 0.82rem;">--:--</span>
                             {% endif %}
                         </td>
                         <td>
-                            {% if att.total_working_hours %}
-                            <strong style="color: #10b981;">{{ att.total_working_hours|floatformat:1 }} hrs</strong>
+                            {% if att.is_punched %}
+                                {% if att.display_out %}
+                                <strong style="color: var(--text-primary); font-size: 0.88rem;">{{ att.display_out }}</strong>
+                                {% if att.check_out_lat %}
+                                <div style="font-size: 0.7rem; color: var(--text-muted); font-family: monospace;">Lat: {{ att.check_out_lat|floatformat:4 }}</div>
+                                {% endif %}
+                                {% elif att.is_active_on_duty %}
+                                <span class="badge" style="background: rgba(16, 185, 129, 0.12); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.25); font-weight: 700; font-size: 0.72rem;">
+                                    <span class="pulse-dot-green"></span> Active on Duty
+                                </span>
+                                {% else %}
+                                <span class="badge" style="background: rgba(245, 158, 11, 0.12); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.25); font-size: 0.72rem;">
+                                    No Check-Out
+                                </span>
+                                {% endif %}
+                            {% else %}
+                            <span style="color: var(--text-muted); font-size: 0.82rem;">--:--</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if att.calculated_duration != '--' %}
+                                {% if att.is_active_on_duty %}
+                                <strong style="color: #06b6d4;">{{ att.calculated_duration }}</strong>
+                                {% else %}
+                                <strong style="color: #10b981;">{{ att.calculated_duration }}</strong>
+                                {% endif %}
                             {% else %}
                             <span style="color: var(--text-muted);">--</span>
                             {% endif %}
                         </td>
                         <td>
                             {% if att.check_in_accuracy %}
-                            ±{{ att.check_in_accuracy|floatformat:0 }}m
+                                {% if att.check_in_accuracy <= 30 %}
+                                <span style="color: #10b981; font-weight: 600;">±{{ att.check_in_accuracy|floatformat:0 }}m</span>
+                                {% elif att.check_in_accuracy <= 80 %}
+                                <span style="color: #60a5fa; font-weight: 600;">±{{ att.check_in_accuracy|floatformat:0 }}m</span>
+                                {% else %}
+                                <span style="color: #f59e0b; font-weight: 600;">±{{ att.check_in_accuracy|floatformat:0 }}m</span>
+                                {% endif %}
                             {% else %}
-                            --
+                            <span style="color: var(--text-muted);">--</span>
                             {% endif %}
                         </td>
                         <td>
-                            {% if att.check_in_status == 'VALID' %}
-                            <span class="badge badge-success"><i class="fa-solid fa-circle-check"></i> Validated</span>
-                            {% elif att.check_in_status == 'REQUIRES_REVIEW' %}
-                            <span class="badge badge-warning"><i class="fa-solid fa-triangle-exclamation"></i> Under Review</span>
+                            {% if att.is_punched %}
+                                {% if att.is_mock_location %}
+                                <span class="badge badge-danger"><i class="fa-solid fa-ban"></i> Mock GPS</span>
+                                {% elif att.check_in_status == 'VALID' %}
+                                <span class="badge badge-success" style="background: rgba(16, 185, 129, 0.12); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.25); font-weight: 600;">
+                                    <i class="fa-solid fa-circle-check"></i> Validated
+                                </span>
+                                {% elif att.check_in_status == 'POOR_ACCURACY' %}
+                                <span class="badge badge-warning" style="background: rgba(245, 158, 11, 0.12); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.25); font-weight: 600;">
+                                    <i class="fa-solid fa-satellite-dish"></i> Low Accuracy
+                                </span>
+                                {% elif att.check_in_status == 'REQUIRES_REVIEW' %}
+                                <span class="badge badge-danger" style="background: rgba(239, 68, 68, 0.12); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.25); font-weight: 600;">
+                                    <i class="fa-solid fa-triangle-exclamation"></i> Flagged
+                                </span>
+                                {% else %}
+                                <span class="badge" style="background: rgba(148, 163, 184, 0.12); color: #94a3b8;">Normal</span>
+                                {% endif %}
                             {% else %}
-                            <span class="badge" style="background: rgba(148, 163, 184, 0.15); color: #94a3b8;">Normal</span>
+                            <span style="color: var(--text-muted); font-size: 0.78rem;">--</span>
                             {% endif %}
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="9" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">
+                        <td colspan="9" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                            <i class="fa-solid fa-clipboard-user" style="font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.4; display: block;"></i>
                             No attendance records match the selected date range.
                         </td>
                     </tr>
                     {% endfor %}
+                    <tr id="attEmptyRow" style="display: none;">
+                        <td colspan="9" style="text-align: center; padding: 2.8rem; color: var(--text-muted);">
+                            <i class="fa-solid fa-filter-circle-xmark" style="font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.5; display: block; color: #6366f1;"></i>
+                            <span>No attendance records match this status filter.</span>
+                            <div style="margin-top: 0.6rem;">
+                                <button type="button" class="btn btn-secondary" onclick="selectKpiCard('all')" style="font-size: 0.78rem; padding: 4px 12px; border-radius: 6px;">View All Staff Records</button>
+                            </div>
+                        </td>
+                    </tr>
                 </tbody>
             </table>
         </div>
@@ -304,9 +885,9 @@
     <!-- TAB 3: GPS GEOFENCE & COMPLIANCE EXCEPTIONS               -->
     <!-- ======================================================== -->
     {% elif active_tab == 'exceptions' %}
-    <div class="panel">
+    <div class="panel" style="padding: 0; overflow: hidden; border-radius: 16px;">
         <div class="table-responsive">
-            <table class="table" id="reportExportTable">
+            <table class="rep-table" id="reportExportTable">
                 <thead>
                     <tr>
                         <th>Date</th>
@@ -320,7 +901,7 @@
                 </thead>
                 <tbody>
                     {% for exc in exceptions %}
-                    <tr>
+                    <tr class="exc-row" data-type="{{ exc.type }}" data-search="{{ exc.employee_name|lower }} {{ exc.employee_code|lower }} {{ exc.target|lower }} {{ exc.reason|lower }} {{ exc.type|lower }}">
                         <td><strong>{{ exc.date }}</strong></td>
                         <td>
                             <span class="badge badge-warning" style="font-size: 0.72rem;">
@@ -354,6 +935,15 @@
                         </td>
                     </tr>
                     {% endfor %}
+                    <tr id="excEmptyRow" style="display: none;">
+                        <td colspan="7" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">
+                            <i class="fa-solid fa-filter-circle-xmark" style="color: #6366f1; font-size: 1.5rem; margin-bottom: 0.5rem;"></i>
+                            <p>No compliance deviations match your filter or search.</p>
+                            <div style="margin-top: 0.6rem;">
+                                <button type="button" class="btn btn-secondary" onclick="resetLiveFilters()" style="font-size: 0.78rem; padding: 4px 12px; border-radius: 6px;">Clear Filter</button>
+                            </div>
+                        </td>
+                    </tr>
                 </tbody>
             </table>
         </div>
@@ -364,7 +954,223 @@
 
 {% block extra_js %}
 <script>
-    // Export Table to CSV
+    // Unified Status Dropdown Change Handler
+    function onStatusSelectChange(val) {
+        const statusInput = document.getElementById('statusFilterInput');
+        if (statusInput) statusInput.value = val;
+
+        const activeTab = "{{ active_tab }}";
+        if (activeTab === 'attendance') {
+            selectKpiCard(val);
+        } else {
+            updateUrlParam('status_filter', val);
+            applyAllFilters();
+        }
+    }
+
+    // Interactive KPI Card Filtering Logic
+    function selectKpiCard(filterType) {
+        // 1. Update visual active state on cards
+        const cards = document.querySelectorAll('.reports-kpi-card');
+        cards.forEach(card => {
+            if (card.getAttribute('data-kpi-filter') === filterType) {
+                card.classList.add('active-kpi');
+            } else {
+                card.classList.remove('active-kpi');
+            }
+        });
+
+        // 2. Sync hidden form input & status dropdown
+        const statusInput = document.getElementById('statusFilterInput');
+        if (statusInput) statusInput.value = filterType;
+
+        const statusSelect = document.getElementById('sfaStatusSelect');
+        if (statusSelect && statusSelect.value !== filterType) {
+            statusSelect.value = filterType;
+        }
+
+        // 3. Update browser URL without page reload
+        updateUrlParam('status_filter', filterType);
+
+        // 4. Apply combined filtering (status + live search query)
+        applyAllFilters();
+    }
+
+    // Helper to safely update URL search param without reload
+    function updateUrlParam(key, val) {
+        try {
+            const url = new URL(window.location);
+            if (!val || val === 'all') {
+                url.searchParams.delete(key);
+            } else {
+                url.searchParams.set(key, val);
+            }
+            window.history.replaceState({}, '', url);
+        } catch (e) {}
+    }
+
+    // Reset Live Filters
+    function resetLiveFilters() {
+        const searchInput = document.getElementById('sfaSearchInput');
+        if (searchInput) searchInput.value = '';
+
+        const statusSelect = document.getElementById('sfaStatusSelect');
+        if (statusSelect) statusSelect.value = 'all';
+
+        const statusInput = document.getElementById('statusFilterInput');
+        if (statusInput) statusInput.value = 'all';
+
+        const activeTab = "{{ active_tab }}";
+        if (activeTab === 'attendance') {
+            selectKpiCard('all');
+        } else {
+            updateUrlParam('status_filter', 'all');
+            applyAllFilters();
+        }
+    }
+
+    // Master Client-side Live Filter for the currently active tab
+    function applyAllFilters() {
+        const searchInput = document.getElementById('sfaSearchInput');
+        const searchTerm = (searchInput ? searchInput.value : '').toLowerCase().trim();
+
+        const statusInput = document.getElementById('statusFilterInput');
+        const statusSelect = document.getElementById('sfaStatusSelect');
+        const statusFilter = (statusInput ? statusInput.value : (statusSelect ? statusSelect.value : 'all')) || 'all';
+
+        // Filter Attendance rows
+        const attRows = document.querySelectorAll('.att-row');
+        if (attRows.length > 0) {
+            let visibleCount = 0;
+            attRows.forEach(row => {
+                let statusMatch = false;
+                if (statusFilter === 'all') {
+                    statusMatch = true;
+                } else if (statusFilter === 'checked_in') {
+                    statusMatch = (row.getAttribute('data-punched') === '1');
+                } else if (statusFilter === 'active') {
+                    statusMatch = (row.getAttribute('data-active') === '1');
+                } else if (statusFilter === 'completed') {
+                    statusMatch = (row.getAttribute('data-completed') === '1');
+                } else if (statusFilter === 'leave_absent') {
+                    statusMatch = (row.getAttribute('data-leave') === '1');
+                }
+
+                let searchMatch = true;
+                if (searchTerm) {
+                    const rowSearch = (row.getAttribute('data-search') || row.innerText).toLowerCase();
+                    searchMatch = rowSearch.includes(searchTerm);
+                }
+
+                if (statusMatch && searchMatch) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            const emptyRow = document.getElementById('attEmptyRow');
+            if (emptyRow) {
+                emptyRow.style.display = (visibleCount === 0) ? '' : 'none';
+            }
+        }
+
+        // Filter Visit rows
+        const visitRows = document.querySelectorAll('.visit-row');
+        if (visitRows.length > 0) {
+            let visibleCount = 0;
+            visitRows.forEach(row => {
+                let statusMatch = true;
+                if (statusFilter && statusFilter !== 'all') {
+                    const rStatus = (row.getAttribute('data-status') || '').toUpperCase();
+                    statusMatch = (rStatus === statusFilter.toUpperCase());
+                }
+
+                let searchMatch = true;
+                if (searchTerm) {
+                    const rowSearch = (row.getAttribute('data-search') || row.innerText).toLowerCase();
+                    searchMatch = rowSearch.includes(searchTerm);
+                }
+
+                if (statusMatch && searchMatch) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            const emptyRow = document.getElementById('visitEmptyRow');
+            if (emptyRow) {
+                emptyRow.style.display = (visibleCount === 0) ? '' : 'none';
+            }
+        }
+
+        // Filter Exceptions rows
+        const excRows = document.querySelectorAll('.exc-row');
+        if (excRows.length > 0) {
+            let visibleCount = 0;
+            excRows.forEach(row => {
+                let statusMatch = true;
+                if (statusFilter && statusFilter !== 'all') {
+                    const rType = row.getAttribute('data-type') || '';
+                    statusMatch = (rType === statusFilter);
+                }
+
+                let searchMatch = true;
+                if (searchTerm) {
+                    const rowSearch = (row.getAttribute('data-search') || row.innerText).toLowerCase();
+                    searchMatch = rowSearch.includes(searchTerm);
+                }
+
+                if (statusMatch && searchMatch) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            const emptyRow = document.getElementById('excEmptyRow');
+            if (emptyRow) {
+                emptyRow.style.display = (visibleCount === 0) ? '' : 'none';
+            }
+        }
+    }
+
+    // Initialize on DOM load
+    document.addEventListener('DOMContentLoaded', function () {
+        // Connect live search input
+        const searchInput = document.getElementById('sfaSearchInput');
+        if (searchInput) {
+            searchInput.addEventListener('input', applyAllFilters);
+            searchInput.addEventListener('keyup', applyAllFilters);
+        }
+
+        // Sync initial status filter from URL or hidden input
+        const urlParams = new URLSearchParams(window.location.search);
+        const filterFromUrl = urlParams.get('status_filter');
+        const activeTab = "{{ active_tab }}";
+
+        if (filterFromUrl) {
+            const statusInput = document.getElementById('statusFilterInput');
+            if (statusInput) statusInput.value = filterFromUrl;
+
+            const statusSelect = document.getElementById('sfaStatusSelect');
+            if (statusSelect) statusSelect.value = filterFromUrl;
+
+            if (activeTab === 'attendance' && ['checked_in', 'active', 'completed', 'leave_absent'].includes(filterFromUrl)) {
+                selectKpiCard(filterFromUrl);
+            } else {
+                applyAllFilters();
+            }
+        } else {
+            applyAllFilters();
+        }
+    });
+
+    // Export Table to CSV (Only currently visible/filtered rows)
     function exportActiveTableToCsv() {
         const table = document.getElementById('reportExportTable');
         if (!table) return;
@@ -373,14 +1179,19 @@
         const rows = table.querySelectorAll('tr');
 
         for (let i = 0; i < rows.length; i++) {
+            const r = rows[i];
+            if (r.id === 'attEmptyRow' || r.id === 'visitEmptyRow' || r.id === 'excEmptyRow' || r.style.display === 'none') continue;
+
             const row = [];
-            const cols = rows[i].querySelectorAll('td, th');
+            const cols = r.querySelectorAll('td, th');
             for (let j = 0; j < cols.length; j++) {
                 let data = cols[j].innerText.replace(/(\r\n|\n|\r)/gm, ' ').replace(/(\s\s+)/g, ' ').trim();
                 data = data.replace(/"/g, '""');
                 row.push('"' + data + '"');
             }
-            csv.push(row.join(','));
+            if (row.length > 0) {
+                csv.push(row.join(','));
+            }
         }
 
         const csvContent = 'data:text/csv;charset=utf-8,' + csv.join('\n');

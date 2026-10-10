@@ -154,6 +154,10 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MAX_UPLOAD_SIZE = 5 * 1024 * 1024  # 5MB per receipt attachment
+
 # SMTP Email Settings for Password Reset
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'mail.rakle.in'

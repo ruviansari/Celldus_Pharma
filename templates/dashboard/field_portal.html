@@ -556,7 +556,7 @@
 <!-- MODAL: ACTIVE VISIT DETAILING, SAMPLES & POB FORM         -->
 <!-- ======================================================== -->
 <div id="activeVisitModal" class="modal-overlay" style="display: none; align-items: center; justify-content: center; z-index: 1050;">
-    <div class="modal-container" style="max-width: 750px; width: 95%; max-height: 90vh; overflow-y: auto;">
+    <div class="modal-box" style="max-width: 750px; width: 95%; max-height: 90vh; overflow-y: auto;">
         <div class="modal-header">
             <div>
                 <h3 id="detailingModalCustName" style="margin: 0; font-size: 1.2rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
@@ -568,7 +568,7 @@
                 <span id="liveVisitTimer" class="badge badge-warning" style="font-size: 0.9rem; padding: 4px 10px;">
                     <i class="fa-solid fa-stopwatch"></i> 00m 00s
                 </span>
-                <button type="button" class="modal-close" onclick="closeModal('activeVisitModal')">&times;</button>
+                <button type="button" class="modal-close-btn" onclick="closeModal('activeVisitModal')" title="Close">&times;</button>
             </div>
         </div>
 
@@ -658,28 +658,33 @@
 <!-- MODAL: DEVIATION / GEOFENCE JUSTIFICATION REASON         -->
 <!-- ======================================================== -->
 <div id="deviationReasonModal" class="modal-overlay" style="display: none; align-items: center; justify-content: center; z-index: 1060;">
-    <div class="modal-container" style="max-width: 500px; width: 90%;">
+    <div class="modal-box" style="max-width: 520px; width: 92%; box-sizing: border-box;">
         <div class="modal-header">
-            <h3 style="margin: 0; color: #f59e0b; display: flex; align-items: center; gap: 0.5rem;">
+            <h3 style="margin: 0; color: #f59e0b; display: flex; align-items: center; gap: 0.6rem; font-size: 1.18rem; font-weight: 700;">
                 <i class="fa-solid fa-triangle-exclamation"></i> Geofence Boundary Alert
             </h3>
-            <button type="button" class="modal-close" onclick="closeModal('deviationReasonModal')">&times;</button>
+            <button type="button" class="modal-close-btn" onclick="closeModal('deviationReasonModal')" title="Close">&times;</button>
         </div>
         <div class="modal-body">
-            <p id="deviationModalMessage" style="font-size: 0.88rem; color: var(--text-primary); margin-bottom: 1rem;">
+            <div id="deviationModalMessage" style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 10px; padding: 0.85rem 1rem; color: var(--text-primary); font-size: 0.88rem; line-height: 1.5; margin-bottom: 1.25rem;">
                 You appear to be away from the registered customer location.
-            </p>
-            <div class="form-group">
-                <label class="form-label">Justification / Operational Reason:</label>
-                <textarea id="deviationReasonText" class="form-control" rows="3" placeholder="e.g. Doctor met at hospital private annex / clinic renovation in progress."></textarea>
-                <small style="color: var(--text-muted); display: block; margin-top: 0.35rem;">
-                    This visit will be recorded as <strong>REQUIRES_REVIEW</strong> for supervisor approval without blocking your work.
+            </div>
+            <div class="form-group" style="margin-bottom: 0.5rem;">
+                <label class="form-label" style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.45rem; display: block;">
+                    Justification / Operational Reason: <span style="color: #ef4444;">*</span>
+                </label>
+                <textarea id="deviationReasonText" class="form-control" rows="3" placeholder="e.g. Met doctor during field detailing / OPD visit" style="width: 100%; border-radius: 8px; font-size: 0.88rem; line-height: 1.45; box-sizing: border-box;"></textarea>
+                <small style="color: var(--text-muted); display: flex; align-items: flex-start; gap: 0.4rem; margin-top: 0.5rem; font-size: 0.8rem; line-height: 1.4;">
+                    <i class="fa-solid fa-shield-halved" style="color: #6366f1; margin-top: 2px; flex-shrink: 0;"></i>
+                    <span>This visit will be recorded as <strong>REQUIRES_REVIEW</strong> for supervisor approval without blocking your work.</span>
                 </small>
             </div>
         </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" onclick="closeModal('deviationReasonModal')">Cancel</button>
-            <button type="button" class="btn btn-primary" onclick="proceedWithDeviation()">Proceed with Justification</button>
+        <div class="modal-footer" style="display: flex; justify-content: flex-end; align-items: center; gap: 0.75rem; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('deviationReasonModal')" style="padding: 0.55rem 1.15rem; border-radius: 8px;">Cancel</button>
+            <button type="button" class="btn btn-primary" onclick="proceedWithDeviation()" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); border: none; padding: 0.55rem 1.25rem; border-radius: 8px; font-weight: 600; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);">
+                Proceed with Justification
+            </button>
         </div>
     </div>
 </div>
@@ -688,12 +693,12 @@
 <!-- MODAL: ADD AD-HOC CUSTOMER VISIT CALL                    -->
 <!-- ======================================================== -->
 <div id="addAdhocCallModal" class="modal-overlay" style="display: none; align-items: center; justify-content: center; z-index: 1050;">
-    <div class="modal-container" style="max-width: 520px; width: 95%;">
+    <div class="modal-box" style="max-width: 520px; width: 95%;">
         <div class="modal-header">
             <h3 style="margin: 0; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem; font-size: 1.15rem;">
                 <i class="fa-solid fa-plus-circle" style="color: var(--color-accent);"></i> Add Ad-hoc Customer Call
             </h3>
-            <button type="button" class="modal-close" onclick="closeModal('addAdhocCallModal')">&times;</button>
+            <button type="button" class="modal-close-btn" onclick="closeModal('addAdhocCallModal')" title="Close">&times;</button>
         </div>
         <form id="addAdhocCallForm" onsubmit="submitAddAdhocCall(event)">
             <div class="modal-body" style="display: flex; flex-direction: column; gap: 1rem; padding: 1.25rem;">
@@ -734,6 +739,76 @@
                 </button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- MODAL: EXECUTIVE END FIELD DUTY CONFIRMATION (CHECK-OUT)  -->
+<!-- ======================================================== -->
+<div id="endDutyConfirmModal" class="modal-overlay" style="display: none; align-items: center; justify-content: center; z-index: 1060;">
+    <div class="modal-box" style="max-width: 480px; width: 92%; padding: 1.85rem; border-radius: 20px; box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.65); position: relative; overflow: hidden; box-sizing: border-box;">
+        
+        <!-- Top decorative accent line -->
+        <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #ef4444, #f59e0b, #6366f1);"></div>
+
+        <div class="modal-header" style="border-bottom: none; margin-bottom: 0.85rem; padding-bottom: 0; display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
+            <div style="display: flex; gap: 1rem; align-items: center;">
+                <div style="width: 52px; height: 52px; border-radius: 16px; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.3); display: flex; align-items: center; justify-content: center; color: #ef4444; font-size: 1.35rem; flex-shrink: 0; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </div>
+                <div>
+                    <h3 style="margin: 0 0 0.25rem 0; font-size: 1.22rem; font-weight: 800; color: var(--text-primary); letter-spacing: -0.01em;">
+                        End Field Duty
+                    </h3>
+                    <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">
+                        Confirm today's attendance check-out
+                    </p>
+                </div>
+            </div>
+            <button type="button" class="modal-close-btn" onclick="closeModal('endDutyConfirmModal')" title="Close" style="margin-top: -4px;">&times;</button>
+        </div>
+
+        <div class="modal-body" style="padding: 0.5rem 0 1rem 0;">
+            <p style="font-size: 0.92rem; color: var(--text-primary); line-height: 1.55; margin: 0 0 1.25rem 0;">
+                Are you sure you want to end your field duty shift for today?
+            </p>
+
+            <!-- Shift Summary Box -->
+            <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1)); border-radius: 14px; padding: 1rem 1.15rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1.15rem;">
+                <div>
+                    <span style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; display: block; margin-bottom: 0.25rem;">
+                        <i class="fa-solid fa-stopwatch" style="color: #10b981;"></i> Working Hours
+                    </span>
+                    <span id="endDutyModalHours" style="font-size: 1.15rem; font-weight: 800; color: #10b981;">
+                        00h 00m
+                    </span>
+                </div>
+                <div>
+                    <span style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; display: block; margin-bottom: 0.25rem;">
+                        <i class="fa-solid fa-route" style="color: #06b6d4;"></i> Route Visits
+                    </span>
+                    <span id="endDutyModalVisits" style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary);">
+                        0 Completed
+                    </span>
+                </div>
+            </div>
+
+            <!-- GPS Verification Notice -->
+            <div style="background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.25); border-radius: 10px; padding: 0.75rem 0.95rem; font-size: 0.8rem; color: var(--text-secondary); line-height: 1.45; display: flex; align-items: flex-start; gap: 0.55rem;">
+                <i class="fa-solid fa-location-crosshairs" style="color: #6366f1; margin-top: 2px; flex-shrink: 0;"></i>
+                <span>Your live GPS coordinates and timestamp will be captured on the server to lock your daily field attendance ledger.</span>
+            </div>
+        </div>
+
+        <div class="modal-footer" style="border-top: 1px solid var(--border-color, rgba(255, 255, 255, 0.1)); margin-top: 0.5rem; padding-top: 1.15rem; display: flex; justify-content: flex-end; align-items: center; gap: 0.75rem;">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('endDutyConfirmModal')" style="padding: 0.6rem 1.25rem; border-radius: 10px; font-weight: 600;">
+                Cancel (Stay on Duty)
+            </button>
+            <button type="button" id="btnConfirmCheckOutModal" class="btn" onclick="executeActualCheckOut()" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: #ffffff; border: none; padding: 0.6rem 1.35rem; border-radius: 10px; font-weight: 700; display: inline-flex; align-items: center; gap: 0.5rem; box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35); cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease;">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                <span>Yes, Complete Duty</span>
+            </button>
+        </div>
     </div>
 </div>
 {% endblock %}
@@ -1096,16 +1171,48 @@
         }
     }
 
-    async function handlePunchCheckOut() {
-        if (!confirm("Are you sure you want to end field duty for today?")) return;
+    function handlePunchCheckOut() {
+        // Open the executive confirmation modal with live session summary
+        const hoursEl = document.getElementById('attWorkingHoursVal');
+        const visitsEl = document.getElementById('progressStatsText');
+        
+        const modalHours = document.getElementById('endDutyModalHours');
+        if (modalHours && hoursEl) {
+            modalHours.textContent = hoursEl.textContent || '00h 00m';
+        }
+        
+        const modalVisits = document.getElementById('endDutyModalVisits');
+        if (modalVisits && visitsEl) {
+            modalVisits.textContent = visitsEl.textContent || '0 Completed';
+        }
+        
+        // Reset modal button state
+        const modalBtn = document.getElementById('btnConfirmCheckOutModal');
+        if (modalBtn) {
+            modalBtn.disabled = false;
+            modalBtn.innerHTML = `<i class="fa-solid fa-right-from-bracket"></i> <span>Yes, Complete Duty</span>`;
+        }
+        
+        openModal('endDutyConfirmModal');
+    }
 
-        const btn = document.getElementById('btnCheckOut');
-        btn.disabled = true;
-        btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Reading GPS...`;
+    async function executeActualCheckOut() {
+        const modalBtn = document.getElementById('btnConfirmCheckOutModal');
+        if (modalBtn) {
+            modalBtn.disabled = true;
+            modalBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Reading GPS...`;
+        }
+
+        const mainBtn = document.getElementById('btnCheckOut');
+        if (mainBtn) {
+            mainBtn.disabled = true;
+            mainBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Reading GPS...`;
+        }
 
         try {
             const gps = await requestLocation();
-            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Finalizing...`;
+            if (modalBtn) modalBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Finalizing...`;
+            if (mainBtn) mainBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Finalizing...`;
 
             const payload = {
                 lat: gps.lat,
@@ -1124,6 +1231,8 @@
             });
 
             const body = await res.json();
+            closeModal('endDutyConfirmModal');
+
             if (body.success) {
                 showToast("Duty check-out completed successfully.", "success");
                 fetchAttendanceStatus();
@@ -1135,13 +1244,18 @@
                     errMsg = `${firstKey}: ${Array.isArray(val) ? val[0] : val}`;
                 }
                 showToast(errMsg, "error");
-                btn.disabled = false;
-                btn.innerHTML = `<i class="fa-solid fa-right-from-bracket"></i> COMPLETE DUTY (CHECK-OUT)`;
+                if (mainBtn) {
+                    mainBtn.disabled = false;
+                    mainBtn.innerHTML = `<i class="fa-solid fa-right-from-bracket"></i> COMPLETE DUTY (CHECK-OUT)`;
+                }
             }
         } catch (e) {
+            closeModal('endDutyConfirmModal');
             showToast(e.message, "error");
-            btn.disabled = false;
-            btn.innerHTML = `<i class="fa-solid fa-right-from-bracket"></i> COMPLETE DUTY (CHECK-OUT)`;
+            if (mainBtn) {
+                mainBtn.disabled = false;
+                mainBtn.innerHTML = `<i class="fa-solid fa-right-from-bracket"></i> COMPLETE DUTY (CHECK-OUT)`;
+            }
         }
     }
 

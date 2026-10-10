@@ -125,4 +125,11 @@ urlpatterns = [
     path('dashboard/field/portal/', dashboard_erp_views.dashboard_field_portal, name='dashboard_field_portal'),
     path('dashboard/field/tracking/', dashboard_erp_views.dashboard_field_tracking, name='dashboard_field_tracking'),
     path('dashboard/field/reports/', dashboard_erp_views.dashboard_field_reports, name='dashboard_field_reports'),
-]
+
+    # Expense Tracking & General Ledger Management
+    path('dashboard/expenses/', dashboard_erp_views.dashboard_expenses, name='dashboard_expenses'),
+    path('dashboard/expenses/create/', dashboard_erp_views.dashboard_expense_create, name='dashboard_expense_create'),
+    path('dashboard/expenses/action/<uuid:claim_id>/', dashboard_erp_views.dashboard_expense_action, name='dashboard_expense_action'),
+    path('dashboard/expenses/disburse/<uuid:claim_id>/', dashboard_erp_views.dashboard_expense_disburse, name='dashboard_expense_disburse'),
+    path('dashboard/expenses/delete/<uuid:claim_id>/', dashboard_erp_views.dashboard_expense_delete, name='dashboard_expense_delete'),
+]

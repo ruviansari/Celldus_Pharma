@@ -26,6 +26,22 @@ def execute_qa_disposition(inspection_id, disposition_choice: str, reason: str, 
     if inspection.sampler_id == qa_user.id and not qa_user.is_superuser:
         raise ValidationError("Segregation of Duties: Sampler cannot execute final QA disposition.")
 
+    # 21 CFR Part 211 & cGMP Release Verification:
+    if disposition_choice == 'RELEASE':
+        if inspection.overall_test_result != 'PASS':
+            raise ValidationError(
+                f"Pharma cGMP Violation (21 CFR Part 211.165): Batch cannot be released for commercial use "
+                f"because QC inspection testing result is '{inspection.overall_test_result}'. "
+                f"Only batches with verified 'PASS' results are eligible for commercial release."
+            )
+        if inspection.status == 'PENDING_SAMPLING':
+            raise ValidationError(
+                "Pharma cGMP Violation: Batch cannot be released while pending sample collection. "
+                "Complete sampling and laboratory testing before executing QA release."
+            )
+        if not coa_number:
+            raise ValidationError("Pharmaceutical Compliance Error: A valid Certificate of Analysis (COA) number is mandatory to release stock.")
+
     # Create QA Disposition Record
     disp_record = QADispositionRecord.objects.create(
         inspection=inspection,

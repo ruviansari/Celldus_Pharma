@@ -1,5 +1,7 @@
 import csv
 import io
+import calendar
+from datetime import datetime, date, timedelta
 from decimal import Decimal
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
@@ -33,6 +35,15 @@ from erp_crm.models import Lead, FollowUpTask, LeadImportBatch, DailyBeatPlan, F
 from erp_crm.services import process_lead_import_rows
 from erp_crm.tracking_permissions import get_authenticated_employee, is_sales_manager, is_system_or_hr_admin
 from erp_hr.models import Employee, AttendanceRecord, LeaveApplication
+from erp_finance.models import ExpenseCategory, ExpenseSubCategory, ExpenseClaim, ExpenseAttachment, ChartOfAccount, JournalEntry
+from erp_finance.services import (
+    submit_expense_claim, manager_review_expense,
+    finance_audit_expense, disburse_expense_and_post_gl,
+    generate_claim_fingerprint
+)
+from erp_finance.expense_permissions import is_finance_or_admin, is_manager_or_admin
+from django.core.exceptions import ValidationError, PermissionDenied as DjangoPermissionDenied
+from rest_framework.exceptions import PermissionDenied
 
 
 def staff_required(view_func):
@@ -110,7 +121,7 @@ def dashboard_quality(request):
     status_filter = request.GET.get('status', '').strip()
     search = request.GET.get('q', '').strip()
 
-    inspections = QCInspectionRequest.objects.select_related('lot', 'item', 'specification', 'sampler', 'analyst').order_by('-created_at')
+    inspections = QCInspectionRequest.objects.select_related('lot', 'item', 'specification', 'sampler', 'analyst', 'qa_disposition').order_by('-created_at')
     
     pending_sampling_count = QCInspectionRequest.objects.filter(status='PENDING_SAMPLING').count()
     testing_count = QCInspectionRequest.objects.filter(status='SAMPLED').count()
@@ -1678,12 +1689,30 @@ def dashboard_invoices(request):
     return render(request, 'dashboard/erp_invoices.html', context)
 
 
+def can_manage_attendance(user) -> bool:
+    """
+    Pharma Compliance & Security Rule:
+    Only Super Administrator or designated HR & Payroll Manager / System Admin
+    is permitted to mark, regularize, or alter employee attendance records.
+    Normal staff and non-admin users have strictly read-only access.
+    """
+    if not user or not user.is_authenticated:
+        return False
+    if user.is_superuser or user.username.lower() in ['admin', 'superadmin']:
+        return True
+    return ERPUserRole.objects.filter(
+        user=user,
+        role__in=['ADMIN', 'HR_PAYROLL']
+    ).exists()
+
+
 # ==========================================
 # 11. EMPLOYEE CRM & WORKFORCE OPERATIONS
 # ==========================================
 @staff_required
 def dashboard_employee(request):
     tab = request.GET.get('tab', 'directory')
+    can_manage_att = can_manage_attendance(request.user)
     dept_filter = request.GET.get('dept', '')
     search = request.GET.get('q', '').strip()
 
@@ -1709,8 +1738,152 @@ def dashboard_employee(request):
     total_payroll = sum((e.base_salary for e in all_employees if e.is_active), Decimal('0.00'))
 
     today = timezone.now().date()
-    attendance_records = AttendanceRecord.objects.select_related('employee').filter(date=today)
-    present_today_count = attendance_records.filter(status='PRESENT').count()
+    att_date_str = request.GET.get('att_date', '').strip()
+    try:
+        att_selected_date = datetime.strptime(att_date_str, '%Y-%m-%d').date() if att_date_str else today
+    except ValueError:
+        att_selected_date = today
+
+    att_prev_date = att_selected_date - timedelta(days=1)
+    att_next_date = att_selected_date + timedelta(days=1)
+    att_dept = request.GET.get('att_dept', '').strip()
+    att_status = request.GET.get('att_status', '').strip()
+    att_view = request.GET.get('att_view', 'daily')
+
+    # Query attendance records for selected date
+    att_records_qs = AttendanceRecord.objects.select_related('employee').filter(date=att_selected_date)
+    records_by_emp_id = {rec.employee_id: rec for rec in att_records_qs}
+
+    # Query approved leaves covering selected date
+    leaves_on_date = LeaveApplication.objects.filter(
+        status='APPROVED',
+        from_date__lte=att_selected_date,
+        to_date__gte=att_selected_date
+    ).select_related('employee')
+    leaves_by_emp_id = {leave.employee_id: leave for leave in leaves_on_date}
+
+    # Build active employee list for attendance roster
+    roster_employees = all_employees.filter(is_active=True)
+    if att_dept:
+        roster_employees = roster_employees.filter(department=att_dept)
+
+    daily_roster = []
+    present_count = 0
+    absent_count = 0
+    half_day_count = 0
+    on_leave_count = 0
+    unmarked_count = 0
+
+    for emp in roster_employees:
+        rec = records_by_emp_id.get(emp.id)
+        leave = leaves_by_emp_id.get(emp.id)
+
+        status = 'UNMARKED'
+        in_time = None
+        out_time = None
+        overtime = Decimal('0.00')
+        work_mode = 'OFFICE'
+        record_id = None
+
+        if rec:
+            status = rec.status
+            in_time = rec.in_time
+            out_time = rec.out_time
+            overtime = rec.overtime_hours
+            work_mode = rec.work_mode
+            record_id = rec.id
+        elif leave:
+            status = 'ON_LEAVE'
+
+        if status == 'PRESENT':
+            present_count += 1
+        elif status == 'ABSENT':
+            absent_count += 1
+        elif status == 'HALF_DAY':
+            half_day_count += 1
+        elif status == 'ON_LEAVE':
+            on_leave_count += 1
+        else:
+            unmarked_count += 1
+
+        # Filter by status if requested
+        if att_status and att_status != 'ALL' and status != att_status:
+            continue
+
+        daily_roster.append({
+            'employee': emp,
+            'status': status,
+            'in_time': in_time,
+            'out_time': out_time,
+            'overtime': overtime,
+            'work_mode': work_mode,
+            'record_id': record_id,
+            'leave_info': leave
+        })
+
+    total_roster_count = roster_employees.count()
+    attendance_rate = round((present_count / total_roster_count * 100), 1) if total_roster_count > 0 else 0
+
+    # Monthly Muster Roll Matrix
+    muster_month_str = request.GET.get('muster_month', att_selected_date.strftime('%Y-%m'))
+    try:
+        m_year, m_month = map(int, muster_month_str.split('-'))
+    except Exception:
+        m_year, m_month = att_selected_date.year, att_selected_date.month
+
+    num_days = calendar.monthrange(m_year, m_month)[1]
+    days_list = [date(m_year, m_month, d) for d in range(1, num_days + 1)]
+    m_start = date(m_year, m_month, 1)
+    m_end = date(m_year, m_month, num_days)
+
+    m_records = AttendanceRecord.objects.filter(
+        date__gte=m_start,
+        date__lte=m_end
+    ).select_related('employee')
+
+    m_matrix = {}
+    for r in m_records:
+        if r.employee_id not in m_matrix:
+            m_matrix[r.employee_id] = {}
+        m_matrix[r.employee_id][r.date.day] = r.status
+
+    muster_rows = []
+    for emp in roster_employees:
+        emp_days = []
+        p_count = 0
+        a_count = 0
+        hd_count = 0
+        l_count = 0
+        emp_records = m_matrix.get(emp.id, {})
+        for day_obj in days_list:
+            day_num = day_obj.day
+            st = emp_records.get(day_num)
+            is_weekend = (day_obj.weekday() == 6)  # Sunday
+            if st == 'PRESENT':
+                code = 'P'
+                p_count += 1
+            elif st == 'ABSENT':
+                code = 'A'
+                a_count += 1
+            elif st == 'HALF_DAY':
+                code = 'HD'
+                hd_count += 1
+            elif st == 'ON_LEAVE':
+                code = 'L'
+                l_count += 1
+            elif is_weekend:
+                code = 'WO'
+            else:
+                code = '-'
+            emp_days.append({'day': day_num, 'code': code, 'is_weekend': is_weekend})
+        muster_rows.append({
+            'employee': emp,
+            'days': emp_days,
+            'p_count': p_count,
+            'a_count': a_count,
+            'hd_count': hd_count,
+            'l_count': l_count,
+        })
 
     leaves = LeaveApplication.objects.select_related('employee', 'branch').order_by('-created_at')[:50]
     pending_leaves_count = LeaveApplication.objects.filter(status='SUBMITTED').count()
@@ -1730,8 +1903,24 @@ def dashboard_employee(request):
         'sales_staff_count': sales_staff_count,
         'total_payroll': total_payroll,
         'today': today,
-        'attendance_records': attendance_records,
-        'present_today_count': present_today_count,
+        'attendance_records': att_records_qs,
+        'daily_roster': daily_roster,
+        'att_selected_date': att_selected_date,
+        'att_prev_date': att_prev_date,
+        'att_next_date': att_next_date,
+        'att_dept': att_dept,
+        'att_status': att_status,
+        'att_view': att_view,
+        'present_count': present_count,
+        'absent_count': absent_count,
+        'half_day_count': half_day_count,
+        'on_leave_count': on_leave_count,
+        'unmarked_count': unmarked_count,
+        'total_roster_count': total_roster_count,
+        'attendance_rate': attendance_rate,
+        'muster_month_str': muster_month_str,
+        'days_list': days_list,
+        'muster_rows': muster_rows,
         'leaves': leaves,
         'pending_leaves_count': pending_leaves_count,
         'field_force': field_force,
@@ -1740,6 +1929,7 @@ def dashboard_employee(request):
         'active_tab': tab,
         'dept_filter': dept_filter,
         'search_query': search,
+        'can_manage_attendance': can_manage_att,
     }
     return render(request, 'dashboard/erp_employee.html', context)
 
@@ -1880,6 +2070,14 @@ def dashboard_employee_toggle_status(request, employee_id):
 
 @staff_required
 def dashboard_attendance_mark(request):
+    if not can_manage_attendance(request.user):
+        messages.error(
+            request,
+            "Permission Denied: Only Super Administrator or HR / Payroll Managers are authorized to mark or alter attendance records."
+        )
+        date_str = request.POST.get('date') or str(timezone.now().date())
+        return redirect(f'/dashboard/employee/?tab=attendance&att_date={date_str}')
+
     if request.method == "POST":
         employee_id = request.POST.get('employee')
         date_str = request.POST.get('date') or str(timezone.now().date())
@@ -1922,7 +2120,7 @@ def dashboard_attendance_mark(request):
         except Exception as e:
             messages.error(request, f"Error logging attendance: {str(e)}")
 
-    return redirect('/dashboard/employee/?tab=attendance')
+    return redirect(f'/dashboard/employee/?tab=attendance&att_date={date_str}')
 
 
 @staff_required
@@ -2157,77 +2355,529 @@ def dashboard_field_tracking(request):
 def dashboard_field_reports(request):
     """
     Field Force SFA Performance, Coverage & Exception Reports.
-    Includes CSV export capability.
+    Includes CSV export capability, dynamic search, territory & status filtering.
     """
     tab = request.GET.get('tab', 'visits')
     start_date_str = request.GET.get('start_date', '')
     end_date_str = request.GET.get('end_date', '')
     territory_filter = request.GET.get('territory', '')
+    status_filter = request.GET.get('status_filter', 'all')
+    search_query = request.GET.get('q', '').strip()
 
     today = timezone.now().date()
     start_date = today - timezone.timedelta(days=7)
     end_date = today
 
+    has_date_param = ('start_date' in request.GET) or ('end_date' in request.GET)
     if start_date_str:
         try:
             start_date = timezone.datetime.strptime(start_date_str, '%Y-%m-%d').date()
         except Exception:
             pass
+    elif has_date_param and not start_date_str:
+        start_date = None
+
     if end_date_str:
         try:
             end_date = timezone.datetime.strptime(end_date_str, '%Y-%m-%d').date()
         except Exception:
             pass
+    elif has_date_param and not end_date_str:
+        end_date = None
 
-    visits_qs = FieldVisit.objects.select_related('customer', 'employee').prefetch_related('orders_booked').filter(
-        visit_date__gte=start_date,
-        visit_date__lte=end_date
-    ).order_by('-visit_date', '-start_time')
+    visits_qs = FieldVisit.objects.select_related('customer', 'employee').prefetch_related('orders_booked').all()
+    if start_date:
+        visits_qs = visits_qs.filter(visit_date__gte=start_date)
+    if end_date:
+        visits_qs = visits_qs.filter(visit_date__lte=end_date)
+    visits_qs = visits_qs.order_by('-visit_date', '-start_time')
+
+    att_qs = AttendanceRecord.objects.select_related('employee').all()
+    if start_date:
+        att_qs = att_qs.filter(date__gte=start_date)
+    if end_date:
+        att_qs = att_qs.filter(date__lte=end_date)
+    att_qs = att_qs.order_by('-date', '-check_in_time', '-in_time')
 
     if territory_filter:
-        visits_qs = visits_qs.filter(customer__territory_id=territory_filter)
+        try:
+            import uuid
+            t_uuid = uuid.UUID(str(territory_filter))
+            visits_qs = visits_qs.filter(
+                Q(customer__territory_id=t_uuid) | Q(employee__territory_id=t_uuid)
+            )
+            att_qs = att_qs.filter(
+                Q(employee__territory_id=t_uuid) |
+                Q(employee__field_visits__customer__territory_id=t_uuid)
+            ).distinct()
+        except (ValueError, TypeError, AttributeError):
+            visits_qs = visits_qs.filter(
+                Q(customer__territory__name__icontains=territory_filter) |
+                Q(employee__territory__name__icontains=territory_filter) |
+                Q(customer__territory__code__icontains=territory_filter) |
+                Q(employee__territory__code__icontains=territory_filter)
+            )
+            att_qs = att_qs.filter(
+                Q(employee__territory__name__icontains=territory_filter) |
+                Q(employee__territory__code__icontains=territory_filter)
+            ).distinct()
 
-    att_qs = AttendanceRecord.objects.select_related('employee').filter(
-        date__gte=start_date,
-        date__lte=end_date
-    ).order_by('-date', '-check_in_time')
+    if search_query:
+        visits_qs = visits_qs.filter(
+            Q(visit_no__icontains=search_query) |
+            Q(customer__name__icontains=search_query) |
+            Q(customer__city__icontains=search_query) |
+            Q(customer__customer_type__icontains=search_query) |
+            Q(employee__first_name__icontains=search_query) |
+            Q(employee__last_name__icontains=search_query) |
+            Q(employee__employee_code__icontains=search_query) |
+            Q(visit_status__icontains=search_query)
+        )
+        att_qs = att_qs.filter(
+            Q(employee__first_name__icontains=search_query) |
+            Q(employee__last_name__icontains=search_query) |
+            Q(employee__employee_code__icontains=search_query) |
+            Q(employee__designation__icontains=search_query) |
+            Q(work_mode__icontains=search_query) |
+            Q(status__icontains=search_query)
+        )
+
+    if status_filter and status_filter != 'all' and tab == 'visits':
+        status_upper = status_filter.upper()
+        if status_upper in ('COMPLETED', 'IN_PROGRESS', 'PLANNED', 'CANCELLED'):
+            visits_qs = visits_qs.filter(visit_status=status_upper)
+
+    now_dt = timezone.now()
+    attendance_processed = []
+    total_punched = 0
+    total_active = 0
+    total_completed = 0
+    total_leave_absent = 0
+
+    zero_time = timezone.datetime.strptime('00:00', '%H:%M').time()
+
+    for a in att_qs[:100]:
+        has_in = bool(a.check_in_time or (a.in_time and a.status in ('PRESENT', 'HALF_DAY')))
+        has_out = bool(a.check_out_time or (a.out_time and a.out_time != zero_time and a.status in ('PRESENT', 'HALF_DAY')))
+        is_active = bool(has_in and not has_out and a.date == today)
+
+        # Dynamic Duration Calculation
+        duration_display = "--"
+        if a.check_in_time and a.check_out_time:
+            sec = max(0, int((a.check_out_time - a.check_in_time).total_seconds()))
+            hrs = sec // 3600
+            mins = (sec % 3600) // 60
+            duration_display = f"{hrs}h {mins:02d}m" if hrs > 0 else f"{mins}m"
+        elif a.in_time and a.out_time and a.out_time != zero_time and a.status in ('PRESENT', 'HALF_DAY'):
+            d1 = timezone.datetime.combine(a.date, a.in_time)
+            d2 = timezone.datetime.combine(a.date, a.out_time)
+            if d2 >= d1:
+                sec = max(0, int((d2 - d1).total_seconds()))
+                hrs = sec // 3600
+                mins = (sec % 3600) // 60
+                duration_display = f"{hrs}h {mins:02d}m" if hrs > 0 else f"{mins}m"
+        elif is_active:
+            sec = max(0, int((now_dt - a.check_in_time).total_seconds())) if a.check_in_time else 0
+            hrs = sec // 3600
+            mins = (sec % 3600) // 60
+            duration_display = f"{hrs}h {mins:02d}m" if hrs > 0 else (f"{mins}m" if mins > 0 else "Active Now")
+        elif has_in:
+            duration_display = "In Progress"
+
+        if is_active:
+            total_active += 1
+            total_punched += 1
+        elif has_in and has_out:
+            total_completed += 1
+            total_punched += 1
+        elif has_in:
+            total_punched += 1
+        else:
+            total_leave_absent += 1
+
+        disp_in = timezone.localtime(a.check_in_time).strftime('%H:%M') if a.check_in_time else (a.in_time.strftime('%H:%M') if (a.in_time and a.status in ('PRESENT', 'HALF_DAY')) else None)
+        disp_out = timezone.localtime(a.check_out_time).strftime('%H:%M') if a.check_out_time else (a.out_time.strftime('%H:%M') if (a.out_time and a.out_time != zero_time and a.status in ('PRESENT', 'HALF_DAY')) else None)
+
+        a.calculated_duration = duration_display
+        a.display_in = disp_in
+        a.display_out = disp_out
+        a.is_punched = has_in
+        a.is_checked_out = has_out
+        a.is_active_on_duty = is_active
+        attendance_processed.append(a)
+
+    att_stats = {
+        'total': len(attendance_processed),
+        'punched': total_punched,
+        'active': total_active,
+        'completed': total_completed,
+        'leave_absent': total_leave_absent,
+    }
 
     exceptions = []
     for v in visits_qs.filter(is_flagged=True):
         exceptions.append({
             'date': v.visit_date,
             'type': 'VISIT_GEOFENCE_DEVIATION',
-            'employee_name': f"{v.employee.first_name} {v.employee.last_name}",
+            'employee_name': f"{v.employee.first_name} {v.employee.last_name}".strip(),
             'employee_code': v.employee.employee_code,
             'target': v.customer.name,
             'distance': v.distance_to_target_meters,
-            'reason': v.flag_reason or v.geofence_deviation_reason or 'Geofence exceeded',
+            'reason': v.flag_reason or v.geofence_deviation_reason or 'Geofence Perimeter Exceeded',
         })
 
     for a in att_qs.filter(Q(check_in_status='REQUIRES_REVIEW') | Q(flag_reason__gt='')):
         exceptions.append({
             'date': a.date,
             'type': 'ATTENDANCE_FLAG',
-            'employee_name': f"{a.employee.first_name} {a.employee.last_name}",
+            'employee_name': f"{a.employee.first_name} {a.employee.last_name}".strip(),
             'employee_code': a.employee.employee_code,
             'target': 'Check-In Punch',
             'distance': None,
-            'reason': a.flag_reason or 'Suspicious location or mock GPS',
+            'reason': a.flag_reason or f"Verification Status: {a.get_check_in_status_display()}",
         })
 
     territories = Territory.objects.all().order_by('name')
 
     context = {
         'active_tab': tab,
-        'start_date': start_date.strftime('%Y-%m-%d'),
-        'end_date': end_date.strftime('%Y-%m-%d'),
+        'start_date': start_date.strftime('%Y-%m-%d') if start_date else '',
+        'end_date': end_date.strftime('%Y-%m-%d') if end_date else '',
         'selected_territory': territory_filter,
+        'active_status_filter': status_filter,
+        'search_query': search_query,
         'territories': territories,
         'visits': visits_qs[:100],
-        'attendance_list': att_qs[:100],
+        'attendance_list': attendance_processed,
+        'att_stats': att_stats,
         'exceptions': exceptions,
         'exception_count': len(exceptions),
     }
     return render(request, 'dashboard/field_reports.html', context)
+
+
+# ==========================================
+# 11. EXPENSE TRACKING & GL INTEGRATION
+# ==========================================
+import hashlib
+
+@staff_required
+def dashboard_expenses(request):
+    try:
+        current_emp = get_authenticated_employee(request.user)
+    except Exception:
+        current_emp = None
+
+    user_is_finance = is_finance_or_admin(request.user)
+    user_is_manager = is_manager_or_admin(request.user)
+
+    active_tab = request.GET.get('tab', 'my_claims' if not (user_is_finance or user_is_manager) else 'approvals')
+    status_filter = request.GET.get('status', '').strip()
+    category_filter = request.GET.get('category', '').strip()
+    search = request.GET.get('q', '').strip()
+
+    # Base querysets
+    all_claims_qs = ExpenseClaim.objects.select_related(
+        'employee', 'expense_category', 'sub_category',
+        'manager_approver', 'finance_approver', 'linked_journal'
+    ).prefetch_related('attachments').order_by('-expense_date', '-created_at')
+
+    # 1. My Claims
+    if current_emp:
+        my_claims_qs = all_claims_qs.filter(employee=current_emp)
+    else:
+        my_claims_qs = all_claims_qs.none()
+
+    # 2. Approvals Queue
+    if user_is_finance:
+        approvals_qs = all_claims_qs.filter(status__in=['SUBMITTED', 'UNDER_REVIEW', 'APPROVED'])
+    elif user_is_manager and current_emp:
+        subordinate_ids = current_emp.subordinates.filter(is_active=True).values_list('id', flat=True)
+        approvals_qs = all_claims_qs.filter(employee_id__in=subordinate_ids, status='SUBMITTED')
+    else:
+        approvals_qs = all_claims_qs.none()
+
+    # Tab specific queryset for the active list
+    if active_tab == 'approvals':
+        displayed_qs = approvals_qs
+    elif active_tab == 'all_claims':
+        if user_is_finance:
+            displayed_qs = all_claims_qs
+        elif user_is_manager and current_emp:
+            subordinate_ids = list(current_emp.subordinates.filter(is_active=True).values_list('id', flat=True))
+            displayed_qs = all_claims_qs.filter(Q(employee=current_emp) | Q(employee_id__in=subordinate_ids))
+        else:
+            displayed_qs = my_claims_qs
+    else:
+        displayed_qs = my_claims_qs
+
+    # Apply filters
+    if status_filter:
+        displayed_qs = displayed_qs.filter(status=status_filter)
+    if category_filter:
+        displayed_qs = displayed_qs.filter(expense_category_id=category_filter)
+    if search:
+        displayed_qs = displayed_qs.filter(
+            Q(document_no__icontains=search) |
+            Q(business_purpose__icontains=search) |
+            Q(vendor_name__icontains=search) |
+            Q(invoice_reference__icontains=search) |
+            Q(employee__first_name__icontains=search) |
+            Q(employee__last_name__icontains=search) |
+            Q(employee__employee_code__icontains=search)
+        )
+
+    # Analytics & KPIs (current month)
+    today = timezone.now().date()
+    start_of_month = today.replace(day=1)
+
+    this_month_claims = all_claims_qs.filter(expense_date__gte=start_of_month)
+    total_incurred_month = this_month_claims.filter(status__in=['APPROVED', 'PAID']).aggregate(
+        total=models.Sum('amount')
+    )['total'] or Decimal('0.00')
+
+    total_reimbursed_month = this_month_claims.filter(status='PAID').aggregate(
+        total=models.Sum('amount')
+    )['total'] or Decimal('0.00')
+
+    pending_approvals_count = approvals_qs.count()
+    rejected_count_month = this_month_claims.filter(status='REJECTED').count()
+
+    # Category breakdown for analytics
+    categories = ExpenseCategory.objects.filter(is_active=True).prefetch_related('subcategories')
+    category_analytics = []
+    for cat in categories:
+        cat_total = this_month_claims.filter(expense_category=cat, status__in=['APPROVED', 'PAID']).aggregate(
+            total=models.Sum('amount')
+        )['total'] or Decimal('0.00')
+        category_analytics.append({
+            'category': cat,
+            'total': cat_total
+        })
+
+    # Payment / Bank accounts for disbursement (Asset accounts)
+    payment_accounts = ChartOfAccount.objects.filter(
+        account_type='ASSET',
+        is_active=True
+    ).order_by('account_code')
+
+    context = {
+        'current_emp': current_emp,
+        'user_is_finance': user_is_finance,
+        'user_is_manager': user_is_manager,
+        'active_tab': active_tab,
+        'status_filter': status_filter,
+        'category_filter': category_filter,
+        'search': search,
+        'claims': displayed_qs[:100],
+        'total_claims_count': displayed_qs.count(),
+        'approvals_count': pending_approvals_count,
+        'total_incurred_month': total_incurred_month,
+        'total_reimbursed_month': total_reimbursed_month,
+        'rejected_count_month': rejected_count_month,
+        'categories': categories,
+        'category_analytics': category_analytics,
+        'payment_accounts': payment_accounts,
+        'today': today,
+    }
+    return render(request, 'dashboard/erp_expenses.html', context)
+
+
+@staff_required
+def dashboard_expense_create(request):
+    if request.method != 'POST':
+        return redirect('dashboard_expenses')
+
+    try:
+        emp = get_authenticated_employee(request.user)
+    except Exception as e:
+        messages.error(request, f"Cannot submit expense: {str(e)}")
+        return redirect('dashboard_expenses')
+
+    category_id = request.POST.get('category')
+    sub_category_id = request.POST.get('sub_category')
+    expense_date_str = request.POST.get('expense_date')
+    base_amount_str = request.POST.get('base_amount', '0').strip()
+    tax_amount_str = request.POST.get('tax_amount', '0').strip()
+    invoice_number = request.POST.get('invoice_number', '').strip()
+    vendor_name = request.POST.get('vendor_name', '').strip()
+    business_purpose = request.POST.get('business_purpose', '').strip()
+    payment_mode = request.POST.get('payment_mode', 'BANK')
+    action = request.POST.get('action', 'submit')  # 'draft' or 'submit'
+
+    if not category_id or not expense_date_str or not base_amount_str or not business_purpose:
+        messages.error(request, "Please fill in all required fields (Category, Date, Amount, and Business Purpose).")
+        return redirect('dashboard_expenses')
+
+    try:
+        category = ExpenseCategory.objects.get(id=category_id)
+        sub_category = ExpenseSubCategory.objects.get(id=sub_category_id) if sub_category_id else None
+        expense_date = datetime.strptime(expense_date_str, '%Y-%m-%d').date()
+        base_amount = Decimal(base_amount_str)
+        tax_amount = Decimal(tax_amount_str or '0.00')
+        total_amount = base_amount + tax_amount
+    except Exception as e:
+        messages.error(request, f"Invalid expense values provided: {str(e)}")
+        return redirect('dashboard_expenses')
+
+    receipt_file = request.FILES.get('receipt_file')
+
+    # Receipt validation against category policy
+    if category.requires_receipt_above > Decimal('0.00') and not receipt_file and total_amount >= category.requires_receipt_above:
+        messages.error(request, f"Receipt is strictly mandatory for {category.name} on claims above ₹{category.requires_receipt_above:,.2f}.")
+        return redirect('dashboard_expenses')
+
+    if receipt_file and receipt_file.size > 5 * 1024 * 1024:
+        messages.error(request, "Uploaded receipt exceeds maximum allowed file size of 5MB.")
+        return redirect('dashboard_expenses')
+
+    attachments = [receipt_file] if receipt_file else []
+    is_submit = (action == 'submit')
+
+    try:
+        claim = submit_expense_claim(
+            user=request.user,
+            employee=emp,
+            category=category,
+            amount=total_amount,
+            expense_date=expense_date,
+            base_amount=base_amount,
+            tax_amount=tax_amount,
+            business_purpose=business_purpose,
+            payee=f"{emp.first_name} {emp.last_name}",
+            payment_mode=payment_mode,
+            vendor_name=vendor_name,
+            invoice_reference=invoice_number,
+            sub_category=sub_category,
+            attachments=attachments,
+            is_submit=is_submit,
+            request=request
+        )
+
+        if is_submit:
+            messages.success(request, f"Expense claim {claim.document_no} for ₹{claim.amount:,.2f} successfully submitted for manager approval.")
+        else:
+            messages.success(request, f"Expense claim {claim.document_no} saved as Draft.")
+
+    except ValidationError as ve:
+        messages.error(request, f"Validation Error: {ve.message if hasattr(ve, 'message') else str(ve)}")
+    except Exception as e:
+        messages.error(request, f"Error processing expense claim: {str(e)}")
+
+    return redirect('dashboard_expenses')
+
+
+@staff_required
+def dashboard_expense_action(request, claim_id):
+    if request.method != 'POST':
+        return redirect('dashboard_expenses')
+
+    claim = get_object_or_404(ExpenseClaim, id=claim_id)
+    action_type = request.POST.get('action')  # manager_approve, manager_reject, finance_approve, finance_reject
+    remarks = request.POST.get('remarks', '').strip()
+
+    try:
+        if action_type == 'manager_approve':
+            manager_review_expense(claim.id, request.user, action='APPROVE', remarks=remarks, request=request)
+            messages.success(request, f"Claim {claim.document_no} approved by Manager and forwarded to Finance Audit.")
+
+        elif action_type == 'manager_reject':
+            if not remarks:
+                messages.error(request, "Rejection reason is mandatory.")
+                return redirect('dashboard_expenses')
+            manager_review_expense(claim.id, request.user, action='REJECT', remarks=remarks, request=request)
+            messages.warning(request, f"Claim {claim.document_no} rejected with feedback provided to employee.")
+
+        elif action_type == 'finance_approve':
+            if not is_finance_or_admin(request.user):
+                messages.error(request, "Permission Denied: Only Finance / Accounts staff can perform finance audit.")
+                return redirect('dashboard_expenses')
+            finance_audit_expense(claim.id, request.user, action='APPROVE', remarks=remarks, request=request)
+            messages.success(request, f"Claim {claim.document_no} sanctioned by Finance. Ready for disbursement.")
+
+        elif action_type == 'finance_reject':
+            if not is_finance_or_admin(request.user):
+                messages.error(request, "Permission Denied: Only Finance / Accounts staff can perform finance audit.")
+                return redirect('dashboard_expenses')
+            if not remarks:
+                messages.error(request, "Finance audit rejection reason is mandatory.")
+                return redirect('dashboard_expenses')
+            finance_audit_expense(claim.id, request.user, action='REJECT', remarks=remarks, request=request)
+            messages.warning(request, f"Claim {claim.document_no} rejected by Finance.")
+
+    except (ValidationError, PermissionDenied, DjangoPermissionDenied) as ve:
+        messages.error(request, f"Segregation of Duties / Audit Rule: {getattr(ve, 'message', str(ve))}")
+    except Exception as e:
+        messages.error(request, f"Error updating claim: {str(e)}")
+
+    return redirect('dashboard_expenses')
+
+
+@staff_required
+def dashboard_expense_disburse(request, claim_id):
+    if request.method != 'POST':
+        return redirect('dashboard_expenses')
+
+    if not is_finance_or_admin(request.user):
+        messages.error(request, "Permission Denied: Only Finance / Accounts can disburse funds and post GL journals.")
+        return redirect('dashboard_expenses')
+
+    claim = get_object_or_404(ExpenseClaim, id=claim_id)
+    bank_account_id = request.POST.get('bank_account_id')
+    payment_utr = request.POST.get('payment_utr', '').strip()
+
+    if not bank_account_id:
+        messages.error(request, "Please select the Bank / Cash Account to disburse payment from.")
+        return redirect('dashboard_expenses')
+
+    try:
+        bank_account = ChartOfAccount.objects.get(id=bank_account_id)
+        claim = disburse_expense_and_post_gl(
+            claim_id=claim.id,
+            user=request.user,
+            payment_utr=payment_utr,
+            bank_gl_account=bank_account,
+            request=request
+        )
+        journal_seq = claim.linked_journal.document_no if claim.linked_journal else 'N/A'
+        messages.success(
+            request,
+            f"Successfully disbursed ₹{claim.amount:,.2f} for {claim.document_no}! "
+            f"Double-entry GL Journal {journal_seq} posted atomically (UTR: {payment_utr or 'N/A'})."
+        )
+    except ValidationError as ve:
+        messages.error(request, f"Disbursement Error: {ve.message if hasattr(ve, 'message') else str(ve)}")
+    except Exception as e:
+        messages.error(request, f"System Error during disbursement: {str(e)}")
+
+    return redirect('dashboard_expenses')
+
+
+@staff_required
+def dashboard_expense_delete(request, claim_id):
+    if request.method != 'POST':
+        return redirect('dashboard_expenses')
+
+    claim = get_object_or_404(ExpenseClaim, id=claim_id)
+    if claim.status != 'DRAFT':
+        messages.error(request, "Only draft expense claims can be deleted.")
+        return redirect('dashboard_expenses')
+
+    try:
+        emp = get_authenticated_employee(request.user)
+        if claim.employee != emp and not is_finance_or_admin(request.user):
+            messages.error(request, "Permission Denied: Cannot delete another employee's claim.")
+            return redirect('dashboard_expenses')
+    except Exception:
+        if not is_finance_or_admin(request.user):
+            messages.error(request, "Permission Denied.")
+            return redirect('dashboard_expenses')
+
+    doc_no = claim.document_no
+    claim.delete()
+    messages.success(request, f"Draft claim {doc_no} removed successfully.")
+    return redirect('dashboard_expenses')
+
+
 
 

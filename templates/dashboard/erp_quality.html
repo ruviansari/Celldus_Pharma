@@ -554,9 +554,26 @@
                             <i class="fa-solid fa-file-signature"></i> QA Action
                         </button>
                         {% else %}
-                        <span style="color: #10b981; font-size: 0.78rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.3rem;">
-                            <i class="fa-solid fa-check-double"></i> Released
+                        {% if insp.qa_disposition.disposition == 'RELEASE' or insp.lot.status == 'AVAILABLE' and insp.overall_test_result == 'PASS' %}
+                        <span style="color: #10b981; font-size: 0.78rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.35rem;">
+                            <i class="fa-solid fa-circle-check"></i> Released
                         </span>
+                        {% if insp.qa_disposition.coa_number %}
+                        <div style="font-size: 0.7rem; color: var(--text-muted); font-family: monospace;">{{ insp.qa_disposition.coa_number }}</div>
+                        {% endif %}
+                        {% elif insp.qa_disposition.disposition == 'REJECT' or insp.lot.status == 'REJECTED' or insp.overall_test_result == 'FAIL' %}
+                        <span style="color: #ef4444; font-size: 0.78rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.35rem;">
+                            <i class="fa-solid fa-circle-xmark"></i> Rejected
+                        </span>
+                        {% elif insp.qa_disposition.disposition == 'HOLD' or insp.lot.status == 'BLOCKED' %}
+                        <span style="color: #f59e0b; font-size: 0.78rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.35rem;">
+                            <i class="fa-solid fa-circle-pause"></i> Quarantine Hold
+                        </span>
+                        {% else %}
+                        <span style="color: var(--text-muted); font-size: 0.78rem; font-weight: 600;">
+                            Dispositioned
+                        </span>
+                        {% endif %}
                         {% endif %}
                     </td>
                 </tr>
@@ -721,6 +738,9 @@
                     </div>
                 </div>
 
+                <!-- cGMP QC Compliance Safety Alert Banner -->
+                <div id="dispQcSafetyBanner" style="display: none; padding: 0.75rem 1rem; border-radius: 10px; font-size: 0.82rem; margin-bottom: 1.15rem; line-height: 1.45;"></div>
+
                 <!-- Field 1: Regulatory Decision -->
                 <div class="qa-form-group">
                     <label class="qa-form-label" for="dispSelect">
@@ -796,12 +816,59 @@ function openDispositionModal(inspId, docNo, batchNo, lotNo, itemName, itemCode,
     
     document.getElementById('dispositionForm').action = "/dashboard/quality/disposition/" + inspId + "/";
     
-    // Reset to default RELEASE
     const dispSelect = document.getElementById('dispSelect');
-    if (dispSelect) {
+    const releaseOption = dispSelect.querySelector('option[value="RELEASE"]');
+    const safetyBanner = document.getElementById('dispQcSafetyBanner');
+    
+    // Strict cGMP (21 CFR Part 211) release locking
+    if (testResult === 'FAIL') {
+        if (releaseOption) {
+            releaseOption.disabled = true;
+            releaseOption.innerText = "❌ AUTHORIZE RELEASE (LOCKED: QC Result is FAIL / OOS)";
+        }
+        dispSelect.value = 'REJECT';
+        if (safetyBanner) {
+            safetyBanner.style.display = 'flex';
+            safetyBanner.style.alignItems = 'flex-start';
+            safetyBanner.style.gap = '0.55rem';
+            safetyBanner.style.background = 'rgba(239, 68, 68, 0.12)';
+            safetyBanner.style.border = '1px solid rgba(239, 68, 68, 0.35)';
+            safetyBanner.style.color = '#fca5a5';
+            safetyBanner.innerHTML = '<i class="fa-solid fa-triangle-exclamation" style="color: #ef4444; font-size: 1.1rem; margin-top: 1px; flex-shrink: 0;"></i> <div><strong style="color: #ef4444;">cGMP Safety Lock (21 CFR Part 211):</strong> This batch is <strong>FAIL (Out of Specification)</strong>. Commercial Release is <u style="color: #ef4444;">strictly prohibited</u>. You may only REJECT for destruction or place on Quarantine HOLD for CAPA investigation.</div>';
+        }
+    } else if (testResult === 'PENDING') {
+        if (releaseOption) {
+            releaseOption.disabled = true;
+            releaseOption.innerText = "⏳ AUTHORIZE RELEASE (LOCKED: QC Testing Pending)";
+        }
+        dispSelect.value = 'HOLD';
+        if (safetyBanner) {
+            safetyBanner.style.display = 'flex';
+            safetyBanner.style.alignItems = 'flex-start';
+            safetyBanner.style.gap = '0.55rem';
+            safetyBanner.style.background = 'rgba(245, 158, 11, 0.12)';
+            safetyBanner.style.border = '1px solid rgba(245, 158, 11, 0.35)';
+            safetyBanner.style.color = '#fcd34d';
+            safetyBanner.innerHTML = '<i class="fa-solid fa-clock" style="color: #f59e0b; font-size: 1.1rem; margin-top: 1px; flex-shrink: 0;"></i> <div><strong style="color: #f59e0b;">Analytical Testing Incomplete:</strong> QC Result is <strong>PENDING</strong>. Commercial Release is <u style="color: #f59e0b;">locked</u> until testing is concluded with a Certificate of Analysis (PASS). You can place on Quarantine HOLD.</div>';
+        }
+    } else {
+        if (releaseOption) {
+            releaseOption.disabled = false;
+            releaseOption.innerText = "AUTHORIZE RELEASE (Move Stock to AVAILABLE for Sale/Use)";
+        }
         dispSelect.value = 'RELEASE';
-        updateDispositionUI();
+        if (safetyBanner) {
+            safetyBanner.style.display = 'flex';
+            safetyBanner.style.alignItems = 'flex-start';
+            safetyBanner.style.gap = '0.55rem';
+            safetyBanner.style.background = 'rgba(16, 185, 129, 0.1)';
+            safetyBanner.style.border = '1px solid rgba(16, 185, 129, 0.3)';
+            safetyBanner.style.color = '#86efac';
+            safetyBanner.innerHTML = '<i class="fa-solid fa-circle-check" style="color: #10b981; font-size: 1.1rem; margin-top: 1px; flex-shrink: 0;"></i> <div><strong style="color: #10b981;">QC Inspection Compliant (PASS):</strong> Batch complies with all pharmacopoeial limits. Authorized for Commercial Release upon COA validation.</div>';
+        }
     }
+    
+    updateDispositionUI();
     
     const modal = document.getElementById('dispositionModal');
     if (modal) {

@@ -27,72 +27,325 @@
         outline: none;
     }
     .stats-card-link .stat-card {
-        background: #0f172a;
-        border: 1px solid var(--border-color);
-        border-radius: 12px;
-        padding: 1.15rem;
-        transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+        background: linear-gradient(145deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
+        padding: 1.25rem 1.35rem;
+        transition: transform 0.26s cubic-bezier(0.16, 1, 0.3, 1), 
+                    box-shadow 0.26s cubic-bezier(0.16, 1, 0.3, 1), 
+                    border-color 0.22s ease,
+                    filter 0.22s ease;
         height: 100%;
         box-sizing: border-box;
         position: relative;
         overflow: hidden;
+        backdrop-filter: blur(14px);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.08);
     }
+    
+    /* Top light sheen on stat cards */
+    .stats-card-link .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+        pointer-events: none;
+    }
+
+    /* Light shimmer effect on hover */
+    .stats-card-link .stat-card::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -130%;
+        width: 60%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.14), transparent);
+        transform: skewX(-20deg);
+        pointer-events: none;
+        transition: none;
+    }
+    .stats-card-link:hover .stat-card::after {
+        left: 180%;
+        transition: left 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
     .stats-card-link:hover .stat-card {
-        transform: translateY(-4px);
+        transform: translateY(-5px) scale(1.01);
+        border-color: rgba(255, 255, 255, 0.22);
     }
+
+    /* Tailored color glows on hover for each KPI stat card */
+    .stats-card-link:hover .stat-card[style*="#10b981"] {
+        border-color: rgba(16, 185, 129, 0.5) !important;
+        box-shadow: 0 12px 30px -4px rgba(16, 185, 129, 0.35), 0 0 18px rgba(16, 185, 129, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+    .stats-card-link:hover .stat-card[style*="#f59e0b"] {
+        border-color: rgba(245, 158, 11, 0.55) !important;
+        box-shadow: 0 12px 30px -4px rgba(245, 158, 11, 0.35), 0 0 18px rgba(245, 158, 11, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+    .stats-card-link:hover .stat-card[style*="#8b5cf6"] {
+        border-color: rgba(139, 92, 246, 0.55) !important;
+        box-shadow: 0 12px 30px -4px rgba(139, 92, 246, 0.35), 0 0 18px rgba(139, 92, 246, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+    .stats-card-link:hover .stat-card[style*="#ef4444"] {
+        border-color: rgba(239, 68, 68, 0.55) !important;
+        box-shadow: 0 12px 30px -4px rgba(239, 68, 68, 0.35), 0 0 18px rgba(239, 68, 68, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+
     .stats-card-link:hover .card-arrow {
-        transform: translate(2px, -2px);
+        transform: translate(3px, -3px) scale(1.25);
         opacity: 1 !important;
+        filter: drop-shadow(0 0 6px currentColor);
     }
     .card-arrow {
-        transition: transform 0.2s ease, opacity 0.2s ease;
+        transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease, filter 0.2s ease;
     }
 
     [data-theme="light"] .stats-card-link .stat-card {
         background: #ffffff;
         border-color: #e2e8f0;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
     }
     [data-theme="light"] .stats-card-link:hover .stat-card {
         background: #ffffff;
-        box-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.08);
+        box-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.12);
     }
 
     /* Tabs Styling */
     .expense-tabs-bar {
         display: flex;
-        gap: 0.5rem;
-        margin-bottom: 1.5rem;
-        border-bottom: 1px solid var(--border-color);
-        padding-bottom: 0.75rem;
+        gap: 0.65rem;
+        margin-bottom: 1.75rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        padding-bottom: 0.85rem;
         overflow-x: auto;
     }
     .exp-tab-btn {
         display: inline-flex;
         align-items: center;
-        gap: 0.5rem;
-        padding: 0.6rem 1.15rem;
-        border-radius: 8px;
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid var(--border-color);
-        color: var(--text-secondary);
+        gap: 0.55rem;
+        padding: 0.65rem 1.25rem;
+        border-radius: 10px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #cbd5e1;
         font-weight: 600;
-        font-size: 0.85rem;
+        font-size: 0.86rem;
         cursor: pointer;
-        transition: all 0.2s ease;
+        transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+                    box-shadow 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+                    border-color 0.2s ease,
+                    background 0.2s ease,
+                    color 0.2s ease;
         text-decoration: none;
         white-space: nowrap;
+        position: relative;
+        backdrop-filter: blur(8px);
+    }
+    .exp-tab-btn i {
+        font-size: 0.95rem;
+        transition: transform 0.22s ease, color 0.2s ease;
     }
     .exp-tab-btn:hover {
-        color: var(--text-primary);
-        border-color: var(--border-hover);
-        background: rgba(255, 255, 255, 0.06);
+        color: #ffffff;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.04) 100%);
+        border-color: rgba(99, 102, 241, 0.45);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3), 0 0 12px rgba(99, 102, 241, 0.2);
+    }
+    .exp-tab-btn:hover i {
+        transform: scale(1.18);
+        color: #818cf8;
+    }
+    .exp-tab-btn:active {
+        transform: translateY(0) scale(0.98);
     }
     .exp-tab-btn.active {
-        background: var(--color-primary);
-        border-color: var(--color-primary);
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        border-color: rgba(255, 255, 255, 0.3);
         color: #ffffff;
-        box-shadow: 0 4px 15px var(--color-primary-glow);
+        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5), 0 0 16px rgba(99, 102, 241, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    }
+    .exp-tab-btn.active:hover {
+        transform: translateY(-2.5px) scale(1.02);
+        box-shadow: 0 8px 25px rgba(99, 102, 241, 0.6), 0 0 20px rgba(99, 102, 241, 0.45);
+        filter: brightness(1.08);
+    }
+    .exp-tab-btn.active i {
+        color: #ffffff !important;
+        transform: scale(1.1);
+    }
+
+    /* Analytics Cards & Progress Styling */
+    .analytics-card {
+        background: linear-gradient(145deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        border-radius: 16px !important;
+        padding: 1.5rem !important;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+        backdrop-filter: blur(14px);
+        transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    }
+    .analytics-card:hover {
+        border-color: rgba(255, 255, 255, 0.16) !important;
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.35) !important;
+    }
+
+    .category-spend-item {
+        padding: 0.8rem 1rem;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+                    background 0.2s ease,
+                    border-color 0.2s ease,
+                    box-shadow 0.24s ease;
+    }
+    .category-spend-item:hover {
+        transform: translateX(4px);
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(59, 130, 246, 0.4);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25), 0 0 12px rgba(59, 130, 246, 0.2);
+    }
+    .cat-code {
+        color: var(--text-muted);
+        font-weight: 500;
+        font-size: 0.8rem;
+    }
+    .spend-progress-track {
+        height: 7px;
+        background: rgba(255, 255, 255, 0.07);
+        border-radius: 999px;
+        overflow: hidden;
+        margin: 0.45rem 0 0.35rem 0;
+        box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+    }
+    .spend-progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #3b82f6 0%, #06b6d4 100%);
+        border-radius: 999px;
+        transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: 0 0 8px rgba(6, 182, 212, 0.5);
+    }
+    .category-spend-item:hover .spend-progress-fill {
+        filter: brightness(1.2);
+        box-shadow: 0 0 14px rgba(6, 182, 212, 0.85);
+    }
+
+    /* Guardrail Cards */
+    .guardrails-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.9rem;
+    }
+    .guardrail-card {
+        padding: 0.95rem 1.15rem;
+        border-radius: 10px;
+        line-height: 1.5;
+        transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+                    box-shadow 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+                    border-color 0.2s ease,
+                    filter 0.2s ease;
+        position: relative;
+        cursor: default;
+    }
+    .guardrail-card:hover {
+        transform: translateX(5px) translateY(-1px);
+    }
+
+    .guardrail-cyan {
+        background: linear-gradient(135deg, rgba(6, 182, 212, 0.12) 0%, rgba(6, 182, 212, 0.03) 100%);
+        border-left: 4px solid #06b6d4 !important;
+        border: 1px solid rgba(6, 182, 212, 0.22);
+    }
+    .guardrail-cyan:hover {
+        border-color: rgba(6, 182, 212, 0.55);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3), 0 0 16px rgba(6, 182, 212, 0.25);
+        filter: brightness(1.08);
+    }
+
+    .guardrail-amber {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(245, 158, 11, 0.03) 100%);
+        border-left: 4px solid #f59e0b !important;
+        border: 1px solid rgba(245, 158, 11, 0.22);
+    }
+    .guardrail-amber:hover {
+        border-color: rgba(245, 158, 11, 0.55);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3), 0 0 16px rgba(245, 158, 11, 0.25);
+        filter: brightness(1.08);
+    }
+
+    .guardrail-purple {
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.12) 0%, rgba(139, 92, 246, 0.03) 100%);
+        border-left: 4px solid #8b5cf6 !important;
+        border: 1px solid rgba(139, 92, 246, 0.22);
+    }
+    .guardrail-purple:hover {
+        border-color: rgba(139, 92, 246, 0.55);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3), 0 0 16px rgba(139, 92, 246, 0.25);
+        filter: brightness(1.08);
+    }
+
+    .guardrail-red {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(239, 68, 68, 0.03) 100%);
+        border-left: 4px solid #ef4444 !important;
+        border: 1px solid rgba(239, 68, 68, 0.22);
+    }
+    .guardrail-red:hover {
+        border-color: rgba(239, 68, 68, 0.55);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3), 0 0 16px rgba(239, 68, 68, 0.25);
+        filter: brightness(1.08);
+    }
+
+    /* Light Mode Overrides */
+    [data-theme="light"] .analytics-card {
+        background: #ffffff !important;
+        border-color: #e2e8f0 !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+    }
+    [data-theme="light"] .category-spend-item {
+        background: #f8fafc;
+        border-color: #e2e8f0;
+    }
+    [data-theme="light"] .category-spend-item:hover {
+        background: #f1f5f9;
+        border-color: #93c5fd;
+    }
+    [data-theme="light"] .spend-progress-track {
+        background: #e2e8f0;
+    }
+    [data-theme="light"] .exp-tab-btn {
+        background: #f8fafc;
+        border-color: #e2e8f0;
+        color: #475569;
+    }
+    [data-theme="light"] .exp-tab-btn:hover {
+        background: #f1f5f9;
+        color: #0f172a;
+    }
+    [data-theme="light"] .exp-tab-btn.active {
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        color: #ffffff;
+    }
+
+    /* Top Action Buttons Hover Enhancement */
+    .top-actions-btn-group .btn,
+    .btn-primary {
+        transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), 
+                    box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1), 
+                    filter 0.2s ease !important;
+    }
+    .btn-primary:hover {
+        transform: translateY(-2px) scale(1.02);
+        box-shadow: 0 8px 24px rgba(99, 102, 241, 0.5), 0 0 16px rgba(99, 102, 241, 0.35) !important;
+        filter: brightness(1.08);
+    }
+    .btn-primary:active {
+        transform: translateY(0) scale(0.97);
     }
 
     /* Filter Bar */
@@ -373,19 +626,19 @@
 <!-- ========================================== -->
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
     <!-- Category Spend Breakdown -->
-    <div class="filter-card">
-        <h3 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+    <div class="filter-card analytics-card">
+        <h3 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
             <i class="fa-solid fa-tags" style="color: #3b82f6;"></i> Monthly Spend by Expense Category
         </h3>
-        <div style="display: flex; flex-direction: column; gap: 1rem;">
+        <div style="display: flex; flex-direction: column; gap: 0.85rem;">
             {% for item in category_analytics %}
-            <div>
+            <div class="category-spend-item">
                 <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.35rem;">
-                    <span><strong>{{ item.category.name }}</strong> ({{ item.category.code }})</span>
+                    <span><strong>{{ item.category.name }}</strong> <span class="cat-code">({{ item.category.code }})</span></span>
                     <span style="font-family: monospace; font-weight: 700; color: #10b981;">₹{{ item.total|floatformat:2 }}</span>
                 </div>
-                <div style="height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden;">
-                    <div style="height: 100%; background: #3b82f6; width: {% if total_incurred_month > 0 %}{% widthratio item.total total_incurred_month 100 %}{% else %}0{% endif %}%;"></div>
+                <div class="spend-progress-track">
+                    <div class="spend-progress-fill" style="width: {% if total_incurred_month > 0 %}{% widthratio item.total total_incurred_month 100 %}{% else %}0{% endif %}%;"></div>
                 </div>
                 <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.2rem;">
                     GL Account: {{ item.category.gl_account.account_code }} - {{ item.category.gl_account.name }} | Cap: ₹{{ item.category.max_limit_per_claim|default:"No limit" }}
@@ -396,21 +649,21 @@
     </div>
 
     <!-- Regulatory Compliance & SOD Policies -->
-    <div class="filter-card">
-        <h3 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+    <div class="filter-card analytics-card">
+        <h3 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
             <i class="fa-solid fa-shield-halved" style="color: #10b981;"></i> Regulatory Policies & Compliance Guardrails
         </h3>
-        <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.85rem; font-size: 0.83rem;">
-            <li style="padding: 0.75rem; background: rgba(6, 182, 212, 0.08); border-left: 3px solid #06b6d4; border-radius: 4px;">
+        <ul class="guardrails-list" style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.85rem; font-size: 0.83rem;">
+            <li class="guardrail-card guardrail-cyan">
                 <strong>UCPMP 2024 Pharma Compliance:</strong> Promotional, doctor gifts, and medical conference expenses strictly capped with zero-tolerance audit trail.
             </li>
-            <li style="padding: 0.75rem; background: rgba(245, 158, 11, 0.08); border-left: 3px solid #f59e0b; border-radius: 4px;">
+            <li class="guardrail-card guardrail-amber">
                 <strong>Segregation of Duties (SOD):</strong> Rigorous self-approval prevention. Submitting employees cannot approve, sanction, or disburse their own claims.
             </li>
-            <li style="padding: 0.75rem; background: rgba(139, 92, 246, 0.08); border-left: 3px solid #8b5cf6; border-radius: 4px;">
+            <li class="guardrail-card guardrail-purple">
                 <strong>Automated Double-Entry General Ledger:</strong> Disbursement auto-posts balanced journals Dr. Expense Account + Dr. Input GST vs. Cr. Bank Account.
             </li>
-            <li style="padding: 0.75rem; background: rgba(239, 68, 68, 0.08); border-left: 3px solid #ef4444; border-radius: 4px;">
+            <li class="guardrail-card guardrail-red">
                 <strong>SHA-256 Claim Fingerprinting:</strong> Prevents duplicate submissions of the same bill amount, invoice, and date across employees.
             </li>
         </ul>
@@ -1011,12 +1264,18 @@
 
     // Open Finance Audit Modal
     function openFinanceAuditModal(claimId, docNo, empName, total, base, tax, inv) {
+        const b = parseFloat(base) || 0;
+        const t = parseFloat(tax) || 0;
+        let tot = parseFloat(total) || 0;
+        if (tot === 0 || Math.abs(tot - b) < 0.01) {
+            tot = b + t;
+        }
         document.getElementById('finAuditSubtitle').innerText = 'Claim: ' + docNo;
         document.getElementById('finModalEmp').innerText = empName;
         document.getElementById('finModalInv').innerText = inv || 'N/A';
-        document.getElementById('finModalBase').innerText = '₹' + parseFloat(base).toFixed(2);
-        document.getElementById('finModalTax').innerText = '₹' + parseFloat(tax).toFixed(2);
-        document.getElementById('finModalTotal').innerText = '₹' + parseFloat(total).toFixed(2);
+        document.getElementById('finModalBase').innerText = '₹' + b.toFixed(2);
+        document.getElementById('finModalTax').innerText = '₹' + t.toFixed(2);
+        document.getElementById('finModalTotal').innerText = '₹' + tot.toFixed(2);
         document.getElementById('financeAuditForm').action = '/dashboard/expenses/action/' + claimId + '/';
         openModal('financeAuditModal');
     }
@@ -1034,12 +1293,18 @@
 
     // Open Claim Detail Modal
     function openClaimDetailModal(docNo, emp, cat, date, base, tax, total, purpose, vendor, inv, status, mgrRemarks, finRemarks, utr) {
+        const b = parseFloat(base) || 0;
+        const t = parseFloat(tax) || 0;
+        let tot = parseFloat(total) || 0;
+        if (tot === 0 || Math.abs(tot - b) < 0.01) {
+            tot = b + t;
+        }
         document.getElementById('detailClaimId').innerText = docNo;
         document.getElementById('detailEmp').innerText = emp;
         document.getElementById('detailCatDate').innerText = cat + ' • ' + date;
         document.getElementById('detailVendor').innerText = (vendor || 'Direct') + (inv ? ' (Inv: ' + inv + ')' : '');
-        document.getElementById('detailBreakdown').innerText = '₹' + parseFloat(base).toFixed(2) + ' + ₹' + parseFloat(tax).toFixed(2);
-        document.getElementById('detailTotal').innerText = '₹' + parseFloat(total).toFixed(2);
+        document.getElementById('detailBreakdown').innerText = '₹' + b.toFixed(2) + ' + ₹' + t.toFixed(2);
+        document.getElementById('detailTotal').innerText = '₹' + tot.toFixed(2);
         document.getElementById('detailPurpose').innerText = purpose;
 
         const mgrBlock = document.getElementById('detailManagerBlock');

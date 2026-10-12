@@ -2064,6 +2064,16 @@ def dashboard_employee_toggle_status(request, employee_id):
         reason=f"{status_str} employee [{emp.employee_code}] {emp.first_name} {emp.last_name}",
         request=request
     )
+
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest' or 'application/json' in request.headers.get('accept', ''):
+        return JsonResponse({
+            'success': True,
+            'is_active': emp.is_active,
+            'status_str': status_str,
+            'employee_code': emp.employee_code,
+            'message': f"Employee [{emp.employee_code}] has been {status_str.lower()}."
+        })
+
     messages.success(request, f"Employee [{emp.employee_code}] has been {status_str.lower()}.")
     return redirect('/dashboard/employee/?tab=directory')
 
@@ -2248,12 +2258,12 @@ def dashboard_field_tracking(request):
     Displays real-time geographic map, team status, and daily timeline stepper.
     """
     today = timezone.now().date()
-    field_force = Employee.objects.select_related('territory', 'branch').filter(department='SALES').order_by('employee_code')
-    attendances_today = AttendanceRecord.objects.filter(date=today)
+    field_force = Employee.objects.select_related('territory', 'branch').filter(department='SALES', is_active=True).order_by('employee_code')
+    attendances_today = AttendanceRecord.objects.filter(date=today, employee__in=field_force)
     att_map = {a.employee_id: a for a in attendances_today}
 
-    visits_today = FieldVisit.objects.select_related('customer', 'employee').filter(visit_date=today).order_by('-start_time')
-    beat_plans_today = DailyBeatPlan.objects.filter(date=today)
+    visits_today = FieldVisit.objects.select_related('customer', 'employee').filter(visit_date=today, employee__in=field_force).order_by('-start_time')
+    beat_plans_today = DailyBeatPlan.objects.filter(date=today, employee__in=field_force)
 
     total_field_force = field_force.count()
     present_count = attendances_today.filter(check_in_time__isnull=False).count()
@@ -2261,7 +2271,7 @@ def dashboard_field_tracking(request):
     completed_visits = visits_today.filter(visit_status='COMPLETED').count()
     planned_visits = beat_plans_today.count()
 
-    pob_agg = VisitOrderBooking.objects.filter(visit__visit_date=today).aggregate(models.Sum('booked_amount'))
+    pob_agg = VisitOrderBooking.objects.filter(visit__visit_date=today, visit__employee__in=field_force).aggregate(models.Sum('booked_amount'))
     total_pob_amount = pob_agg['booked_amount__sum'] or Decimal('0.00')
 
     flagged_visits_count = visits_today.filter(is_flagged=True).count()
@@ -2281,18 +2291,41 @@ def dashboard_field_tracking(request):
         if att:
             att_status = att.check_in_status or ('PRESENT' if att.check_in_time else 'ABSENT')
 
+        is_on_duty = bool(att and (att.check_in_time or att.in_time) and not att.check_out_time)
+
         team_data.append({
             'employee': emp,
             'attendance': att,
             'attendance_status': att_status,
+            'is_on_duty': is_on_duty,
             'is_active_in_visit': is_active_visit,
             'planned_visits': len(emp_planned),
             'completed_visits': completed_v,
             'pob_booked_amount': pob_emp,
         })
 
+    def _extract_flag_summary(reason):
+        if not reason:
+            return ""
+        r_low = reason.lower()
+        if 'coordinate' in r_low:
+            return 'No Geo-Coords'
+        if 'accuracy' in r_low:
+            return 'Low Accuracy GPS'
+        if 'short' in r_low:
+            return 'Short Visit (<3m)'
+        if 'outside' in r_low:
+            return 'Outside Geofence'
+        if 'deviation' in r_low:
+            return 'GPS Deviation'
+        if 'mock' in r_low:
+            return 'Mock GPS'
+        return reason[:20].strip()
+
     activity_feed = []
     for v in visits_today[:15]:
+        v_ts = v.end_time or v.start_time
+        v_time = timezone.localtime(v_ts).strftime('%H:%M') if v_ts else '--:--'
         activity_feed.append({
             'type': 'VISIT',
             'icon': 'fa-check' if v.visit_status == 'COMPLETED' else 'fa-stethoscope',
@@ -2301,15 +2334,20 @@ def dashboard_field_tracking(request):
             'employee_id': str(v.employee_id),
             'employee_name': f"{v.employee.first_name} {v.employee.last_name}",
             'title': f"{v.employee.first_name} {v.employee.last_name} @ {v.customer.name}",
-            'subtitle': f"{v.customer.customer_type} | {v.customer.city or 'Field'}",
-            'time': v.start_time.strftime('%H:%M') if v.start_time else '--:--',
+            'subtitle': f"{v.customer.customer_type} • {v.customer.city or 'Field'}",
+            'time': v_time,
             'status': v.visit_status,
             'is_flagged': v.is_flagged,
             'flag_reason': v.flag_reason,
-            'timestamp': v.start_time or timezone.now()
+            'flag_summary': _extract_flag_summary(v.flag_reason),
+            'lat': float(v.start_lat) if v.start_lat else None,
+            'lng': float(v.start_lng) if v.start_lng else None,
+            'timestamp': v_ts or timezone.now()
         })
 
     for a in attendances_today.filter(check_in_time__isnull=False).select_related('employee')[:15]:
+        a_ts = a.check_in_time
+        a_time = timezone.localtime(a.check_in_time).strftime('%H:%M') if a.check_in_time else (str(a.in_time)[:5] if a.in_time else '--:--')
         activity_feed.append({
             'type': 'ATTENDANCE',
             'icon': 'fa-fingerprint',
@@ -2318,12 +2356,15 @@ def dashboard_field_tracking(request):
             'employee_id': str(a.employee_id),
             'employee_name': f"{a.employee.first_name} {a.employee.last_name}",
             'title': f"{a.employee.first_name} {a.employee.last_name} Punched In",
-            'subtitle': f"Mode: {a.work_mode} | {a.employee.territory.name if a.employee.territory else 'HQ'}",
-            'time': timezone.localtime(a.check_in_time).strftime('%H:%M') if a.check_in_time else (str(a.in_time)[:5] if a.in_time else '--:--'),
+            'subtitle': f"Mode: {a.work_mode} • {a.employee.territory.name if a.employee.territory else 'HQ'}",
+            'time': a_time,
             'status': a.check_in_status or 'PRESENT',
-            'is_flagged': bool(a.flag_reason),
+            'is_flagged': bool(a.flag_reason) or (a.check_in_status in ['REQUIRES_REVIEW', 'POOR_ACCURACY', 'OUTSIDE_GEOFENCE']),
             'flag_reason': a.flag_reason,
-            'timestamp': a.check_in_time or timezone.now()
+            'flag_summary': _extract_flag_summary(a.flag_reason),
+            'lat': float(a.check_in_lat) if a.check_in_lat else None,
+            'lng': float(a.check_in_lng) if a.check_in_lng else None,
+            'timestamp': a_ts or timezone.now()
         })
     activity_feed.sort(key=lambda x: x['timestamp'], reverse=True)
 

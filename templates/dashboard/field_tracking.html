@@ -28,7 +28,8 @@
 {% block theme_toggle_block %}{% endblock %}
 
 {% block extra_css %}
-<!-- Google Maps Integration -->
+<!-- Interactive Leaflet & CARTO GIS Integration -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
 
 <style>
     /* ========================================================================= */
@@ -262,10 +263,37 @@
         gap: 0.5rem;
     }
     #fieldCockpitMap {
-        height: 470px;
+        height: 480px;
         width: 100%;
         background: #0f172a;
         z-index: 10;
+    }
+    .leaflet-container {
+        font-family: inherit;
+        background: #0f172a !important;
+    }
+    .leaflet-popup-content-wrapper {
+        background: rgba(15, 23, 42, 0.96) !important;
+        color: #f1f5f9 !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        border-radius: 14px !important;
+        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5), 0 0 15px rgba(99, 102, 241, 0.25) !important;
+        backdrop-filter: blur(16px) !important;
+        -webkit-backdrop-filter: blur(16px) !important;
+        padding: 0.35rem 0.25rem !important;
+    }
+    .leaflet-popup-tip {
+        background: rgba(15, 23, 42, 0.96) !important;
+    }
+
+    [data-theme="light"] .leaflet-popup-content-wrapper {
+        background: rgba(255, 255, 255, 0.96) !important;
+        color: #0f172a !important;
+        border: 1px solid rgba(0, 0, 0, 0.1) !important;
+        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.15) !important;
+    }
+    [data-theme="light"] .leaflet-popup-tip {
+        background: #ffffff !important;
     }
 
     /* Custom Leaflet Marker Styling */
@@ -274,18 +302,22 @@
         border: none;
     }
     .rep-marker-pin {
-        width: 32px;
-        height: 32px;
+        width: 34px;
+        height: 34px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         color: #ffffff;
-        font-size: 0.85rem;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        font-size: 0.88rem;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
         border: 2px solid #ffffff;
         position: relative;
         cursor: pointer;
+        transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .rep-marker-pin:hover {
+        transform: scale(1.15);
     }
     .rep-marker-pulse {
         position: absolute;
@@ -298,14 +330,14 @@
     }
     @keyframes markerPulse {
         0% { transform: scale(1); opacity: 0.8; }
-        100% { transform: scale(2.2); opacity: 0; }
+        100% { transform: scale(2.4); opacity: 0; }
     }
 
     .map-popup-card {
         font-family: inherit;
         font-size: 0.85rem;
-        min-width: 190px;
-        color: #0f172a;
+        min-width: 210px;
+        padding: 0.2rem 0.35rem;
     }
     .map-popup-header {
         display: flex;
@@ -315,38 +347,77 @@
         margin-bottom: 0.35rem;
     }
     .map-popup-meta {
-        font-size: 0.75rem;
-        color: #64748b;
+        font-size: 0.74rem;
+        color: var(--text-muted);
         display: flex;
-        gap: 0.6rem;
-        margin-bottom: 0.4rem;
+        gap: 0.5rem;
+        margin-bottom: 0.45rem;
     }
     .map-popup-info {
-        padding: 0.4rem 0;
-        border-top: 1px solid #e2e8f0;
-        font-size: 0.74rem;
-        color: #334155;
-        line-height: 1.4;
+        padding: 0.45rem 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        font-size: 0.76rem;
+        line-height: 1.5;
+    }
+    [data-theme="light"] .map-popup-info {
+        border-top: 1px solid rgba(0, 0, 0, 0.08);
     }
     .map-popup-btn {
         width: 100%;
-        margin-top: 0.4rem;
-        padding: 0.35rem 0.6rem;
-        background: #4f46e5;
-        color: #ffffff;
+        margin-top: 0.5rem;
+        padding: 0.45rem 0.75rem;
+        background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
+        color: #ffffff !important;
         border: none;
-        border-radius: 6px;
-        font-size: 0.75rem;
-        font-weight: 600;
+        border-radius: 8px;
+        font-size: 0.76rem;
+        font-weight: 700;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 0.35rem;
-        transition: background 0.2s;
+        gap: 0.4rem;
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .map-popup-btn:hover {
-        background: #4338ca;
+        background: linear-gradient(135deg, #4338ca 0%, #2563eb 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(79, 70, 229, 0.45);
+    }
+
+    /* Leaflet Google Map Layer Control Styling */
+    .leaflet-control-layers {
+        background: rgba(15, 23, 42, 0.94) !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        color: #f1f5f9 !important;
+        border-radius: 10px !important;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45) !important;
+        font-size: 0.78rem !important;
+        backdrop-filter: blur(8px);
+        padding: 0.5rem 0.75rem !important;
+    }
+    .leaflet-control-layers-toggle {
+        filter: invert(1);
+    }
+    .leaflet-control-layers label {
+        color: #f1f5f9 !important;
+        margin-bottom: 0.25rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+    [data-theme="light"] .leaflet-control-layers {
+        background: rgba(255, 255, 255, 0.96) !important;
+        border: 1px solid rgba(0, 0, 0, 0.12) !important;
+        color: #0f172a !important;
+    }
+    [data-theme="light"] .leaflet-control-layers-toggle {
+        filter: none;
+    }
+    [data-theme="light"] .leaflet-control-layers label {
+        color: #0f172a !important;
     }
 
     /* ========================================================================= */
@@ -475,6 +546,191 @@
         color: #ef4444;
     }
 
+    /* Enhanced Team Tracking Table & Toolbar Styling */
+    .filter-toolbar {
+        background: linear-gradient(145deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
+        padding: 1rem 1.25rem;
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-bottom: 1.25rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+        backdrop-filter: blur(12px);
+    }
+    .filter-toolbar input.form-control,
+    .filter-toolbar select.form-control {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        color: var(--text-primary);
+        font-size: 0.85rem;
+        transition: all 0.2s ease;
+    }
+    .filter-toolbar input.form-control:focus,
+    .filter-toolbar select.form-control:focus {
+        background: rgba(255, 255, 255, 0.07);
+        border-color: rgba(99, 102, 241, 0.6);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+
+    #teamTrackingTable {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+    /* Enhanced Responsive Table & Action Column */
+    .table-responsive {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 0 0 14px 14px;
+        padding-bottom: 0.6rem;
+    }
+    .table-responsive::-webkit-scrollbar {
+        height: 7px;
+    }
+    .table-responsive::-webkit-scrollbar-track {
+        background: rgba(15, 23, 42, 0.4);
+        border-radius: 4px;
+    }
+    .table-responsive::-webkit-scrollbar-thumb {
+        background: rgba(99, 102, 241, 0.35);
+        border-radius: 4px;
+    }
+    .table-responsive::-webkit-scrollbar-thumb:hover {
+        background: rgba(99, 102, 241, 0.65);
+    }
+
+    #teamTrackingTable {
+        width: 100%;
+        min-width: 1050px;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+    #teamTrackingTable thead th {
+        background: rgba(15, 23, 42, 0.95);
+        color: var(--text-secondary);
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 0.95rem 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        white-space: nowrap;
+    }
+    #teamTrackingTable thead th:last-child,
+    #teamTrackingTable tbody td:last-child {
+        text-align: center;
+        white-space: nowrap;
+        min-width: 130px;
+        width: 130px;
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
+    }
+    #teamTrackingTable tbody tr {
+        transition: background 0.2s ease, transform 0.2s ease;
+    }
+    #teamTrackingTable tbody tr:hover {
+        background: rgba(255, 255, 255, 0.04) !important;
+    }
+    #teamTrackingTable tbody td {
+        padding: 0.85rem 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        vertical-align: middle;
+        font-size: 0.85rem;
+    }
+    .rep-avatar-circle {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 0.88rem;
+        box-shadow: 0 2px 8px rgba(79, 70, 229, 0.35);
+        flex-shrink: 0;
+        transition: transform 0.2s ease;
+    }
+    #teamTrackingTable tbody tr:hover .rep-avatar-circle {
+        transform: scale(1.08);
+    }
+
+    /* Action Timeline Button - Robust & Full Width */
+    .btn-timeline-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
+        padding: 0.42rem 0.95rem;
+        border-radius: 999px;
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.22) 0%, rgba(6, 182, 212, 0.15) 100%);
+        border: 1px solid rgba(99, 102, 241, 0.5);
+        color: #f1f5f9;
+        font-size: 0.82rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+        text-decoration: none;
+        white-space: nowrap;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+        backdrop-filter: blur(8px);
+        box-sizing: border-box;
+    }
+    .btn-timeline-action:hover {
+        background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
+        border-color: #818cf8;
+        color: #ffffff;
+        transform: translateY(-2px) scale(1.03);
+        box-shadow: 0 6px 18px rgba(79, 70, 229, 0.45), 0 0 12px rgba(6, 182, 212, 0.35);
+    }
+    .btn-timeline-action i {
+        color: #818cf8;
+        font-size: 0.85rem;
+        transition: transform 0.2s ease, color 0.2s ease;
+    }
+    .btn-timeline-action:hover i {
+        color: #ffffff;
+        transform: scale(1.15);
+    }
+    .btn-timeline-action:active {
+        transform: translateY(0) scale(0.97);
+    }
+
+    /* Modal Summary Quick Ribbon */
+    .timeline-summary-bar {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
+        padding: 0.85rem 1rem;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+    }
+    .timeline-summary-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+    }
+    .timeline-summary-lbl {
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        font-weight: 600;
+        letter-spacing: 0.03em;
+    }
+    .timeline-summary-val {
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
     /* Timeline Stepper */
     .timeline-stepper {
         position: relative;
@@ -490,7 +746,7 @@
         top: 0.5rem;
         bottom: 0.5rem;
         width: 2px;
-        background: var(--border-color);
+        background: rgba(255, 255, 255, 0.1);
     }
     .timeline-node {
         position: relative;
@@ -499,21 +755,27 @@
         position: absolute;
         left: -2rem;
         top: 0.25rem;
-        width: 26px;
-        height: 26px;
+        width: 28px;
+        height: 28px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 0.75rem;
+        font-size: 0.8rem;
         color: #ffffff;
-        box-shadow: 0 0 10px rgba(0,0,0,0.3);
+        box-shadow: 0 0 12px rgba(0, 0, 0, 0.4);
+        border: 2px solid rgba(255, 255, 255, 0.2);
     }
     .timeline-content {
-        background: rgba(255, 255, 255, 0.02);
-        border: 1px solid var(--border-color);
-        border-radius: 10px;
-        padding: 0.85rem 1rem;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        padding: 0.95rem 1.15rem;
+        transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+    .timeline-content:hover {
+        border-color: rgba(99, 102, 241, 0.4);
+        background: rgba(255, 255, 255, 0.05);
     }
 </style>
 {% endblock %}
@@ -591,7 +853,7 @@
 
     <!-- 2. INTERACTIVE LIVE MAP & ACTIVITY COCKPIT -->
     <div class="cockpit-layout">
-        <!-- Interactive High-Performance CARTO Map -->
+        <!-- Interactive High-Performance Google Map -->
         <div class="map-panel">
             <div class="map-header">
                 <div style="font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
@@ -631,25 +893,46 @@
 
             <div class="feed-items-list" id="cockpitFeedList">
                 {% for item in activity_feed %}
-                <div class="feed-item" data-feed-type="{{ item.type }}" onclick="focusFeedActivity('{{ item.employee_id }}', '{{ item.employee_name }}', '{{ item.lat|default:'' }}', '{{ item.lng|default:'' }}')">
+                <div class="feed-item" data-feed-type="{{ item.type }}" onclick="focusFeedActivity('{{ item.employee_id }}', '{{ item.employee_name }}', '{{ item.lat|default:'' }}', '{{ item.lng|default:'' }}')" title="Click to locate on Google Map">
                     <div class="feed-icon" style="background: {{ item.icon_bg }}; color: {{ item.icon_color }};">
                         <i class="fa-solid {{ item.icon }}"></i>
                     </div>
                     <div style="flex: 1; min-width: 0;">
-                        <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
-                            {{ item.title }}
+                        <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.4rem; margin-bottom: 0.2rem;">
+                            <div style="font-size: 0.84rem; font-weight: 700; color: var(--text-primary); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+                                {{ item.title }}
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.35rem; flex-shrink: 0;">
+                                {% if item.status == 'COMPLETED' %}
+                                <span class="badge badge-success" style="font-size: 0.65rem; font-weight: 700; padding: 2px 7px;"><i class="fa-solid fa-check"></i> Completed</span>
+                                {% elif item.status == 'IN_PROGRESS' or item.status == 'STARTED' %}
+                                <span class="badge badge-info" style="font-size: 0.65rem; font-weight: 700; padding: 2px 7px;"><i class="fa-solid fa-spinner fa-spin"></i> In Detailing</span>
+                                {% elif item.status == 'POOR_ACCURACY' %}
+                                <span class="badge badge-warning" style="font-size: 0.65rem; font-weight: 700; padding: 2px 7px;" title="Low GPS Accuracy"><i class="fa-solid fa-satellite-dish"></i> Low GPS</span>
+                                {% elif item.status == 'OUTSIDE_GEOFENCE' or item.status == 'REQUIRES_REVIEW' %}
+                                <span class="badge badge-warning" style="font-size: 0.65rem; font-weight: 700; padding: 2px 7px;" title="Geofence Deviation"><i class="fa-solid fa-triangle-exclamation"></i> Flagged</span>
+                                {% elif item.status == 'VALID' or item.status == 'PRESENT' %}
+                                <span class="badge badge-success" style="font-size: 0.65rem; font-weight: 700; padding: 2px 7px;"><i class="fa-solid fa-fingerprint"></i> On Duty</span>
+                                {% else %}
+                                <span class="badge" style="font-size: 0.65rem; font-weight: 600; padding: 2px 7px; background: rgba(148,163,184,0.15); color: #94a3b8;">{{ item.status }}</span>
+                                {% endif %}
+                                <button type="button" class="btn btn-secondary" onclick="event.stopPropagation(); viewEmployeeTimeline('{{ item.employee_id }}', '{{ item.employee_name }}')" title="View {{ item.employee_name }} Timeline" style="padding: 2px 6px; font-size: 0.65rem; border-radius: 6px; line-height: 1;">
+                                    <i class="fa-solid fa-timeline"></i>
+                                </button>
+                            </div>
                         </div>
-                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.15rem;">
-                            {{ item.time }} | {{ item.subtitle }}
+                        <div style="font-size: 0.74rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
+                            <strong style="color: #818cf8; font-family: monospace;">{{ item.time }}</strong>
+                            <span style="opacity: 0.4;">|</span>
+                            <span>{{ item.subtitle }}</span>
                             {% if item.is_flagged %}
-                            <span style="color: #f59e0b; margin-left: 0.35rem;"><i class="fa-solid fa-triangle-exclamation"></i> {{ item.flag_reason|slice:":25" }}</span>
+                            <span class="badge badge-warning" style="font-size: 0.65rem; padding: 1px 6px;" title="{{ item.flag_reason|default:'Audit deviation' }}">
+                                <i class="fa-solid fa-triangle-exclamation"></i> {{ item.flag_summary|default:'Audit Flag' }}
+                            </span>
                             {% else %}
-                            <span style="color: #10b981; margin-left: 0.35rem;"><i class="fa-solid fa-shield-check"></i> Geofence OK</span>
+                            <span style="color: #10b981; font-size: 0.7rem;"><i class="fa-solid fa-shield-check"></i> Geofence OK</span>
                             {% endif %}
                         </div>
-                    </div>
-                    <div style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600;">
-                        {{ item.status }}
                     </div>
                 </div>
                 {% empty %}
@@ -712,7 +995,7 @@
                         <th>Visits (Done/Plan)</th>
                         <th>POB Orders (₹)</th>
                         <th>Status</th>
-                        <th style="text-align: right;">Action</th>
+                        <th style="text-align: center;">Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -720,12 +1003,12 @@
                     <tr data-emp-id="{{ row.employee.id }}" data-territory="{{ row.employee.territory.name|default:'' }}" data-status="{{ row.attendance_status }}" data-pob="{{ row.pob_booked_amount|floatformat:0 }}" data-in-visit="{% if row.is_active_in_visit %}1{% else %}0{% endif %}">
                         <td>
                             <div style="display: flex; align-items: center; gap: 0.75rem;">
-                                <div style="width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #4f46e5, #06b6d4); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 0.85rem;">
-                                    {{ row.employee.first_name|slice:":1" }}
+                                <div class="rep-avatar-circle">
+                                    {{ row.employee.first_name|slice:":1"|upper }}
                                 </div>
                                 <div>
-                                    <strong style="color: var(--text-primary); font-size: 0.9rem;">{{ row.employee.first_name }} {{ row.employee.last_name }}</strong>
-                                    <div style="font-size: 0.75rem; color: var(--text-muted);">{{ row.employee.employee_code }}</div>
+                                    <strong style="color: var(--text-primary); font-size: 0.9rem;">{{ row.employee.first_name|title }} {{ row.employee.last_name|title }}</strong>
+                                    <div style="font-size: 0.75rem; color: var(--text-muted); font-family: monospace;">{{ row.employee.employee_code }}</div>
                                 </div>
                             </div>
                         </td>
@@ -735,44 +1018,54 @@
                         </td>
                         <td>{{ row.employee.territory.name|default:"Unassigned" }}</td>
                         <td>
-                            {% if row.attendance_status == 'PRESENT' %}
-                            <span class="badge badge-success"><i class="fa-solid fa-circle-check"></i> Present</span>
-                            {% elif row.attendance_status == 'REQUIRES_REVIEW' or row.attendance_status == 'POOR_ACCURACY' %}
-                            <span class="badge badge-warning"><i class="fa-solid fa-triangle-exclamation"></i> Flagged</span>
+                            {% if row.attendance_status == 'PRESENT' or row.attendance_status == 'VALID' %}
+                            <span class="badge badge-success" style="font-weight: 600;"><i class="fa-solid fa-circle-check"></i> Present</span>
+                            {% elif row.attendance_status == 'REQUIRES_REVIEW' or row.attendance_status == 'POOR_ACCURACY' or row.attendance_status == 'OUTSIDE_GEOFENCE' %}
+                            <span class="badge badge-warning" style="font-weight: 600;" title="{{ row.attendance.flag_reason|default:'Geofence Deviation' }}"><i class="fa-solid fa-triangle-exclamation"></i> Flagged</span>
                             {% else %}
-                            <span class="badge" style="background: rgba(148, 163, 184, 0.15); color: #94a3b8;">Not Checked In</span>
+                            <span class="badge" style="background: rgba(148, 163, 184, 0.15); color: #94a3b8; font-weight: 600;"><i class="fa-solid fa-clock"></i> Not Checked In</span>
                             {% endif %}
                         </td>
                         <td>
                             {% if row.attendance and row.attendance.check_in_time %}
-                            <strong>{{ row.attendance.check_in_time|time:"H:i" }}</strong>
-                            <div style="font-size: 0.72rem; color: var(--text-muted);">{{ row.attendance.work_mode }}</div>
+                            <strong style="color: var(--text-primary);">{{ row.attendance.check_in_time|time:"H:i" }}</strong>
+                            <div style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600;"><span class="badge badge-primary" style="font-size: 0.65rem; padding: 1px 6px;">{{ row.attendance.work_mode|default:'FIELD' }}</span></div>
                             {% elif row.attendance and row.attendance.in_time %}
-                            <strong>{{ row.attendance.in_time|slice:":5" }}</strong>
-                            <div style="font-size: 0.72rem; color: var(--text-muted);">{{ row.attendance.work_mode }}</div>
+                            <strong style="color: var(--text-primary);">{{ row.attendance.in_time|slice:":5" }}</strong>
+                            <div style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600;"><span class="badge badge-primary" style="font-size: 0.65rem; padding: 1px 6px;">{{ row.attendance.work_mode|default:'FIELD' }}</span></div>
                             {% else %}
-                            <span style="color: var(--text-muted);">--:--</span>
+                            <span style="color: var(--text-muted); font-size: 0.82rem;">--:--</span>
                             {% endif %}
                         </td>
                         <td>
-                            <strong style="color: #10b981;">{{ row.completed_visits }}</strong> / {{ row.planned_visits }}
+                            <strong style="color: #10b981; font-size: 0.92rem;">{{ row.completed_visits }}</strong> <span style="color: var(--text-muted);">/</span> <span style="font-weight: 600;">{{ row.planned_visits }}</span>
                         </td>
                         <td>
-                            <strong>₹{{ row.pob_booked_amount|floatformat:0 }}</strong>
+                            <strong style="font-family: monospace; color: var(--text-primary); font-size: 0.92rem;">₹{{ row.pob_booked_amount|floatformat:0 }}</strong>
                         </td>
                         <td>
                             {% if row.is_active_in_visit %}
-                            <span class="badge" style="background: rgba(6, 182, 212, 0.15); color: #06b6d4; border: 1px solid rgba(6, 182, 212, 0.3);">
+                            <span class="badge" style="background: rgba(6, 182, 212, 0.18); color: #06b6d4; border: 1px solid rgba(6, 182, 212, 0.4); box-shadow: 0 0 10px rgba(6, 182, 212, 0.25);">
                                 <i class="fa-solid fa-spinner fa-spin"></i> In Detailing
                             </span>
-                            {% elif row.attendance_status == 'PRESENT' %}
-                            <span class="badge badge-success">On Field Duty</span>
+                            {% elif row.is_on_duty %}
+                                {% if row.attendance_status == 'REQUIRES_REVIEW' or row.attendance_status == 'POOR_ACCURACY' or row.attendance_status == 'OUTSIDE_GEOFENCE' %}
+                                <span class="badge" style="background: rgba(245, 158, 11, 0.18); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.35);">
+                                    <i class="fa-solid fa-person-walking"></i> On Duty (Flagged)
+                                </span>
+                                {% else %}
+                                <span class="badge badge-success" style="box-shadow: 0 0 8px rgba(16, 185, 129, 0.25);">
+                                    <i class="fa-solid fa-circle-dot fa-fade"></i> On Field Duty
+                                </span>
+                                {% endif %}
                             {% else %}
-                            <span class="badge" style="background: rgba(148, 163, 184, 0.12); color: #94a3b8;">Idle</span>
+                            <span class="badge" style="background: rgba(148, 163, 184, 0.12); color: #94a3b8;">
+                                <i class="fa-solid fa-moon"></i> Off Duty
+                            </span>
                             {% endif %}
                         </td>
-                        <td style="text-align: right;">
-                            <button class="btn btn-secondary" onclick="viewEmployeeTimeline('{{ row.employee.id }}', '{{ row.employee.first_name }} {{ row.employee.last_name }}')" style="padding: 0.35rem 0.75rem; font-size: 0.78rem;">
+                        <td style="text-align: center;">
+                            <button type="button" class="btn-timeline-action" onclick="viewEmployeeTimeline('{{ row.employee.id }}', '{{ row.employee.first_name|title }} {{ row.employee.last_name|title }}')" title="View telemetry and visit timeline">
                                 <i class="fa-solid fa-timeline"></i> Timeline
                             </button>
                         </td>
@@ -784,6 +1077,12 @@
                         </td>
                     </tr>
                     {% endfor %}
+                    <tr id="noMatchRow" style="display: none;">
+                        <td colspan="9" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">
+                            <i class="fa-solid fa-user-slash" style="font-size: 1.8rem; margin-bottom: 0.5rem; display: block; opacity: 0.5;"></i>
+                            No field representatives match your search and filter criteria.
+                        </td>
+                    </tr>
                 </tbody>
             </table>
         </div>
@@ -793,28 +1092,39 @@
 <!-- ======================================================== -->
 <!-- MODAL: EMPLOYEE DAILY TIMELINE & GPS AUDIT TRAIL         -->
 <!-- ======================================================== -->
-<div id="employeeTimelineModal" class="modal-overlay" style="display: none; align-items: center; justify-content: center; z-index: 1050;">
-    <div class="modal-box" style="max-width: 650px; width: 92%; max-height: 85vh; overflow-y: auto;">
-        <div class="modal-header">
+<div id="employeeTimelineModal" class="modal-overlay" style="display: none; align-items: center; justify-content: center; z-index: 1050;" onclick="if(event.target === this) closeModal('employeeTimelineModal')">
+    <div class="modal-box" style="max-width: 680px; width: 92%; max-height: 88vh; overflow-y: auto; background: var(--card-bg); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+        <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 0.75rem;">
             <div>
-                <h3 id="timelineModalEmpName" style="margin: 0; font-size: 1.15rem; color: var(--text-primary);">
+                <h3 id="timelineModalEmpName" style="margin: 0; font-size: 1.15rem; color: var(--text-primary); font-weight: 700;">
                     Employee Timeline
                 </h3>
-                <span style="font-size: 0.8rem; color: var(--text-muted);">Daily GPS verification & visit sequence</span>
+                <div id="timelineModalSubMeta" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                    <span>Daily GPS verification & visit sequence</span>
+                </div>
             </div>
-            <button type="button" class="modal-close-btn" onclick="closeModal('employeeTimelineModal')" title="Close">&times;</button>
+            <div style="display: flex; align-items: center; gap: 0.65rem;">
+                <input type="date" id="timelineDateInput" class="form-control" style="padding: 0.35rem 0.65rem; font-size: 0.8rem; width: auto; background: rgba(255,255,255,0.06); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 8px;" onchange="onTimelineDatePickerChange()" title="Pick audit date">
+                <button type="button" class="modal-close-btn" onclick="closeModal('employeeTimelineModal')" title="Close" style="font-size: 1.4rem; padding: 0 0.35rem; line-height: 1;">&times;</button>
+            </div>
         </div>
 
-        <div class="modal-body" style="padding: 1.25rem;">
+        <div class="modal-body" style="padding: 1.25rem 1.5rem;">
+            <!-- Modal Summary Dashboard Ribbon -->
+            <div id="timelineSummaryContainer" class="timeline-summary-bar" style="display: none;"></div>
+
             <!-- Timeline Stepper List -->
             <div id="timelineStepperContainer" class="timeline-stepper">
-                <div style="text-align: center; padding: 1.5rem; color: var(--text-muted);">
+                <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
                     <i class="fa-solid fa-circle-notch fa-spin"></i> Loading timeline...
                 </div>
             </div>
         </div>
 
-        <div class="modal-footer">
+        <div class="modal-footer" style="padding: 1rem 1.5rem; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+            <div id="timelineModalFooterNote" style="font-size: 0.76rem; color: var(--text-muted);">
+                <i class="fa-solid fa-shield-halved" style="color: #6366f1;"></i> Geofenced Telemetry Audit Trail
+            </div>
             <button type="button" class="btn btn-secondary" onclick="closeModal('employeeTimelineModal')">Close</button>
         </div>
     </div>
@@ -822,90 +1132,88 @@
 {% endblock %}
 
 {% block extra_js %}
-<!-- Google Maps JavaScript API with user API Key -->
-<script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key|default:'AIzaSyB51aYJiic2l5j0grNJsbd-WIoH2M-D0L0' }}&callback=initGoogleMap&loading=async" async defer></script>
+<!-- Leaflet JavaScript API -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 
 <script>
     let cockpitMap = null;
-    let googleMarkers = [];
-    let googleInfoWindow = null;
-    let currentMapBounds = null;
+    let mapMarkers = [];
+    let currentTileLayer = null;
     let activeMetricCard = 'ALL';
 
-    // Premium Google Maps Dark Theme Styles
-    const googleMapDarkStyles = [
-        { "elementType": "geometry", "stylers": [{ "color": "#1e293b" }] },
-        { "elementType": "labels.text.stroke", "stylers": [{ "color": "#1e293b" }] },
-        { "elementType": "labels.text.fill", "stylers": [{ "color": "#94a3b8" }] },
-        { "featureType": "administrative.locality", "elementType": "labels.text.fill", "stylers": [{ "color": "#cbd5e1" }] },
-        { "featureType": "poi", "elementType": "labels.text.fill", "stylers": [{ "color": "#94a3b8" }] },
-        { "featureType": "poi.park", "elementType": "geometry", "stylers": [{ "color": "#0f172a" }] },
-        { "featureType": "road", "elementType": "geometry", "stylers": [{ "color": "#334155" }] },
-        { "featureType": "road", "elementType": "geometry.stroke", "stylers": [{ "color": "#1e293b" }] },
-        { "featureType": "road", "elementType": "labels.text.fill", "stylers": [{ "color": "#94a3b8" }] },
-        { "featureType": "road.highway", "elementType": "geometry", "stylers": [{ "color": "#475569" }] },
-        { "featureType": "road.highway", "elementType": "geometry.stroke", "stylers": [{ "color": "#1e293b" }] },
-        { "featureType": "transit", "elementType": "geometry", "stylers": [{ "color": "#1e293b" }] },
-        { "featureType": "water", "elementType": "geometry", "stylers": [{ "color": "#0f172a" }] },
-        { "featureType": "water", "elementType": "labels.text.fill", "stylers": [{ "color": "#64748b" }] }
-    ];
-
-    // Clean Google Maps Light Theme Styles
-    const googleMapLightStyles = [
-        { "featureType": "water", "elementType": "geometry", "stylers": [{ "color": "#e0f2fe" }] },
-        { "featureType": "landscape", "elementType": "geometry", "stylers": [{ "color": "#f8fafc" }] },
-        { "featureType": "road", "elementType": "geometry", "stylers": [{ "color": "#ffffff" }] },
-        { "featureType": "poi", "elementType": "geometry", "stylers": [{ "color": "#f1f5f9" }] }
-    ];
-
-    function getGoogleMapStyles() {
-        const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
-        return isDark ? googleMapDarkStyles : googleMapLightStyles;
-    }
+    // Google Maps Tile Endpoints (Standard Roads, Satellite Hybrid, Terrain, OSM)
+    const GOOGLE_STREETS_URL = 'https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}';
+    const GOOGLE_HYBRID_URL  = 'https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}';
+    const GOOGLE_TERRAIN_URL = 'https://{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}';
+    const OSM_STREETS_URL    = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 
     // =========================================================================
-    // 1. GOOGLE MAPS INITIALIZATION
+    // 1. HIGH-PERFORMANCE GOOGLE MAP INITIALIZATION
     // =========================================================================
 
-    function initGoogleMap() {
+    function initCockpitMap() {
         const mapContainer = document.getElementById('fieldCockpitMap');
         if (!mapContainer || cockpitMap) return;
 
-        // Default Center: Delhi NCR HQ (28.6280, 77.3780)
-        cockpitMap = new google.maps.Map(mapContainer, {
-            center: { lat: 28.6280, lng: 77.3780 },
+        cockpitMap = L.map('fieldCockpitMap', {
+            center: [28.6280, 77.3780],
             zoom: 11,
-            mapTypeId: google.maps.MapTypeId.ROADMAP,
-            mapTypeControl: true,
-            mapTypeControlOptions: {
-                style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
-                position: google.maps.ControlPosition.TOP_RIGHT
-            },
-            zoomControl: true,
-            zoomControlOptions: {
-                position: google.maps.ControlPosition.RIGHT_CENTER
-            },
-            streetViewControl: false,
-            fullscreenControl: true,
-            fullscreenControlOptions: {
-                position: google.maps.ControlPosition.RIGHT_TOP
-            },
-            styles: getGoogleMapStyles()
+            zoomControl: false,
+            attributionControl: true
         });
 
-        googleInfoWindow = new google.maps.InfoWindow();
+        L.control.zoom({ position: 'topright' }).addTo(cockpitMap);
+
+        // Google Maps Standard Roadmap Layer
+        const googleStreets = L.tileLayer(GOOGLE_STREETS_URL, {
+            maxZoom: 20,
+            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+            attribution: '&copy; Google Maps'
+        });
+
+        // Google Maps Satellite / Hybrid Layer
+        const googleHybrid = L.tileLayer(GOOGLE_HYBRID_URL, {
+            maxZoom: 20,
+            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+            attribution: '&copy; Google Maps Satellite'
+        });
+
+        // Google Maps Terrain Layer
+        const googleTerrain = L.tileLayer(GOOGLE_TERRAIN_URL, {
+            maxZoom: 20,
+            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+            attribution: '&copy; Google Maps Terrain'
+        });
+
+        // OpenStreetMap Fallback Layer
+        const osmStreets = L.tileLayer(OSM_STREETS_URL, {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors'
+        });
+
+        // Default to Google Streets
+        googleStreets.addTo(cockpitMap);
+        currentTileLayer = googleStreets;
+
+        // Base Layer Switcher (Google Streets / Satellite / Terrain / OSM)
+        const baseMaps = {
+            "Google Maps": googleStreets,
+            "Google Satellite": googleHybrid,
+            "Google Terrain": googleTerrain,
+            "OpenStreetMap": osmStreets
+        };
+        L.control.layers(baseMaps, null, { position: 'topright' }).addTo(cockpitMap);
 
         loadCockpitMapData();
     }
 
     function updateMapTheme() {
-        if (cockpitMap) {
-            cockpitMap.setOptions({ styles: getGoogleMapStyles() });
-        }
+        if (!cockpitMap) return;
+        cockpitMap.invalidateSize();
     }
 
     // =========================================================================
-    // 2. REAL-TIME TEAM GPS MARKERS ON GOOGLE MAP
+    // 2. REAL-TIME TEAM GPS MARKERS ON MAP
     // =========================================================================
 
     async function loadCockpitMapData() {
@@ -913,20 +1221,20 @@
 
         try {
             const res = await fetch('/api/v1/tracking/employees/current/', {
-                headers: { 'Accept': 'application/json' }
+                headers: { 'Accept': 'application/json' },
+                credentials: 'same-origin'
             });
             const body = await res.json();
             if (body.success && body.data) {
                 const team = body.data.team || body.data.employees || [];
                 renderMapMarkers(team);
 
-                // Update live feed if available in payload
                 if (body.data.activity_feed && body.data.activity_feed.length > 0) {
                     renderFeedItems(body.data.activity_feed);
                 }
             }
         } catch (e) {
-            console.warn("Telemetry ping notice:", e);
+            console.warn("Live telemetry sync notice:", e);
         }
     }
 
@@ -934,11 +1242,10 @@
         if (!cockpitMap) return;
 
         // Clear existing markers
-        googleMarkers.forEach(item => {
-            if (item.marker) item.marker.setMap(null);
-        });
-        googleMarkers = [];
-        currentMapBounds = new google.maps.LatLngBounds();
+        mapMarkers.forEach(m => cockpitMap.removeLayer(m));
+        mapMarkers = [];
+
+        const bounds = L.latLngBounds();
         let validLocationsCount = 0;
 
         (employees || []).forEach(emp => {
@@ -946,44 +1253,42 @@
             if (loc && (loc.latitude || loc.lat) && (loc.longitude || loc.lng)) {
                 const lat = parseFloat(loc.latitude || loc.lat);
                 const lng = parseFloat(loc.longitude || loc.lng);
-                const pos = { lat, lng };
-                currentMapBounds.extend(pos);
+                const latLng = [lat, lng];
+                bounds.extend(latLng);
                 validLocationsCount++;
 
                 const isActiveVisit = emp.is_active_in_visit;
-                const isPresent = emp.attendance_status === 'PRESENT' || emp.is_checked_in;
+                const isPresent = emp.attendance_status === 'PRESENT' || emp.attendance_status === 'VALID' || emp.is_checked_in;
                 const markerColor = isActiveVisit ? '#06b6d4' : (isPresent ? '#10b981' : '#f59e0b');
                 const statusLabel = isActiveVisit ? 'In Detailing' : (isPresent ? 'Punched In' : 'Idle');
 
-                // Custom SVG Pin Marker
-                const marker = new google.maps.Marker({
-                    position: pos,
-                    map: cockpitMap,
-                    title: `${emp.name || (emp.first_name + ' ' + emp.last_name)} (${emp.employee_code})`,
-                    icon: {
-                        path: google.maps.SymbolPath.CIRCLE,
-                        scale: 10,
-                        fillColor: markerColor,
-                        fillOpacity: 1,
-                        strokeColor: '#ffffff',
-                        strokeWeight: 2.5
-                    }
+                const customIcon = L.divIcon({
+                    className: 'custom-rep-marker',
+                    html: `
+                        <div class="rep-marker-pin" style="background: ${markerColor}; border-color: #ffffff;">
+                            <div class="rep-marker-pulse" style="border-color: ${markerColor};"></div>
+                            <i class="fa-solid ${isActiveVisit ? 'fa-stethoscope' : (isPresent ? 'fa-user-check' : 'fa-location-dot')}"></i>
+                        </div>
+                    `,
+                    iconSize: [34, 34],
+                    iconAnchor: [17, 17],
+                    popupAnchor: [0, -18]
                 });
 
-                const contentHtml = `
+                const popupHtml = `
                     <div class="map-popup-card">
                         <div class="map-popup-header">
-                            <strong style="color: #0f172a; font-size: 0.9rem;">${emp.name || (emp.first_name + ' ' + emp.last_name)}</strong>
-                            <span class="badge" style="background: ${markerColor}22; color: ${markerColor}; font-size: 0.68rem; padding: 2px 6px; font-weight: 700;">
+                            <strong style="font-size: 0.92rem; color: var(--text-primary);">${emp.name || (emp.first_name + ' ' + emp.last_name)}</strong>
+                            <span class="badge" style="background: ${markerColor}22; color: ${markerColor}; font-size: 0.7rem; padding: 2px 7px; font-weight: 700; border: 1px solid ${markerColor}44;">
                                 ${statusLabel}
                             </span>
                         </div>
-                        <div class="map-popup-meta" style="font-size: 0.75rem; color: #64748b; margin: 0.25rem 0 0.4rem 0;">
+                        <div class="map-popup-meta">
                             <span>EMP: ${emp.employee_code}</span> &bull;
                             <span>Territory: ${emp.territory || 'Unassigned'}</span>
                         </div>
-                        <div class="map-popup-info" style="padding: 0.35rem 0; border-top: 1px solid #e2e8f0; font-size: 0.75rem; color: #334155; line-height: 1.4;">
-                            <div>Status: <strong>${emp.current_activity || 'Field Duty'}</strong></div>
+                        <div class="map-popup-info">
+                            <div>Activity: <strong>${emp.current_activity || 'Field Duty'}</strong></div>
                             <div>Check-In: <strong>${emp.check_in_time || '--:--'}</strong></div>
                         </div>
                         <button class="map-popup-btn" onclick="viewEmployeeTimeline('${emp.employee_id}', '${emp.name || (emp.first_name + ' ' + emp.last_name)}')">
@@ -992,33 +1297,25 @@
                     </div>
                 `;
 
-                marker.addListener('click', () => {
-                    googleInfoWindow.setContent(contentHtml);
-                    googleInfoWindow.open(cockpitMap, marker);
-                });
-
-                googleMarkers.push({
-                    empId: emp.employee_id,
-                    marker: marker
-                });
+                const marker = L.marker(latLng, { icon: customIcon }).bindPopup(popupHtml);
+                marker.empId = emp.employee_id;
+                marker.addTo(cockpitMap);
+                mapMarkers.push(marker);
             }
         });
 
-        if (validLocationsCount > 0 && cockpitMap) {
-            cockpitMap.fitBounds(currentMapBounds);
-            if (validLocationsCount === 1) {
-                cockpitMap.setZoom(14);
-            }
+        if (validLocationsCount > 0) {
+            cockpitMap.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
         }
     }
 
     function centerMapOnTeam() {
         if (!cockpitMap) return;
-        if (currentMapBounds && !currentMapBounds.isEmpty()) {
-            cockpitMap.fitBounds(currentMapBounds);
+        if (mapMarkers.length > 0) {
+            const group = new L.featureGroup(mapMarkers);
+            cockpitMap.fitBounds(group.getBounds().pad(0.15));
         } else {
-            cockpitMap.setCenter({ lat: 28.6280, lng: 77.3780 });
-            cockpitMap.setZoom(11);
+            cockpitMap.setView([28.6280, 77.3780], 11);
         }
     }
 
@@ -1068,7 +1365,6 @@
         } else if (type === 'CALLS') {
             badgeText.textContent = "Doctor Calls Today";
             filterFeedCategory('VISIT');
-            // Scroll to feed
             document.querySelector('.live-feed-panel').scrollIntoView({ behavior: 'smooth', block: 'center' });
             return;
         } else if (type === 'POB') {
@@ -1080,7 +1376,6 @@
             filterTeamTable();
         }
 
-        // Smooth scroll to table
         const table = document.getElementById('teamTrackingTable');
         if (table) {
             table.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -1092,7 +1387,7 @@
     }
 
     function filterTeamTableSpecial(mode) {
-        const rows = document.querySelectorAll('#teamTrackingTable tbody tr');
+        const rows = document.querySelectorAll('#teamTrackingTable tbody tr:not(#noMatchRow)');
         let visibleCount = 0;
 
         rows.forEach(r => {
@@ -1105,13 +1400,17 @@
         });
 
         document.getElementById('visibleRepCount').textContent = visibleCount;
+        const noMatch = document.getElementById('noMatchRow');
+        if (noMatch) {
+            noMatch.style.display = visibleCount === 0 ? '' : 'none';
+        }
     }
 
     function filterTeamTable() {
-        const search = document.getElementById('teamSearchInput').value.toLowerCase();
+        const search = document.getElementById('teamSearchInput').value.trim().toLowerCase();
         const terr = document.getElementById('territoryFilter').value.toLowerCase();
         const stat = document.getElementById('statusFilter').value;
-        const rows = document.querySelectorAll('#teamTrackingTable tbody tr');
+        const rows = document.querySelectorAll('#teamTrackingTable tbody tr:not(#noMatchRow)');
         let visibleCount = 0;
 
         rows.forEach(r => {
@@ -1125,11 +1424,11 @@
 
             let matchesStat = true;
             if (stat === 'PRESENT') {
-                matchesStat = rStat === 'PRESENT';
+                matchesStat = rStat === 'PRESENT' || rStat === 'VALID';
             } else if (stat === 'IN_PROGRESS') {
                 matchesStat = inVisit;
             } else if (stat === 'FLAGGED') {
-                matchesStat = rStat === 'REQUIRES_REVIEW' || rStat === 'POOR_ACCURACY';
+                matchesStat = rStat === 'REQUIRES_REVIEW' || rStat === 'POOR_ACCURACY' || rStat === 'OUTSIDE_GEOFENCE';
             } else if (stat === 'NOT_CHECKED_IN') {
                 matchesStat = rStat === 'NOT_CHECKED_IN' || rStat === 'ABSENT';
             }
@@ -1140,6 +1439,10 @@
         });
 
         document.getElementById('visibleRepCount').textContent = visibleCount;
+        const noMatch = document.getElementById('noMatchRow');
+        if (noMatch) {
+            noMatch.style.display = visibleCount === 0 ? '' : 'none';
+        }
     }
 
     // =========================================================================
@@ -1147,22 +1450,20 @@
     // =========================================================================
 
     async function loadTodayFeed() {
-        // Set Today filter active
         document.querySelectorAll('.feed-chip').forEach(c => c.classList.remove('active'));
         document.getElementById('feedFilterToday').classList.add('active');
 
-        // Show all items currently in DOM
         const items = document.querySelectorAll('#cockpitFeedList .feed-item');
         items.forEach(el => el.style.display = 'flex');
 
-        // Refresh feed data via live API
         const btn = document.getElementById('feedFilterToday');
         const origHtml = btn.innerHTML;
         btn.innerHTML = `<i class="fa-solid fa-arrows-rotate fa-spin"></i> Today`;
 
         try {
             const res = await fetch('/api/v1/tracking/employees/current/', {
-                headers: { 'Accept': 'application/json' }
+                headers: { 'Accept': 'application/json' },
+                credentials: 'same-origin'
             });
             const body = await res.json();
             if (body.success && body.data) {
@@ -1219,25 +1520,49 @@
             const iconBg = isVisit ? (item.is_flagged ? 'rgba(245, 158, 11, 0.15)' : 'rgba(16, 185, 129, 0.15)') : 'rgba(79, 70, 229, 0.15)';
             const iconColor = isVisit ? (item.is_flagged ? '#f59e0b' : '#10b981') : '#6366f1';
 
+            let statusBadge = '';
+            if (item.status === 'COMPLETED') {
+                statusBadge = `<span class="badge badge-success" style="font-size: 0.65rem; font-weight: 700; padding: 2px 7px;"><i class="fa-solid fa-check"></i> Completed</span>`;
+            } else if (item.status === 'IN_PROGRESS' || item.status === 'STARTED') {
+                statusBadge = `<span class="badge badge-info" style="font-size: 0.65rem; font-weight: 700; padding: 2px 7px;"><i class="fa-solid fa-spinner fa-spin"></i> In Detailing</span>`;
+            } else if (item.status === 'POOR_ACCURACY') {
+                statusBadge = `<span class="badge badge-warning" style="font-size: 0.65rem; font-weight: 700; padding: 2px 7px;" title="Low GPS Accuracy"><i class="fa-solid fa-satellite-dish"></i> Low GPS</span>`;
+            } else if (item.status === 'OUTSIDE_GEOFENCE' || item.status === 'REQUIRES_REVIEW') {
+                statusBadge = `<span class="badge badge-warning" style="font-size: 0.65rem; font-weight: 700; padding: 2px 7px;" title="Geofence Deviation"><i class="fa-solid fa-triangle-exclamation"></i> Flagged</span>`;
+            } else if (item.status === 'VALID' || item.status === 'PRESENT') {
+                statusBadge = `<span class="badge badge-success" style="font-size: 0.65rem; font-weight: 700; padding: 2px 7px;"><i class="fa-solid fa-fingerprint"></i> On Duty</span>`;
+            } else {
+                statusBadge = `<span class="badge" style="font-size: 0.65rem; font-weight: 600; padding: 2px 7px; background: rgba(148,163,184,0.15); color: #94a3b8;">${item.status || 'Active'}</span>`;
+            }
+
+            const flagLabel = item.flag_summary || (item.flag_reason ? item.flag_reason.slice(0, 20) : 'Audit Flag');
             const geofenceBadge = item.is_flagged ?
-                `<span style="color: #f59e0b; margin-left: 0.35rem;"><i class="fa-solid fa-triangle-exclamation"></i> ${(item.flag_reason || 'Deviation').slice(0, 25)}</span>` :
-                `<span style="color: #10b981; margin-left: 0.35rem;"><i class="fa-solid fa-shield-check"></i> Geofence OK</span>`;
+                `<span class="badge badge-warning" style="font-size: 0.65rem; padding: 1px 6px;" title="${item.flag_reason || 'Deviation'}"><i class="fa-solid fa-triangle-exclamation"></i> ${flagLabel}</span>` :
+                `<span style="color: #10b981; font-size: 0.7rem;"><i class="fa-solid fa-shield-check"></i> Geofence OK</span>`;
 
             return `
-                <div class="feed-item" data-feed-type="${item.type}" onclick="focusFeedActivity('${item.employee_id}', '${item.employee_name}', '${item.lat || ''}', '${item.lng || ''}')">
+                <div class="feed-item" data-feed-type="${item.type}" onclick="focusFeedActivity('${item.employee_id}', '${item.employee_name}', '${item.lat || ''}', '${item.lng || ''}')" title="Click to locate on Google Map">
                     <div class="feed-icon" style="background: ${iconBg}; color: ${iconColor};">
                         <i class="fa-solid ${icon}"></i>
                     </div>
                     <div style="flex: 1; min-width: 0;">
-                        <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
-                            ${item.title}
+                        <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.4rem; margin-bottom: 0.2rem;">
+                            <div style="font-size: 0.84rem; font-weight: 700; color: var(--text-primary); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+                                ${item.title}
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.35rem; flex-shrink: 0;">
+                                ${statusBadge}
+                                <button type="button" class="btn btn-secondary" onclick="event.stopPropagation(); viewEmployeeTimeline('${item.employee_id}', '${item.employee_name}')" title="View ${item.employee_name} Timeline" style="padding: 2px 6px; font-size: 0.65rem; border-radius: 6px; line-height: 1;">
+                                    <i class="fa-solid fa-timeline"></i>
+                                </button>
+                            </div>
                         </div>
-                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.15rem;">
-                            ${item.time} | ${item.subtitle} ${geofenceBadge}
+                        <div style="font-size: 0.74rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
+                            <strong style="color: #818cf8; font-family: monospace;">${item.time}</strong>
+                            <span style="opacity: 0.4;">|</span>
+                            <span>${item.subtitle}</span>
+                            ${geofenceBadge}
                         </div>
-                    </div>
-                    <div style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600;">
-                        ${item.status}
                     </div>
                 </div>
             `;
@@ -1246,15 +1571,16 @@
 
     function focusFeedActivity(empId, empName, lat, lng) {
         if (lat && lng && cockpitMap) {
-            const pos = { lat: parseFloat(lat), lng: parseFloat(lng) };
-            cockpitMap.panTo(pos);
-            cockpitMap.setZoom(15);
-            const match = googleMarkers.find(m => m.empId === empId);
-            if (match && match.marker) {
-                google.maps.event.trigger(match.marker, 'click');
+            const pos = [parseFloat(lat), parseFloat(lng)];
+            cockpitMap.flyTo(pos, 15, { animate: true, duration: 0.8 });
+            const match = mapMarkers.find(m => m.empId === empId);
+            if (match) {
+                setTimeout(() => match.openPopup(), 450);
             }
+        } else {
+            // When GPS coordinates are not directly present, open rep's daily audit timeline
+            viewEmployeeTimeline(empId, empName);
         }
-        viewEmployeeTimeline(empId, empName);
     }
 
     // =========================================================================
@@ -1278,39 +1604,182 @@
         }, 800);
     }
 
-    async function viewEmployeeTimeline(empId, empName) {
-        document.getElementById('timelineModalEmpName').textContent = `${empName} - Daily Audit Timeline`;
-        const container = document.getElementById('timelineStepperContainer');
-        container.innerHTML = `<div style="text-align: center; padding: 2rem; color: var(--text-muted);"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading timeline events...</div>`;
+    // State for timeline modal
+    let currentTimelineEmpId = null;
+    let currentTimelineEmpName = '';
+
+    function getTodayDateStr() {
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2, '0');
+        const d = String(now.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    }
+
+    async function viewEmployeeTimeline(empId, empName, initialDate) {
+        currentTimelineEmpId = empId;
+        currentTimelineEmpName = empName || 'Employee';
+
+        const titleEl = document.getElementById('timelineModalEmpName');
+        if (titleEl) {
+            titleEl.innerHTML = `<i class="fa-solid fa-route" style="color: #6366f1; margin-right: 0.45rem;"></i>${currentTimelineEmpName} <span style="font-size: 0.85rem; font-weight: 500; color: var(--text-muted);">- Daily Timeline</span>`;
+        }
+
+        const datePicker = document.getElementById('timelineDateInput');
+        const dateToFetch = initialDate || (datePicker && datePicker.value) || getTodayDateStr();
+        if (datePicker) {
+            datePicker.value = dateToFetch;
+        }
+
         openModal('employeeTimelineModal');
+        await fetchTimelineData(empId, dateToFetch);
+    }
+
+    function onTimelineDatePickerChange() {
+        if (!currentTimelineEmpId) return;
+        const datePicker = document.getElementById('timelineDateInput');
+        const dateVal = datePicker && datePicker.value ? datePicker.value : getTodayDateStr();
+        fetchTimelineData(currentTimelineEmpId, dateVal);
+    }
+
+    function jumpToTimelineDate(dateStr) {
+        if (!currentTimelineEmpId || !dateStr) return;
+        const datePicker = document.getElementById('timelineDateInput');
+        if (datePicker) datePicker.value = dateStr;
+        fetchTimelineData(currentTimelineEmpId, dateStr);
+    }
+
+    async function fetchTimelineData(empId, targetDate) {
+        const container = document.getElementById('timelineStepperContainer');
+        const summaryBar = document.getElementById('timelineSummaryContainer');
+
+        if (summaryBar) summaryBar.style.display = 'none';
+        if (container) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+                    <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 1.8rem; color: #6366f1; margin-bottom: 0.75rem; display: block;"></i>
+                    Fetching verified GPS telemetry & activities for <strong>${targetDate}</strong>...
+                </div>
+            `;
+        }
 
         if (!empId || empId === 'None' || empId === 'null') {
-            container.innerHTML = `<div style="text-align:center; color:#f59e0b; padding:1.5rem;"><i class="fa-solid fa-triangle-exclamation"></i> No employee ID associated with this profile.</div>`;
+            if (container) {
+                container.innerHTML = `
+                    <div style="text-align: center; color: #f59e0b; padding: 2rem;">
+                        <i class="fa-solid fa-triangle-exclamation" style="font-size: 1.8rem; margin-bottom: 0.5rem; display: block;"></i>
+                        No employee record associated with this profile.
+                    </div>
+                `;
+            }
             return;
         }
 
         try {
-            const res = await fetch(`/api/v1/tracking/employees/${empId}/timeline/`, {
-                headers: { 'Accept': 'application/json' }
+            const res = await fetch(`/api/v1/tracking/employees/${empId}/timeline/?date=${encodeURIComponent(targetDate)}`, {
+                headers: { 'Accept': 'application/json' },
+                credentials: 'same-origin'
             });
             const body = await res.json();
             if (body.success && body.data) {
-                renderTimelineNodes(body.data);
+                renderTimelineUI(body.data, targetDate);
             } else {
                 const errMsg = body.message || body.detail || (body.error && body.error.message) || 'Unable to load timeline.';
-                container.innerHTML = `<div style="text-align:center; color:#ef4444; padding:1.5rem;"><i class="fa-solid fa-circle-exclamation"></i> ${errMsg}</div>`;
+                if (container) {
+                    container.innerHTML = `
+                        <div style="text-align: center; color: #ef4444; padding: 2rem;">
+                            <i class="fa-solid fa-circle-exclamation" style="font-size: 1.8rem; margin-bottom: 0.5rem; display: block;"></i>
+                            ${errMsg}
+                        </div>
+                    `;
+                }
             }
         } catch (e) {
-            container.innerHTML = `<div style="text-align:center; color:#ef4444; padding:1.5rem;"><i class="fa-solid fa-circle-exclamation"></i> Failed to connect to tracking server.</div>`;
+            if (container) {
+                container.innerHTML = `
+                    <div style="text-align: center; color: #ef4444; padding: 2rem;">
+                        <i class="fa-solid fa-triangle-exclamation" style="font-size: 1.8rem; margin-bottom: 0.5rem; display: block;"></i>
+                        Failed to connect to tracking server. Please try again.
+                    </div>
+                `;
+            }
         }
     }
 
-    function renderTimelineNodes(data) {
+    function renderTimelineUI(data, dateStr) {
+        // 1. Sub-meta header
+        const metaEl = document.getElementById('timelineModalSubMeta');
+        if (metaEl) {
+            metaEl.innerHTML = `
+                <span><i class="fa-solid fa-id-badge" style="color: #818cf8;"></i> ${data.employee_code || ''}</span>
+                <span>•</span>
+                <span><i class="fa-solid fa-briefcase" style="color: #06b6d4;"></i> ${data.designation || 'Field Representative'}</span>
+                <span>•</span>
+                <span><i class="fa-solid fa-map-pin" style="color: #10b981;"></i> ${data.territory || 'Territory'}</span>
+                <span>•</span>
+                <span style="color: var(--text-primary); font-weight: 600;"><i class="fa-regular fa-calendar"></i> ${dateStr}</span>
+            `;
+        }
+
+        // 2. Summary ribbon
+        const summary = data.summary || {};
+        const summaryBar = document.getElementById('timelineSummaryContainer');
+        if (summaryBar) {
+            summaryBar.style.display = 'grid';
+            const checkInFormatted = summary.check_in_time ? `<span style="color: #10b981;">${summary.check_in_time}</span>` : `<span style="color: var(--text-muted);">--:--</span>`;
+            const flagsCount = summary.flags_count ?? 0;
+            const flagsColor = flagsCount > 0 ? '#f59e0b' : '#10b981';
+            const flagsIcon = flagsCount > 0 ? 'fa-triangle-exclamation' : 'fa-shield-check';
+
+            summaryBar.innerHTML = `
+                <div class="timeline-summary-item">
+                    <span class="timeline-summary-lbl"><i class="fa-solid fa-fingerprint"></i> Check-In</span>
+                    <span class="timeline-summary-val">${checkInFormatted}</span>
+                </div>
+                <div class="timeline-summary-item">
+                    <span class="timeline-summary-lbl"><i class="fa-solid fa-map-location-dot"></i> Planned Stops</span>
+                    <span class="timeline-summary-val" style="color: #818cf8;">${summary.planned_stops ?? 0}</span>
+                </div>
+                <div class="timeline-summary-item">
+                    <span class="timeline-summary-lbl"><i class="fa-solid fa-stethoscope"></i> Visits Done</span>
+                    <span class="timeline-summary-val" style="color: #06b6d4;">${summary.completed_visits ?? 0}</span>
+                </div>
+                <div class="timeline-summary-item">
+                    <span class="timeline-summary-lbl"><i class="fa-solid fa-indian-rupee-sign"></i> POB Orders</span>
+                    <span class="timeline-summary-val" style="color: #10b981;">₹${Number(summary.total_pob || 0).toLocaleString('en-IN')}</span>
+                </div>
+                <div class="timeline-summary-item">
+                    <span class="timeline-summary-lbl"><i class="fa-solid ${flagsIcon}"></i> Geofence Audit</span>
+                    <span class="timeline-summary-val" style="color: ${flagsColor};">${flagsCount} ${flagsCount === 1 ? 'Flag' : 'Flags'}</span>
+                </div>
+            `;
+        }
+
+        // 3. Timeline Stepper
         const container = document.getElementById('timelineStepperContainer');
-        const timeline = data.timeline || data.events || [];
+        const timeline = data.timeline || [];
 
         if (timeline.length === 0) {
-            container.innerHTML = `<div style="text-align: center; padding: 2.5rem; color: var(--text-muted);"><i class="fa-solid fa-route" style="font-size: 1.8rem; margin-bottom: 0.5rem; opacity: 0.4; display: block;"></i>No GPS telemetry recorded for this employee today.</div>`;
+            if (data.latest_active_date) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 3rem 1.5rem; color: var(--text-muted);">
+                        <i class="fa-solid fa-calendar-xmark" style="font-size: 2.2rem; opacity: 0.35; margin-bottom: 0.75rem; display: block; color: #818cf8;"></i>
+                        <h4 style="margin: 0 0 0.4rem; color: var(--text-primary); font-size: 1rem;">No Activity Recorded on ${dateStr}</h4>
+                        <p style="font-size: 0.82rem; margin-bottom: 1.25rem; color: var(--text-secondary);">This field representative has no verified GPS check-ins or visit activities on this date.</p>
+                        <button type="button" class="btn btn-primary" onclick="jumpToTimelineDate('${data.latest_active_date}')" style="font-size: 0.82rem; padding: 0.45rem 1.15rem; display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <i class="fa-solid fa-clock-rotate-left"></i> Jump to Latest Activity (${data.latest_active_date})
+                        </button>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 3rem 1.5rem; color: var(--text-muted);">
+                        <i class="fa-solid fa-route" style="font-size: 2.2rem; opacity: 0.35; margin-bottom: 0.75rem; display: block;"></i>
+                        <h4 style="margin: 0 0 0.4rem; color: var(--text-primary); font-size: 1rem;">No Telemetry Recorded on ${dateStr}</h4>
+                        <p style="font-size: 0.82rem;">Select another date from the picker above to inspect historical logs.</p>
+                    </div>
+                `;
+            }
             return;
         }
 
@@ -1320,28 +1789,75 @@
             const isVisitEnd = ev === 'VISIT_END';
             const isCheckIn = ev === 'CHECK_IN';
             const isCheckOut = ev === 'CHECK_OUT';
+            const isBeatPlan = (item.type === 'BEAT_PLAN') || ev.startsWith('BEAT_ROUTE_STOP');
 
             let dotColor = '#4f46e5';
             let icon = 'fa-location-dot';
+            let titleText = ev;
 
-            if (isVisitStart) {
-                dotColor = '#06b6d4';
-                icon = 'fa-stethoscope';
-            } else if (isVisitEnd) {
-                dotColor = '#10b981';
-                icon = 'fa-check';
-            } else if (isCheckIn) {
+            if (isCheckIn) {
                 dotColor = '#6366f1';
                 icon = 'fa-fingerprint';
+                titleText = 'Punch Check-In (On Duty)';
             } else if (isCheckOut) {
                 dotColor = '#f43f5e';
                 icon = 'fa-right-from-bracket';
+                titleText = 'Punch Check-Out (Off Duty)';
+            } else if (isVisitStart) {
+                dotColor = '#06b6d4';
+                icon = 'fa-stethoscope';
+                titleText = `Visit In Progress: ${item.customer || 'Doctor'}`;
+            } else if (isVisitEnd) {
+                dotColor = '#10b981';
+                icon = 'fa-circle-check';
+                titleText = `Visit Completed: ${item.customer || 'Doctor'}`;
+            } else if (isBeatPlan) {
+                dotColor = '#8b5cf6';
+                icon = 'fa-map-pin';
+                titleText = `Scheduled Route: ${item.customer || 'Customer'}`;
             }
 
-            const isFlagged = item.geofence_status === 'OUTSIDE_GEOFENCE' || item.geofence_status === 'REQUIRES_REVIEW' || item.is_flagged;
-            const statusBadge = isFlagged ? 
-                `<span class="badge badge-warning" style="font-size:0.7rem;"><i class="fa-solid fa-triangle-exclamation"></i> ${item.geofence_status || 'FLAGGED'}</span>` :
-                `<span class="badge badge-success" style="font-size:0.7rem;"><i class="fa-solid fa-shield-check"></i> VALID GEOFENCE</span>`;
+            const isFlagged = item.geofence_status === 'OUTSIDE_GEOFENCE' || 
+                              item.geofence_status === 'REQUIRES_REVIEW' || 
+                              item.geofence_status === 'POOR_ACCURACY' || 
+                              item.geofence_status === 'NO_COORDINATES' ||
+                              item.is_flagged;
+
+            let statusBadge = '';
+            if (isBeatPlan) {
+                statusBadge = item.status === 'COMPLETED' ?
+                    `<span class="badge badge-success" style="font-size:0.7rem;"><i class="fa-solid fa-check"></i> Visited</span>` :
+                    `<span class="badge" style="font-size:0.7rem; background: rgba(139, 92, 246, 0.18); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.35);"><i class="fa-solid fa-calendar-day"></i> Planned Route</span>`;
+            } else if (isFlagged) {
+                statusBadge = `<span class="badge badge-warning" style="font-size:0.7rem;"><i class="fa-solid fa-triangle-exclamation"></i> ${item.geofence_status || 'FLAGGED'}</span>`;
+            } else {
+                statusBadge = `<span class="badge badge-success" style="font-size:0.7rem;"><i class="fa-solid fa-shield-check"></i> ${item.geofence_status || 'VERIFIED GEOFENCE'}</span>`;
+            }
+
+            let responseBadge = '';
+            if (item.doctor_response) {
+                const respClean = item.doctor_response.replace(/_/g, ' ');
+                responseBadge = `<span class="badge badge-info" style="font-size: 0.7rem;"><i class="fa-regular fa-comment-dots"></i> Feedback: ${respClean}</span>`;
+            }
+
+            let pobBadge = '';
+            if (item.pob_amount && Number(item.pob_amount) > 0) {
+                pobBadge = `<span class="badge badge-success" style="font-size: 0.72rem; font-weight: 700;"><i class="fa-solid fa-indian-rupee-sign"></i> ₹${Number(item.pob_amount).toLocaleString('en-IN')} POB</span>`;
+            }
+
+            let coordsSnippet = '';
+            if (item.lat && item.lng) {
+                coordsSnippet = `<span style="font-size: 0.72rem; color: var(--text-muted);"><i class="fa-solid fa-location-crosshairs"></i> ${Number(item.lat).toFixed(4)}, ${Number(item.lng).toFixed(4)}</span>`;
+            }
+
+            let flagNotice = '';
+            if (item.flag_reason) {
+                flagNotice = `
+                    <div style="font-size: 0.75rem; color: #f59e0b; width: 100%; margin-top: 0.35rem; background: rgba(245, 158, 11, 0.1); border-left: 3px solid #f59e0b; padding: 0.35rem 0.65rem; border-radius: 4px; line-height: 1.4;">
+                        <i class="fa-solid fa-triangle-exclamation"></i> <strong>Audit Flag:</strong> ${item.flag_reason}
+                    </div>
+                `;
+            }
 
             return `
                 <div class="timeline-node">
@@ -1349,18 +1865,21 @@
                         <i class="fa-solid ${icon}"></i>
                     </div>
                     <div class="timeline-content">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
-                            <strong style="color: var(--text-primary); font-size: 0.88rem;">${ev}</strong>
-                            <span style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600;">${item.time || ''}</span>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem; flex-wrap: wrap; gap: 0.35rem;">
+                            <strong style="color: var(--text-primary); font-size: 0.88rem;">${titleText}</strong>
+                            <span style="font-size: 0.78rem; color: #818cf8; font-weight: 700; font-family: monospace;">${item.time || ''}</span>
                         </div>
-                        <div style="font-size: 0.8rem; color: var(--text-secondary);">
-                            ${item.customer ? `Customer: <strong>${item.customer}</strong>` : (item.work_mode ? `Mode: <strong>${item.work_mode}</strong>` : 'Audit Ping')}
+                        <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.35rem;">
+                            ${item.customer ? `Customer: <strong style="color: var(--text-primary);">${item.customer}</strong> ${item.customer_type ? `<span class="badge badge-secondary" style="font-size: 0.65rem; margin-left: 0.35rem;">${item.customer_type}</span>` : ''}` : (item.work_mode ? `Work Mode: <strong style="color: var(--text-primary);">${item.work_mode}</strong>` : 'Audit Telemetry Ping')}
+                            ${item.city && item.city !== 'Field' ? ` • <span style="color: var(--text-muted);"><i class="fa-solid fa-city"></i> ${item.city}</span>` : ''}
                         </div>
-                        <div style="margin-top: 0.4rem; display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                        <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
                             ${statusBadge}
-                            ${item.duration_minutes ? `<span style="font-size: 0.75rem; color: #10b981;"><i class="fa-solid fa-stopwatch"></i> ${item.duration_minutes} mins</span>` : ''}
-                            ${item.doctor_response ? `<span class="badge badge-info" style="font-size: 0.68rem;">Response: ${item.doctor_response}</span>` : ''}
-                            ${item.flag_reason ? `<div style="font-size: 0.75rem; color: #f59e0b; width: 100%; margin-top: 0.2rem;"><i class="fa-solid fa-triangle-exclamation"></i> Reason: ${item.flag_reason}</div>` : ''}
+                            ${item.duration_minutes ? `<span style="font-size: 0.75rem; color: #10b981; font-weight: 600;"><i class="fa-solid fa-stopwatch"></i> ${item.duration_minutes} mins</span>` : ''}
+                            ${responseBadge}
+                            ${pobBadge}
+                            ${coordsSnippet}
+                            ${flagNotice}
                         </div>
                     </div>
                 </div>
@@ -1378,10 +1897,14 @@
         if (el) el.style.display = 'none';
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-        if (typeof google !== 'undefined' && google.maps && !cockpitMap) {
-            initGoogleMap();
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeModal('employeeTimelineModal');
         }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initCockpitMap();
 
         // Listen for theme toggle to swap map styles smoothly
         const themeBtn = document.getElementById('themeToggleBtn');
@@ -1393,3 +1916,4 @@
     });
 </script>
 {% endblock %}
+

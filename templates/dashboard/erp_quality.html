@@ -349,6 +349,314 @@
         background: #f1f5f9 !important;
         color: #0f172a !important;
     }
+
+    /* =======================================================
+       PREMIUM LOOK: QA DISPOSITIONS & DEVIATIONS PANELS
+       ======================================================= */
+    .qa-premium-card {
+        background: linear-gradient(160deg, rgba(17, 24, 39, 0.85) 0%, rgba(15, 23, 42, 0.95) 100%);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
+        box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        overflow: hidden;
+        transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+        display: flex;
+        flex-direction: column;
+    }
+    .qa-premium-card:hover {
+        border-color: rgba(255, 255, 255, 0.16);
+        box-shadow: 0 16px 36px -12px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+    .qa-premium-card.disposition-card {
+        border-top: 3px solid #10b981;
+    }
+    .qa-premium-card.deviation-card {
+        border-top: 3px solid #f59e0b;
+    }
+
+    .qa-card-header {
+        padding: 1.1rem 1.4rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+        background: rgba(15, 23, 42, 0.35);
+    }
+    .qa-card-title-group {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+    }
+    .qa-card-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.15rem;
+        flex-shrink: 0;
+    }
+    .qa-card-icon.emerald {
+        background: rgba(16, 185, 129, 0.12);
+        color: #10b981;
+        border: 1px solid rgba(16, 185, 129, 0.25);
+        box-shadow: 0 0 12px rgba(16, 185, 129, 0.15);
+    }
+    .qa-card-icon.amber {
+        background: rgba(245, 158, 11, 0.12);
+        color: #f59e0b;
+        border: 1px solid rgba(245, 158, 11, 0.25);
+        box-shadow: 0 0 12px rgba(245, 158, 11, 0.15);
+    }
+    .qa-card-title {
+        font-size: 0.96rem;
+        font-weight: 700;
+        color: #f8fafc;
+        margin: 0;
+        letter-spacing: -0.01em;
+    }
+    .qa-card-subtitle {
+        font-size: 0.72rem;
+        color: #94a3b8;
+        margin-top: 0.15rem;
+    }
+    .qa-count-badge {
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        padding: 4px 10px;
+        border-radius: 20px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        white-space: nowrap;
+    }
+    .qa-count-badge.emerald {
+        background: rgba(16, 185, 129, 0.12);
+        color: #10b981;
+        border: 1px solid rgba(16, 185, 129, 0.25);
+    }
+    .qa-count-badge.amber {
+        background: rgba(245, 158, 11, 0.12);
+        color: #f59e0b;
+        border: 1px solid rgba(245, 158, 11, 0.25);
+    }
+
+    /* Scrollable Table Area */
+    .qa-table-wrapper {
+        overflow-x: auto;
+        flex: 1 1 auto;
+    }
+    .qa-table-wrapper::-webkit-scrollbar {
+        height: 6px;
+        width: 6px;
+    }
+    .qa-table-wrapper::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 4px;
+    }
+
+    /* Table styles */
+    .qa-pro-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        text-align: left;
+    }
+    .qa-pro-table th {
+        background: rgba(15, 23, 42, 0.4);
+        padding: 0.8rem 1rem;
+        font-size: 0.69rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #94a3b8;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+        white-space: nowrap;
+    }
+    .qa-pro-table td {
+        padding: 0.85rem 1rem;
+        font-size: 0.83rem;
+        color: #e2e8f0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        vertical-align: middle;
+        transition: background 0.18s ease;
+    }
+    .qa-pro-table tbody tr {
+        transition: all 0.2s ease;
+    }
+    .qa-pro-table tbody tr:hover {
+        background: rgba(255, 255, 255, 0.035);
+    }
+    .qa-pro-table tbody tr:hover td {
+        color: #ffffff;
+    }
+    .qa-pro-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* Monospace Code Pill */
+    .qa-code-pill {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 0.77rem;
+        font-weight: 600;
+        color: #93c5fd;
+        background: rgba(59, 130, 246, 0.1);
+        border: 1px solid rgba(59, 130, 246, 0.22);
+        padding: 3px 8px;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        white-space: nowrap;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        max-width: 190px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .qa-code-pill:hover {
+        background: rgba(59, 130, 246, 0.18);
+        border-color: rgba(59, 130, 246, 0.4);
+        box-shadow: 0 0 8px rgba(59, 130, 246, 0.25);
+        color: #bfdbfe;
+    }
+
+    /* Lot Tag */
+    .qa-lot-tag {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 0.79rem;
+        font-weight: 600;
+        color: #f1f5f9;
+        white-space: nowrap !important;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+    /* User Avatar Circle */
+    .qa-user-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        white-space: nowrap;
+    }
+    .qa-user-avatar {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #3b82f6, #6366f1);
+        color: #ffffff;
+        font-size: 0.65rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+
+    /* Decision / Status Pills */
+    .qa-status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 3px 9px;
+        border-radius: 20px;
+        font-size: 0.69rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        white-space: nowrap;
+        text-transform: uppercase;
+    }
+    .qa-status-pill.pill-release {
+        background: rgba(16, 185, 129, 0.12);
+        color: #10b981;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        box-shadow: 0 0 8px rgba(16, 185, 129, 0.12);
+    }
+    .qa-status-pill.pill-reject {
+        background: rgba(239, 68, 68, 0.12);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        box-shadow: 0 0 8px rgba(239, 68, 68, 0.12);
+    }
+    .qa-status-pill.pill-hold {
+        background: rgba(245, 158, 11, 0.12);
+        color: #f59e0b;
+        border: 1px solid rgba(245, 158, 11, 0.3);
+        box-shadow: 0 0 8px rgba(245, 158, 11, 0.12);
+    }
+    .qa-status-pill.pill-critical {
+        background: rgba(239, 68, 68, 0.12);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+    .qa-status-pill.pill-major {
+        background: rgba(245, 158, 11, 0.12);
+        color: #f59e0b;
+        border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+    .qa-status-pill.pill-minor {
+        background: rgba(6, 182, 212, 0.12);
+        color: #06b6d4;
+        border: 1px solid rgba(6, 182, 212, 0.3);
+    }
+    .qa-status-pill.pill-closed {
+        background: rgba(148, 163, 184, 0.12);
+        color: #94a3b8;
+        border: 1px solid rgba(148, 163, 184, 0.25);
+    }
+    .qa-status-pill.pill-open {
+        background: rgba(245, 158, 11, 0.12);
+        color: #f59e0b;
+        border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    /* Light Mode Overrides */
+    [data-theme="light"] .qa-premium-card {
+        background: #ffffff !important;
+        border-color: #e2e8f0 !important;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
+    }
+    [data-theme="light"] .qa-premium-card:hover {
+        border-color: #cbd5e1 !important;
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08) !important;
+    }
+    [data-theme="light"] .qa-card-header {
+        background: #f8fafc !important;
+        border-bottom-color: #e2e8f0 !important;
+    }
+    [data-theme="light"] .qa-card-title {
+        color: #0f172a !important;
+    }
+    [data-theme="light"] .qa-card-subtitle {
+        color: #64748b !important;
+    }
+    [data-theme="light"] .qa-pro-table th {
+        background: #f8fafc !important;
+        color: #64748b !important;
+        border-bottom-color: #e2e8f0 !important;
+    }
+    [data-theme="light"] .qa-pro-table td {
+        color: #1e293b !important;
+        border-bottom-color: #f1f5f9 !important;
+    }
+    [data-theme="light"] .qa-pro-table tbody tr:hover {
+        background: #f8fafc !important;
+    }
+    [data-theme="light"] .qa-lot-tag {
+        color: #0f172a !important;
+    }
+    [data-theme="light"] .qa-code-pill {
+        color: #2563eb !important;
+        background: #eff6ff !important;
+        border-color: #bfdbfe !important;
+    }
+    [data-theme="light"] .qa-table-wrapper::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.15) !important;
+    }
 </style>
 {% endblock %}
 
@@ -591,47 +899,91 @@
 </div>
 
 <!-- Recent QA Dispositions & Deviations Panels -->
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(460px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
     <!-- Panel 1: Recent QA Electronic Dispositions -->
-    <div class="panel">
-        <div class="panel-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 0.75rem;">
-            <h3 class="panel-title" style="font-size: 1rem; color: #10b981; display: flex; align-items: center; gap: 0.5rem;">
-                <i class="fa-solid fa-stamp"></i> QA Dispositions &amp; Batch Certificates
-            </h3>
+    <div class="qa-premium-card disposition-card">
+        <div class="qa-card-header">
+            <div class="qa-card-title-group">
+                <div class="qa-card-icon emerald">
+                    <i class="fa-solid fa-stamp"></i>
+                </div>
+                <div>
+                    <h3 class="qa-card-title">QA Dispositions &amp; Batch Certificates</h3>
+                    <div class="qa-card-subtitle">21 CFR Part 11 authorized batch releases &amp; COAs</div>
+                </div>
+            </div>
+            <span class="qa-count-badge emerald">
+                <i class="fa-solid fa-file-shield"></i> {{ dispositions|length }} Records
+            </span>
         </div>
-        <div class="table-container">
-            <table class="custom-table" style="font-size: 0.82rem;">
+        <div class="qa-table-wrapper">
+            <table class="qa-pro-table" style="min-width: 520px;">
                 <thead>
                     <tr>
-                        <th>COA / Record No</th>
-                        <th>Lot / Batch</th>
-                        <th>Decision</th>
-                        <th>Authorized By</th>
-                        <th>Date</th>
+                        <th style="width: 28%;">COA / Record No</th>
+                        <th style="width: 27%;">Lot / Batch</th>
+                        <th style="width: 17%;">Decision</th>
+                        <th style="width: 15%;">Authorized By</th>
+                        <th style="width: 13%;">Date</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for d in dispositions %}
                     <tr>
                         <td>
-                            <strong style="color: #60a5fa;">{{ d.coa_number|default:d.document_no }}</strong>
+                            <div class="qa-code-pill" title="{{ d.coa_number|default:d.document_no }}">
+                                <i class="fa-solid fa-certificate" style="font-size: 0.72rem; color: #60a5fa;"></i>
+                                <span>{{ d.coa_number|default:d.document_no }}</span>
+                            </div>
                         </td>
-                        <td>{{ d.lot.lot_number }}</td>
                         <td>
-                            <span style="font-weight: 700; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px;
-                                {% if d.disposition == 'RELEASE' %}background: rgba(16, 185, 129, 0.15); color: #10b981;
-                                {% elif d.disposition == 'REJECT' %}background: rgba(239, 68, 68, 0.15); color: #ef4444;
-                                {% else %}background: rgba(245, 158, 11, 0.15); color: #f59e0b;{% endif %}">
-                                {{ d.disposition }}
-                            </span>
+                            <div style="white-space: nowrap;">
+                                <span class="qa-lot-tag" title="{{ d.lot.lot_number }}">
+                                    <i class="fa-solid fa-boxes-stacked" style="font-size: 0.68rem; color: #94a3b8;"></i>
+                                    {{ d.lot.lot_number }}
+                                </span>
+                                {% if d.lot.batch_no %}
+                                <div style="font-size: 0.7rem; color: #94a3b8; font-family: ui-monospace, monospace; margin-top: 1px; padding-left: 1rem;">
+                                    Batch: {{ d.lot.batch_no }}
+                                </div>
+                                {% endif %}
+                            </div>
                         </td>
-                        <td>{{ d.authorized_qa_person.username }}</td>
-                        <td style="color: var(--text-muted); font-size: 0.75rem;">{{ d.disposition_date|date:"d M Y" }}</td>
+                        <td>
+                            {% if d.disposition == 'RELEASE' %}
+                            <span class="qa-status-pill pill-release">
+                                <i class="fa-solid fa-circle-check"></i> RELEASE
+                            </span>
+                            {% elif d.disposition == 'REJECT' %}
+                            <span class="qa-status-pill pill-reject">
+                                <i class="fa-solid fa-circle-xmark"></i> REJECT
+                            </span>
+                            {% else %}
+                            <span class="qa-status-pill pill-hold">
+                                <i class="fa-solid fa-circle-pause"></i> HOLD
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="qa-user-badge">
+                                <span class="qa-user-avatar" title="{{ d.authorized_qa_person.username }}">
+                                    {{ d.authorized_qa_person.username|slice:":2"|upper }}
+                                </span>
+                                <span style="font-size: 0.8rem; font-weight: 600; color: #cbd5e1;">{{ d.authorized_qa_person.username }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div style="white-space: nowrap; color: #94a3b8; font-size: 0.75rem; display: flex; align-items: center; gap: 0.35rem;">
+                                <i class="fa-regular fa-calendar-days" style="font-size: 0.7rem; opacity: 0.7;"></i>
+                                <span>{{ d.disposition_date|date:"d M Y" }}</span>
+                            </div>
+                        </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">
-                            No QA disposition records yet.
+                        <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2.5rem 1rem;">
+                            <i class="fa-solid fa-box-archive" style="font-size: 1.8rem; opacity: 0.4; display: block; margin-bottom: 0.5rem;"></i>
+                            No QA disposition records logged yet.
                         </td>
                     </tr>
                     {% endfor %}
@@ -641,46 +993,93 @@
     </div>
 
     <!-- Panel 2: Quality Deviations & CAPA -->
-    <div class="panel">
-        <div class="panel-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 0.75rem;">
-            <h3 class="panel-title" style="font-size: 1rem; color: #f59e0b; display: flex; align-items: center; gap: 0.5rem;">
-                <i class="fa-solid fa-triangle-exclamation"></i> Quality Deviations &amp; Incidents
-            </h3>
+    <div class="qa-premium-card deviation-card">
+        <div class="qa-card-header">
+            <div class="qa-card-title-group">
+                <div class="qa-card-icon amber">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <div>
+                    <h3 class="qa-card-title">Quality Deviations &amp; Incidents</h3>
+                    <div class="qa-card-subtitle">GMP non-conformances, investigations &amp; CAPA</div>
+                </div>
+            </div>
+            <span class="qa-count-badge amber">
+                <i class="fa-solid fa-shield-virus"></i> {{ deviations|length }} Incidents
+            </span>
         </div>
-        <div class="table-container">
-            <table class="custom-table" style="font-size: 0.82rem;">
+        <div class="qa-table-wrapper">
+            <table class="qa-pro-table" style="min-width: 480px;">
                 <thead>
                     <tr>
-                        <th>Deviation Title</th>
-                        <th>Severity</th>
-                        <th>Affected Lot</th>
-                        <th>Status</th>
+                        <th style="width: 44%;">Deviation Title</th>
+                        <th style="width: 18%;">Severity</th>
+                        <th style="width: 22%;">Affected Lot</th>
+                        <th style="width: 16%;">Status</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for dev in deviations %}
                     <tr>
                         <td>
-                            <strong style="color: var(--text-primary);">{{ dev.deviation_title }}</strong>
-                            <div style="font-size: 0.7rem; color: var(--text-muted);">{{ dev.document_no }}</div>
+                            <div>
+                                <div style="font-size: 0.83rem; font-weight: 600; color: #f8fafc; line-height: 1.35;" title="{{ dev.deviation_title }}">
+                                    {{ dev.deviation_title }}
+                                </div>
+                                <div style="font-size: 0.7rem; color: #94a3b8; font-family: ui-monospace, monospace; margin-top: 2px; display: flex; align-items: center; gap: 0.35rem;">
+                                    <i class="fa-solid fa-hashtag" style="font-size: 0.65rem; opacity: 0.7;"></i>
+                                    <span>{{ dev.document_no }}</span>
+                                </div>
+                            </div>
                         </td>
                         <td>
-                            <span style="font-weight: 700; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px;
-                                {% if dev.severity == 'CRITICAL' %}background: rgba(239, 68, 68, 0.15); color: #ef4444;
-                                {% elif dev.severity == 'MAJOR' %}background: rgba(245, 158, 11, 0.15); color: #f59e0b;
-                                {% else %}background: rgba(6, 182, 212, 0.15); color: #06b6d4;{% endif %}">
-                                {{ dev.severity }}
+                            {% if dev.severity == 'CRITICAL' %}
+                            <span class="qa-status-pill pill-critical">
+                                <i class="fa-solid fa-fire"></i> CRITICAL
                             </span>
+                            {% elif dev.severity == 'MAJOR' %}
+                            <span class="qa-status-pill pill-major">
+                                <i class="fa-solid fa-triangle-exclamation"></i> MAJOR
+                            </span>
+                            {% else %}
+                            <span class="qa-status-pill pill-minor">
+                                <i class="fa-solid fa-circle-info"></i> MINOR
+                            </span>
+                            {% endif %}
                         </td>
-                        <td>{{ dev.affected_lot.lot_number|default:"N/A" }}</td>
                         <td>
-                            <span style="font-size: 0.72rem; color: var(--text-secondary);">{{ dev.status }}</span>
+                            <div style="white-space: nowrap;">
+                                {% if dev.affected_lot %}
+                                <span class="qa-lot-tag" title="{{ dev.affected_lot.lot_number }}">
+                                    <i class="fa-solid fa-box" style="font-size: 0.7rem; color: #94a3b8;"></i>
+                                    {{ dev.affected_lot.lot_number }}
+                                </span>
+                                {% else %}
+                                <span style="color: #64748b; font-size: 0.75rem; font-style: italic;">N/A</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            {% if dev.status == 'CLOSED' %}
+                            <span class="qa-status-pill pill-closed">
+                                <i class="fa-solid fa-check"></i> CLOSED
+                            </span>
+                            {% elif dev.status == 'INVESTIGATION' or dev.status == 'OPEN' %}
+                            <span class="qa-status-pill pill-open">
+                                <i class="fa-solid fa-spinner fa-spin-pulse"></i> {{ dev.status }}
+                            </span>
+                            {% else %}
+                            <span class="qa-status-pill pill-closed">
+                                {{ dev.status }}
+                            </span>
+                            {% endif %}
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">
-                            No open deviations recorded.
+                        <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 2.5rem 1rem;">
+                            <i class="fa-solid fa-shield-heart" style="font-size: 1.8rem; opacity: 0.4; display: block; margin-bottom: 0.5rem; color: #10b981;"></i>
+                            No active quality deviations recorded.
                         </td>
                     </tr>
                     {% endfor %}

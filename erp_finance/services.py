@@ -93,6 +93,8 @@ def submit_expense_claim(user, employee, category, amount, expense_date=None, ba
     amount = Decimal(str(amount or '0.00'))
     tax_amount = Decimal(str(tax_amount or '0.00'))
     base_amount = Decimal(str(base_amount or '0.00')) if base_amount else (amount - tax_amount)
+    if base_amount and tax_amount and (not amount or amount == base_amount):
+        amount = base_amount + tax_amount
     expense_date = expense_date or timezone.now().date()
     payee = payee or f"{employee.first_name} {employee.last_name}"
 

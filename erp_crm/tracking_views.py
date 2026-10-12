@@ -534,39 +534,67 @@ class LiveTeamTrackingAPIView(APIView):
                 'is_flagged': bool(att and att.flag_reason)
             })
 
+        def _extract_flag_summary(reason):
+            if not reason:
+                return ""
+            r_low = reason.lower()
+            if 'coordinate' in r_low:
+                return 'No Geo-Coords'
+            if 'accuracy' in r_low:
+                return 'Low Accuracy GPS'
+            if 'short' in r_low:
+                return 'Short Visit (<3m)'
+            if 'outside' in r_low:
+                return 'Outside Geofence'
+            if 'deviation' in r_low:
+                return 'GPS Deviation'
+            if 'mock' in r_low:
+                return 'Mock GPS'
+            return reason[:20].strip()
+
         # Activity feed items for today
         feed_items = []
         for v in FieldVisit.objects.select_related('customer', 'employee').filter(visit_date=today).order_by('-start_time')[:15]:
+            v_ts = v.end_time or v.start_time
+            v_time = timezone.localtime(v_ts).strftime('%H:%M') if v_ts else '--:--'
             feed_items.append({
                 'id': str(v.id),
                 'type': 'VISIT',
                 'title': f"{v.employee.first_name} {v.employee.last_name} @ {v.customer.name}",
-                'subtitle': f"{v.customer.customer_type} | {v.customer.city or 'Field'}",
-                'time': v.start_time.strftime('%H:%M') if v.start_time else '--:--',
+                'subtitle': f"{v.customer.customer_type} • {v.customer.city or 'Field'}",
+                'time': v_time,
                 'status': v.visit_status,
                 'is_flagged': v.is_flagged,
                 'flag_reason': v.flag_reason,
+                'flag_summary': _extract_flag_summary(v.flag_reason),
                 'employee_id': str(v.employee_id),
                 'employee_name': f"{v.employee.first_name} {v.employee.last_name}",
                 'lat': float(v.start_lat) if v.start_lat else None,
-                'lng': float(v.start_lng) if v.start_lng else None
+                'lng': float(v.start_lng) if v.start_lng else None,
+                'timestamp': v_ts or timezone.now()
             })
 
         for a in AttendanceRecord.objects.select_related('employee').filter(date=today, check_in_time__isnull=False).order_by('-check_in_time')[:15]:
+            a_ts = a.check_in_time
+            a_time = timezone.localtime(a.check_in_time).strftime('%H:%M') if a.check_in_time else (str(a.in_time)[:5] if a.in_time else '--:--')
             feed_items.append({
                 'id': str(a.id),
                 'type': 'ATTENDANCE',
                 'title': f"{a.employee.first_name} {a.employee.last_name} Punched In",
-                'subtitle': f"Duty Mode: {a.work_mode} | {a.employee.territory.name if a.employee.territory else 'HQ'}",
-                'time': timezone.localtime(a.check_in_time).strftime('%H:%M') if a.check_in_time else (str(a.in_time)[:5] if a.in_time else '--:--'),
+                'subtitle': f"Duty Mode: {a.work_mode} • {a.employee.territory.name if a.employee.territory else 'HQ'}",
+                'time': a_time,
                 'status': a.check_in_status or 'PRESENT',
-                'is_flagged': bool(a.flag_reason),
+                'is_flagged': bool(a.flag_reason) or (a.check_in_status in ['REQUIRES_REVIEW', 'POOR_ACCURACY', 'OUTSIDE_GEOFENCE']),
                 'flag_reason': a.flag_reason,
+                'flag_summary': _extract_flag_summary(a.flag_reason),
                 'employee_id': str(a.employee_id),
                 'employee_name': f"{a.employee.first_name} {a.employee.last_name}",
                 'lat': float(a.check_in_lat) if a.check_in_lat else None,
-                'lng': float(a.check_in_lng) if a.check_in_lng else None
+                'lng': float(a.check_in_lng) if a.check_in_lng else None,
+                'timestamp': a_ts or timezone.now()
             })
+
+        feed_items.sort(key=lambda x: x.get('timestamp') or timezone.now(), reverse=True)
 
         return api_response(True, "Live team status retrieved.", {
             'date': today,
@@ -595,7 +623,10 @@ class EmployeeTimelineAPIView(APIView):
             raise PermissionDenied("Access to this employee's location timeline is forbidden.")
 
         date_str = request.query_params.get('date')
-        target_date = timezone.datetime.strptime(date_str, '%Y-%m-%d').date() if date_str else timezone.now().date()
+        try:
+            target_date = timezone.datetime.strptime(date_str, '%Y-%m-%d').date() if date_str else timezone.localdate()
+        except (ValueError, TypeError):
+            target_date = timezone.localdate()
 
         # Query events within date range
         events = EmployeeLocationEvent.objects.filter(
@@ -606,48 +637,117 @@ class EmployeeTimelineAPIView(APIView):
         serializer = EmployeeLocationEventSerializer(events, many=True)
 
         timeline_nodes = []
+        recorded_visit_ids = set()
+
         for ev in events:
+            ev_time = timezone.localtime(ev.server_timestamp).strftime('%H:%M:%S') if ev.server_timestamp else '--:--:--'
+            cust_name = ev.metadata.get('customer', '') or ev.metadata.get('customer_name', '') if isinstance(ev.metadata, dict) else ''
+            mode = ev.metadata.get('work_mode', '') if isinstance(ev.metadata, dict) else ''
+            visit_id = ev.metadata.get('visit_id', '') or ev.metadata.get('visit_no', '') if isinstance(ev.metadata, dict) else ''
+            if visit_id:
+                recorded_visit_ids.add(visit_id)
+
             timeline_nodes.append({
                 'event': ev.event_type,
                 'type': 'EVENT',
-                'time': ev.server_timestamp.strftime('%H:%M:%S'),
-                'geofence_status': ev.geofence_status,
+                'time': ev_time,
+                'geofence_status': ev.geofence_status or ('VALID' if not ev.is_flagged else 'FLAGGED'),
                 'is_flagged': ev.is_flagged,
                 'flag_reason': ev.flag_reason,
                 'battery': ev.battery_percentage,
-                'customer': ev.metadata.get('customer_name', '') if isinstance(ev.metadata, dict) else '',
-                'work_mode': ev.metadata.get('work_mode', '') if isinstance(ev.metadata, dict) else '',
+                'customer': cust_name,
+                'work_mode': mode,
                 'lat': float(ev.latitude) if ev.latitude else None,
                 'lng': float(ev.longitude) if ev.longitude else None
             })
 
         visits = FieldVisit.objects.select_related('customer').filter(employee=target_emp, visit_date=target_date).order_by('start_time')
         for v in visits:
-            if v.start_time:
+            v_key = v.visit_no or str(v.id)
+            has_visit_events = v_key in recorded_visit_ids or any(n.get('customer') == v.customer.name for n in timeline_nodes)
+
+            pob_for_visit = sum((o.booked_amount for o in v.orders_booked.all()), Decimal('0.00'))
+
+            if not has_visit_events:
+                if v.start_time:
+                    timeline_nodes.append({
+                        'event': 'VISIT_START',
+                        'type': 'VISIT',
+                        'time': timezone.localtime(v.start_time).strftime('%H:%M:%S'),
+                        'geofence_status': v.geofence_status,
+                        'is_flagged': v.is_flagged,
+                        'flag_reason': v.flag_reason,
+                        'customer': v.customer.name,
+                        'customer_type': v.customer.customer_type,
+                        'city': v.customer.city or 'Field',
+                        'pob_amount': float(pob_for_visit),
+                        'lat': float(v.start_lat) if v.start_lat else None,
+                        'lng': float(v.start_lng) if v.start_lng else None
+                    })
+                if v.end_time:
+                    timeline_nodes.append({
+                        'event': 'VISIT_END',
+                        'type': 'VISIT',
+                        'time': timezone.localtime(v.end_time).strftime('%H:%M:%S'),
+                        'geofence_status': 'VALID',
+                        'is_flagged': False,
+                        'flag_reason': '',
+                        'customer': v.customer.name,
+                        'customer_type': v.customer.customer_type,
+                        'city': v.customer.city or 'Field',
+                        'duration_minutes': v.duration_minutes,
+                        'doctor_response': v.doctor_response,
+                        'pob_amount': float(pob_for_visit),
+                        'lat': float(v.end_lat) if v.end_lat else None,
+                        'lng': float(v.end_lng) if v.end_lng else None
+                    })
+            else:
+                # Enrich existing visit nodes with customer name and doctor details
+                for node in timeline_nodes:
+                    if node.get('event') in ['VISIT_START', 'VISIT_END'] and not node.get('customer'):
+                        node['customer'] = v.customer.name
+                        node['customer_type'] = v.customer.customer_type
+                        node['city'] = v.customer.city or 'Field'
+                    if node.get('event') == 'VISIT_END':
+                        if not node.get('duration_minutes'):
+                            node['duration_minutes'] = v.duration_minutes
+                        if not node.get('doctor_response'):
+                            node['doctor_response'] = v.doctor_response
+                        if not node.get('pob_amount'):
+                            node['pob_amount'] = float(pob_for_visit)
+
+        # Include Scheduled Daily Beat Plan route stops
+        beat_plans = DailyBeatPlan.objects.select_related('customer').filter(employee=target_emp, date=target_date).order_by('sequence')
+        beat_plan_data = []
+        for bp in beat_plans:
+            planned_t = bp.planned_time.strftime('%H:%M') if bp.planned_time else '--:--'
+            beat_plan_data.append({
+                'code': bp.code,
+                'customer': bp.customer.name,
+                'customer_type': bp.customer.customer_type,
+                'city': bp.customer.city or 'Field',
+                'sequence': bp.sequence,
+                'planned_time': planned_t,
+                'priority': bp.priority,
+                'status': bp.status,
+            })
+            # If no visit detailing recorded for this beat plan doctor, show in timeline as scheduled
+            has_detailing = any(n.get('customer') == bp.customer.name and n.get('type') == 'VISIT' for n in timeline_nodes)
+            if not has_detailing:
                 timeline_nodes.append({
-                    'event': 'VISIT_START',
-                    'type': 'VISIT',
-                    'time': v.start_time.strftime('%H:%M:%S'),
-                    'geofence_status': v.geofence_status,
-                    'is_flagged': v.is_flagged,
-                    'flag_reason': v.flag_reason,
-                    'customer': v.customer.name,
-                    'lat': float(v.start_lat) if v.start_lat else None,
-                    'lng': float(v.start_lng) if v.start_lng else None
-                })
-            if v.end_time:
-                timeline_nodes.append({
-                    'event': 'VISIT_END',
-                    'type': 'VISIT',
-                    'time': v.end_time.strftime('%H:%M:%S'),
-                    'geofence_status': 'VALID',
+                    'event': f"BEAT_ROUTE_STOP #{bp.sequence}",
+                    'type': 'BEAT_PLAN',
+                    'time': planned_t if planned_t != '--:--' else 'Scheduled',
+                    'geofence_status': 'PLANNED',
                     'is_flagged': False,
                     'flag_reason': '',
-                    'customer': v.customer.name,
-                    'duration_minutes': v.duration_minutes,
-                    'doctor_response': v.doctor_response,
-                    'lat': float(v.end_lat) if v.end_lat else None,
-                    'lng': float(v.end_lng) if v.end_lng else None
+                    'customer': bp.customer.name,
+                    'customer_type': bp.customer.customer_type,
+                    'city': bp.customer.city or 'Field',
+                    'work_mode': f"Priority: {bp.priority}",
+                    'status': bp.status,
+                    'lat': float(bp.customer.latitude) if bp.customer.latitude else None,
+                    'lng': float(bp.customer.longitude) if bp.customer.longitude else None
                 })
 
         # Also include Attendance punch events if not already present in GPS events
@@ -659,9 +759,9 @@ class EmployeeTimelineAPIView(APIView):
                 timeline_nodes.append({
                     'event': 'CHECK_IN',
                     'type': 'EVENT',
-                    'time': att.check_in_time.strftime('%H:%M:%S'),
+                    'time': timezone.localtime(att.check_in_time).strftime('%H:%M:%S'),
                     'geofence_status': att.check_in_status or 'VALID',
-                    'is_flagged': att.check_in_status in ['REQUIRES_REVIEW', 'OUTSIDE_GEOFENCE'],
+                    'is_flagged': att.check_in_status in ['REQUIRES_REVIEW', 'OUTSIDE_GEOFENCE', 'POOR_ACCURACY'],
                     'flag_reason': att.flag_reason or '',
                     'battery': att.battery_level,
                     'customer': '',
@@ -674,7 +774,7 @@ class EmployeeTimelineAPIView(APIView):
                 timeline_nodes.append({
                     'event': 'CHECK_OUT',
                     'type': 'EVENT',
-                    'time': att.check_out_time.strftime('%H:%M:%S'),
+                    'time': timezone.localtime(att.check_out_time).strftime('%H:%M:%S'),
                     'geofence_status': 'VALID',
                     'is_flagged': False,
                     'flag_reason': '',
@@ -687,12 +787,47 @@ class EmployeeTimelineAPIView(APIView):
 
         timeline_nodes.sort(key=lambda x: x.get('time', ''))
 
+        # Find latest active date for quick jump if today is empty
+        latest_event_date = None
+        if len(timeline_nodes) == 0:
+            last_ev = EmployeeLocationEvent.objects.filter(employee=target_emp).order_by('-server_timestamp').first()
+            if last_ev and last_ev.server_timestamp:
+                latest_event_date = timezone.localtime(last_ev.server_timestamp).date().strftime('%Y-%m-%d')
+            else:
+                last_att = AttendanceRecord.objects.filter(employee=target_emp).order_by('-date').first()
+                if last_att and last_att.date:
+                    latest_event_date = last_att.date.strftime('%Y-%m-%d')
+                else:
+                    last_visit = FieldVisit.objects.filter(employee=target_emp).order_by('-visit_date').first()
+                    if last_visit and last_visit.visit_date:
+                        latest_event_date = last_visit.visit_date.strftime('%Y-%m-%d')
+
+            if latest_event_date == target_date.strftime('%Y-%m-%d'):
+                latest_event_date = None
+
+        total_pob = sum((o.booked_amount for v in visits for o in v.orders_booked.all()), Decimal('0.00'))
+        summary = {
+            'attendance_status': att.check_in_status if att else 'NOT_CHECKED_IN',
+            'check_in_time': timezone.localtime(att.check_in_time).strftime('%H:%M') if att and att.check_in_time else (str(att.in_time)[:5] if att and att.in_time else None),
+            'check_out_time': timezone.localtime(att.check_out_time).strftime('%H:%M') if att and att.check_out_time else (str(att.out_time)[:5] if att and att.out_time else None),
+            'work_mode': att.work_mode if att else 'FIELD',
+            'planned_stops': len(beat_plans),
+            'completed_visits': sum(1 for v in visits if v.visit_status == 'COMPLETED'),
+            'total_pob': float(total_pob),
+            'flags_count': sum(1 for n in timeline_nodes if n.get('is_flagged'))
+        }
+
         return api_response(True, f"Timeline for {target_emp.first_name} on {target_date}.", {
             'employee_code': target_emp.employee_code,
             'employee_name': f"{target_emp.first_name} {target_emp.last_name}",
-            'date': target_date,
+            'designation': target_emp.designation,
+            'territory': target_emp.territory.name if target_emp.territory else 'Unassigned',
+            'date': target_date.strftime('%Y-%m-%d'),
             'event_count': len(timeline_nodes),
             'timeline': timeline_nodes,
+            'beat_plans': beat_plan_data,
+            'summary': summary,
+            'latest_active_date': latest_event_date,
             'events': serializer.data
         })
 

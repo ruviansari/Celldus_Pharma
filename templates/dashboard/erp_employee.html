@@ -437,7 +437,7 @@
                     <td>
                         <strong style="color: #10b981; font-size: 0.9rem;">₹{{ emp.base_salary|floatformat:2 }}</strong>
                     </td>
-                    <td>
+                    <td class="emp-status-cell">
                         {% if emp.is_active %}
                         <span class="badge badge-success"><i class="fa-solid fa-circle" style="font-size: 0.5rem; margin-right: 3px;"></i> Active</span>
                         {% else %}
@@ -452,9 +452,9 @@
                                 <i class="fa-solid fa-pen-to-square"></i>
                             </button>
                             <!-- Toggle Status Form -->
-                            <form action="{% url 'dashboard_employee_toggle_status' emp.id %}" method="POST" style="margin: 0;">
+                            <form action="{% url 'dashboard_employee_toggle_status' emp.id %}" method="POST" style="margin: 0;" onsubmit="handleEmployeeStatusToggle(event, this);">
                                 {% csrf_token %}
-                                <button type="submit" class="action-btn" title="{% if emp.is_active %}Deactivate Employee{% else %}Activate Employee{% endif %}"
+                                <button type="submit" class="action-btn toggle-btn" title="{% if emp.is_active %}Deactivate Employee{% else %}Activate Employee{% endif %}"
                                     style="color: {% if emp.is_active %}var(--color-warning){% else %}var(--color-success){% endif %};">
                                     <i class="fa-solid {% if emp.is_active %}fa-user-slash{% else %}fa-user-check{% endif %}"></i>
                                 </button>
@@ -1323,6 +1323,15 @@ function autoCalcLeaveDays() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    const savedScrollPos = sessionStorage.getItem('emp_scroll_pos');
+    if (savedScrollPos) {
+        sessionStorage.removeItem('emp_scroll_pos');
+        window.scrollTo({
+            top: parseInt(savedScrollPos, 10),
+            behavior: 'instant'
+        });
+    }
+
     const fromInput = document.getElementById('leave_from');
     const toInput = document.getElementById('leave_to');
     if (fromInput) {
@@ -1334,6 +1343,70 @@ document.addEventListener('DOMContentLoaded', function() {
         toInput.addEventListener('input', autoCalcLeaveDays);
     }
 });
+
+function handleEmployeeStatusToggle(event, form) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    const btn = form.querySelector('button');
+    const icon = btn ? btn.querySelector('i') : null;
+    const tr = form.closest('tr');
+    const statusCell = tr ? tr.querySelector('.emp-status-cell') : null;
+
+    if (btn) btn.disabled = true;
+    if (icon) {
+        icon.className = 'fa-solid fa-spinner fa-spin';
+    }
+
+    const formData = new FormData(form);
+
+    fetch(form.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network error: ' + response.status);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (btn) btn.disabled = false;
+        if (data.success) {
+            if (data.is_active) {
+                if (icon) icon.className = 'fa-solid fa-user-slash';
+                if (btn) {
+                    btn.style.color = 'var(--color-warning)';
+                    btn.title = 'Deactivate Employee';
+                }
+                if (statusCell) {
+                    statusCell.innerHTML = '<span class="badge badge-success"><i class="fa-solid fa-circle" style="font-size: 0.5rem; margin-right: 3px;"></i> Active</span>';
+                }
+            } else {
+                if (icon) icon.className = 'fa-solid fa-user-check';
+                if (btn) {
+                    btn.style.color = 'var(--color-success)';
+                    btn.title = 'Activate Employee';
+                }
+                if (statusCell) {
+                    statusCell.innerHTML = '<span class="badge badge-danger"><i class="fa-solid fa-circle" style="font-size: 0.5rem; margin-right: 3px;"></i> Inactive</span>';
+                }
+            }
+        } else {
+            if (icon) icon.className = 'fa-solid fa-triangle-exclamation';
+            alert(data.message || 'Error toggling employee status');
+        }
+    })
+    .catch(err => {
+        console.error('AJAX toggle error, submitting normally with scroll preservation:', err);
+        sessionStorage.setItem('emp_scroll_pos', window.scrollY.toString());
+        form.submit();
+    });
+}
 
 function openEditEmployeeModal(id, code, first, last, dept, desig, branchId, salary, phone, email, bankAcc, bankIfsc) {
     document.getElementById('edit_emp_code_display').innerText = code;

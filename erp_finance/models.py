@@ -187,7 +187,11 @@ class ExpenseClaim(ERPDocumentModel):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT', db_index=True)
 
     def save(self, *args, **kwargs):
-        if not self.base_amount or self.base_amount == Decimal('0.00'):
+        if self.base_amount and self.tax_amount:
+            expected_total = self.base_amount + self.tax_amount
+            if not self.amount or self.amount == self.base_amount or self.amount == Decimal('0.00'):
+                self.amount = expected_total
+        elif not self.base_amount or self.base_amount == Decimal('0.00'):
             self.base_amount = self.amount - (self.tax_amount or Decimal('0.00'))
         if not self.document_no:
             self.document_no = DocumentSequence.get_next_number('EXP', self.branch)

@@ -1399,12 +1399,19 @@
             if (body.success) {
                 showToast("Duty check-out completed successfully.", "success");
                 fetchAttendanceStatus();
+                fetchTodayBeatPlan();
             } else {
                 let errMsg = body.message || "Check-out failed.";
-                if (body.data && typeof body.data === 'object' && Object.keys(body.data).length > 0) {
-                    const firstKey = Object.keys(body.data)[0];
-                    const val = body.data[firstKey];
-                    errMsg = `${firstKey}: ${Array.isArray(val) ? val[0] : val}`;
+                if (body.data && typeof body.data === 'object') {
+                    if (body.data.detail) {
+                        errMsg = body.data.detail;
+                    } else if (Object.keys(body.data).length > 0) {
+                        const firstKey = Object.keys(body.data)[0];
+                        if (firstKey !== 'code') {
+                            const val = body.data[firstKey];
+                            errMsg = `${firstKey}: ${Array.isArray(val) ? val[0] : val}`;
+                        }
+                    }
                 }
                 showToast(errMsg, "error");
                 if (mainBtn) {

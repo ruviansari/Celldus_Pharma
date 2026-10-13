@@ -245,6 +245,7 @@ def dashboard_index(request):
     from erp_quality.models import QCInspectionRequest, QualityDeviation
     from erp_core.models import AuditLog
     from erp_crm.models import Lead
+    from erp_sales.models import SalesOrder
 
     context = {
         # Core Website & Product Stats
@@ -258,11 +259,25 @@ def dashboard_index(request):
         "total_items": ItemMaster.objects.count(),
         "quarantine_lots_count": InventoryLot.objects.filter(status='QUARANTINE').count(),
         "available_lots_count": InventoryLot.objects.filter(status='AVAILABLE').count(),
+        "blocked_lots_count": InventoryLot.objects.filter(status='BLOCKED').count(),
+        "rejected_lots_count": InventoryLot.objects.filter(status='REJECTED').count(),
+        "total_lots_count": InventoryLot.objects.count(),
         "active_pos_count": PurchaseOrder.objects.exclude(status__in=['COMPLETED', 'CANCELLED']).count(),
+        "total_pos_count": PurchaseOrder.objects.count(),
         "active_batches_count": ProductionOrder.objects.filter(status__in=['RELEASED', 'IN_PROGRESS']).count(),
+        "completed_batches_count": ProductionOrder.objects.filter(status='COMPLETED').count(),
+        "total_sales_count": SalesOrder.objects.count(),
         "pending_qc_count": QCInspectionRequest.objects.exclude(status='DISPOSITIONED').count(),
+        "qc_dispositioned_count": QCInspectionRequest.objects.filter(status='DISPOSITIONED').count(),
         "open_deviations_count": QualityDeviation.objects.filter(status='OPEN').count(),
         "total_leads_count": Lead.objects.count(),
+
+        # Item Type Classification Breakdown
+        "item_api_count": ItemMaster.objects.filter(item_type='API').count(),
+        "item_fg_count": ItemMaster.objects.filter(item_type='FINISHED_GOOD').count(),
+        "item_excipient_count": ItemMaster.objects.filter(item_type='EXCIPIENT').count(),
+        "item_pkg_count": ItemMaster.objects.filter(item_type__in=['PACKAGING_PRIMARY', 'PACKAGING_SECONDARY']).count(),
+        "item_raw_count": ItemMaster.objects.filter(item_type__in=['RAW_MATERIAL', 'CONSUMABLE']).count(),
 
         # Recent 21 CFR Part 11 Audit Trail Logs
         "recent_audits": AuditLog.objects.select_related('user').order_by('-timestamp')[:8],

@@ -23,6 +23,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- Dashboard CSS with Cache-Bust -->
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v={% now 'U' %}">
+    <!-- Chart.js for Executive Graphical Dashboards -->
+    <script src="{% static 'js/chart.min.js' %}"></script>
+    <script>
+        if (typeof Chart === 'undefined') {
+            document.write('<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"><\/script>');
+        }
+    </script>
     <style>
         html,
         body {
@@ -440,6 +447,9 @@
                     if (toggleText) toggleText.textContent = 'Light Mode';
                     if (toggleBtn) toggleBtn.setAttribute('title', 'Switch to Light Mode');
                 }
+                try {
+                    window.dispatchEvent(new CustomEvent('celldusThemeChanged', { detail: { theme: theme } }));
+                } catch (e) { }
             }
 
             // Sync on load

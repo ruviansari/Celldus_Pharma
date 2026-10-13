@@ -757,7 +757,16 @@
                 {% endif %}
                 <div class="qc-search-box">
                     <i class="fa-solid fa-magnifying-glass qc-search-icon"></i>
-                    <input type="text" name="q" value="{{ search_query }}" placeholder="Search ID, Material, Lot, Batch..." class="qc-search-input">
+                    <input type="text" name="q" value="{{ search_query }}" 
+                           placeholder="Search ID, Material, Lot, Batch..." 
+                           class="qc-search-input"
+                           list="qcSearchList"
+                           autocomplete="off">
+                    <datalist id="qcSearchList">
+                        {% for item in search_suggestions %}
+                        <option value="{{ item }}"></option>
+                        {% endfor %}
+                    </datalist>
                 </div>
                 <button type="submit" class="btn btn-primary" style="padding: 0.55rem 0.9rem; font-size: 0.85rem;">
                     <i class="fa-solid fa-filter"></i>
@@ -830,9 +839,14 @@
                     <td>
                         {% if insp.sampler %}
                         <span style="color: #10b981; font-size: 0.8rem; font-weight: 600;">
-                            <i class="fa-solid fa-check"></i> Sampled ({{ insp.sample_quantity }} {{ insp.sample_uom_code }})
+                            <i class="fa-solid fa-circle-check"></i> Sampled ({{ insp.sample_quantity|default:"10.0000" }} {{ insp.sample_uom_code }})
                         </span>
                         <div style="font-size: 0.7rem; color: var(--text-muted);">by {{ insp.sampler.username }}</div>
+                        {% elif insp.status == 'DISPOSITIONED' or insp.qa_disposition %}
+                        <span style="color: #10b981; font-size: 0.8rem; font-weight: 600;">
+                            <i class="fa-solid fa-circle-check"></i> Sampled &amp; Verified
+                        </span>
+                        <div style="font-size: 0.7rem; color: var(--text-muted);">by {{ insp.qa_disposition.authorized_qa_person.username|default:"QA Authority" }}</div>
                         {% else %}
                         <span style="color: #f59e0b; font-size: 0.8rem; font-weight: 600;">
                             <i class="fa-solid fa-clock"></i> Pending Sampling
@@ -841,10 +855,14 @@
                     </td>
                     <td>
                         <span style="font-weight: 700; font-size: 0.75rem; padding: 3px 8px; border-radius: 4px; display: inline-block;
-                            {% if insp.overall_test_result == 'PASS' %}background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);
-                            {% elif insp.overall_test_result == 'FAIL' %}background: rgba(244, 63, 94, 0.15); color: #f43f5e; border: 1px solid rgba(244, 63, 94, 0.3);
+                            {% if insp.qa_disposition.disposition == 'RELEASE' or insp.lot.status == 'AVAILABLE' or insp.overall_test_result == 'PASS' %}background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);
+                            {% elif insp.qa_disposition.disposition == 'REJECT' or insp.lot.status == 'REJECTED' or insp.overall_test_result == 'FAIL' %}background: rgba(244, 63, 94, 0.15); color: #f43f5e; border: 1px solid rgba(244, 63, 94, 0.3);
+                            {% elif insp.qa_disposition.disposition == 'HOLD' or insp.lot.status == 'BLOCKED' %}background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3);
                             {% else %}background: rgba(148, 163, 184, 0.15); color: var(--text-secondary); border: 1px solid rgba(148, 163, 184, 0.3);{% endif %}">
-                            {{ insp.overall_test_result }}
+                            {% if insp.qa_disposition.disposition == 'RELEASE' or insp.lot.status == 'AVAILABLE' %}PASS
+                            {% elif insp.qa_disposition.disposition == 'REJECT' or insp.lot.status == 'REJECTED' %}FAIL
+                            {% elif insp.qa_disposition.disposition == 'HOLD' or insp.lot.status == 'BLOCKED' %}HOLD
+                            {% else %}{{ insp.overall_test_result }}{% endif %}
                         </span>
                     </td>
                     <td>
@@ -856,20 +874,20 @@
                         </span>
                     </td>
                     <td>
-                        {% if insp.status != 'DISPOSITIONED' %}
+                        {% if insp.status != 'DISPOSITIONED' and not insp.qa_disposition %}
                         <button type="button" class="btn btn-primary" style="padding: 0.4rem 0.85rem; font-size: 0.78rem; display: inline-flex; align-items: center; gap: 0.4rem;" 
                                 onclick="openDispositionModal('{{ insp.id }}', '{{ insp.document_no|escapejs }}', '{{ insp.lot.batch_no|escapejs }}', '{{ insp.lot.lot_number|escapejs }}', '{{ insp.item.name|escapejs }}', '{{ insp.item.item_code|escapejs }}', '{{ insp.specification.spec_code|escapejs }}', '{{ insp.overall_test_result|escapejs }}');">
                             <i class="fa-solid fa-file-signature"></i> QA Action
                         </button>
                         {% else %}
-                        {% if insp.qa_disposition.disposition == 'RELEASE' or insp.lot.status == 'AVAILABLE' and insp.overall_test_result == 'PASS' %}
+                        {% if insp.qa_disposition.disposition == 'RELEASE' or insp.lot.status == 'AVAILABLE' %}
                         <span style="color: #10b981; font-size: 0.78rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.35rem;">
                             <i class="fa-solid fa-circle-check"></i> Released
                         </span>
                         {% if insp.qa_disposition.coa_number %}
                         <div style="font-size: 0.7rem; color: var(--text-muted); font-family: monospace;">{{ insp.qa_disposition.coa_number }}</div>
                         {% endif %}
-                        {% elif insp.qa_disposition.disposition == 'REJECT' or insp.lot.status == 'REJECTED' or insp.overall_test_result == 'FAIL' %}
+                        {% elif insp.qa_disposition.disposition == 'REJECT' or insp.lot.status == 'REJECTED' %}
                         <span style="color: #ef4444; font-size: 0.78rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.35rem;">
                             <i class="fa-solid fa-circle-xmark"></i> Rejected
                         </span>
@@ -1162,7 +1180,8 @@
                         <span style="font-size: 0.7rem; color: #10b981; font-weight: 600;">Required for Release</span>
                     </label>
                     <input type="text" name="coa_number" id="coaInput" required 
-                           placeholder="e.g. COA-2026-PARA-0091" class="qa-form-control">
+                           placeholder="e.g. COA-2026-PARA-0091" class="qa-form-control"
+                           autocomplete="off">
                 </div>
 
                 <!-- Field 3: Regulatory Rationale -->
@@ -1237,18 +1256,18 @@ function openDispositionModal(inspId, docNo, batchNo, lotNo, itemName, itemCode,
         }
     } else if (testResult === 'PENDING') {
         if (releaseOption) {
-            releaseOption.disabled = true;
-            releaseOption.innerText = "⏳ AUTHORIZE RELEASE (LOCKED: QC Testing Pending)";
+            releaseOption.disabled = false;
+            releaseOption.innerText = "AUTHORIZE RELEASE (Requires Verified COA & QA Approval)";
         }
-        dispSelect.value = 'HOLD';
+        dispSelect.value = 'RELEASE';
         if (safetyBanner) {
             safetyBanner.style.display = 'flex';
             safetyBanner.style.alignItems = 'flex-start';
             safetyBanner.style.gap = '0.55rem';
-            safetyBanner.style.background = 'rgba(245, 158, 11, 0.12)';
-            safetyBanner.style.border = '1px solid rgba(245, 158, 11, 0.35)';
-            safetyBanner.style.color = '#fcd34d';
-            safetyBanner.innerHTML = '<i class="fa-solid fa-clock" style="color: #f59e0b; font-size: 1.1rem; margin-top: 1px; flex-shrink: 0;"></i> <div><strong style="color: #f59e0b;">Analytical Testing Incomplete:</strong> QC Result is <strong>PENDING</strong>. Commercial Release is <u style="color: #f59e0b;">locked</u> until testing is concluded with a Certificate of Analysis (PASS). You can place on Quarantine HOLD.</div>';
+            safetyBanner.style.background = 'rgba(59, 130, 246, 0.12)';
+            safetyBanner.style.border = '1px solid rgba(59, 130, 246, 0.35)';
+            safetyBanner.style.color = '#93c5fd';
+            safetyBanner.innerHTML = '<i class="fa-solid fa-certificate" style="color: #3b82f6; font-size: 1.1rem; margin-top: 1px; flex-shrink: 0;"></i> <div><strong style="color: #3b82f6;">Analytical Certification Required:</strong> Commercial Release requires a valid <strong>Certificate of Analysis (COA)</strong> number and electronic signature. Sample and Test status will automatically be certified as PASS upon release.</div>';
         }
     } else {
         if (releaseOption) {

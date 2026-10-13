@@ -142,6 +142,14 @@ def dashboard_quality(request):
     dispositions = QADispositionRecord.objects.select_related('lot', 'inspection', 'authorized_qa_person').order_by('-disposition_date')[:20]
     deviations = QualityDeviation.objects.select_related('affected_lot').order_by('-created_at')[:20]
 
+    # Real actual suggestions from QC inspection records and Item Master
+    qc_items = list(ItemMaster.objects.exclude(name__isnull=True).values_list('name', flat=True).distinct())
+    qc_lots = list(QCInspectionRequest.objects.exclude(lot__lot_number__isnull=True).values_list('lot__lot_number', flat=True).distinct())
+    qc_batches = list(QCInspectionRequest.objects.exclude(lot__batch_no__isnull=True).exclude(lot__batch_no='').values_list('lot__batch_no', flat=True).distinct())
+    qc_docs = list(QCInspectionRequest.objects.exclude(document_no__isnull=True).values_list('document_no', flat=True).distinct())
+
+    search_suggestions = sorted(list(set([x.strip() for x in (qc_items + qc_lots + qc_batches + qc_docs) if x and x.strip()])))
+
     context = {
         'inspections': inspections[:50],
         'dispositions': dispositions,
@@ -152,6 +160,7 @@ def dashboard_quality(request):
         'total_count': total_count,
         'status_filter': status_filter,
         'search_query': search,
+        'search_suggestions': search_suggestions,
     }
     return render(request, 'dashboard/erp_quality.html', context)
 
@@ -1209,9 +1218,15 @@ def dashboard_audit_trail(request):
             Q(entity_name__icontains=search)
         )
 
+    total_logs = AuditLog.objects.count()
+    total_filtered = qs.count()
+    available_actions = sorted(list(AuditLog.objects.exclude(action__isnull=True).exclude(action='').values_list('action', flat=True).distinct()))
+
     context = {
         'audit_logs': qs[:150],
-        'total_logs': AuditLog.objects.count(),
+        'total_logs': total_logs,
+        'total_filtered': total_filtered,
+        'available_actions': available_actions,
         'action_filter': action_filter,
         'entity_filter': entity_filter,
         'search_query': search,
@@ -2292,12 +2307,14 @@ def dashboard_field_tracking(request):
             att_status = att.check_in_status or ('PRESENT' if att.check_in_time else 'ABSENT')
 
         is_on_duty = bool(att and (att.check_in_time or att.in_time) and not att.check_out_time)
+        is_punched_in = bool(att and (att.check_in_time or att.in_time))
 
         team_data.append({
             'employee': emp,
             'attendance': att,
             'attendance_status': att_status,
             'is_on_duty': is_on_duty,
+            'is_punched_in': is_punched_in,
             'is_active_in_visit': is_active_visit,
             'planned_visits': len(emp_planned),
             'completed_visits': completed_v,
@@ -2380,9 +2397,12 @@ def dashboard_field_tracking(request):
         'exception_count': exception_count,
     }
 
+    flagged_visits_today = [v for v in visits_today if v.is_flagged]
+
     context = {
         'stats': stats,
         'team_data': team_data,
+        'flagged_visits': flagged_visits_today,
         'recent_visits': visits_today[:15],
         'activity_feed': activity_feed,
         'territories': territories,

@@ -730,6 +730,9 @@
         font-weight: 700;
         color: var(--text-primary);
     }
+    .timeline-summary-stops {
+        color: #818cf8;
+    }
 
     /* Timeline Stepper */
     .timeline-stepper {
@@ -776,6 +779,310 @@
     .timeline-content:hover {
         border-color: rgba(99, 102, 241, 0.4);
         background: rgba(255, 255, 255, 0.05);
+    }
+    .timeline-time-tag {
+        font-size: 0.78rem;
+        color: #818cf8;
+        font-weight: 700;
+        font-family: monospace;
+    }
+    .timeline-flag-box {
+        font-size: 0.75rem;
+        color: #f59e0b;
+        width: 100%;
+        margin-top: 0.35rem;
+        background: rgba(245, 158, 11, 0.1);
+        border-left: 3px solid #f59e0b;
+        padding: 0.35rem 0.65rem;
+        border-radius: 4px;
+        line-height: 1.4;
+    }
+    .timeline-empty-card {
+        text-align: center;
+        padding: 3rem 1.5rem;
+        color: var(--text-muted);
+        border-radius: 12px;
+    }
+
+    /* Universal Timeline Badge Rules */
+    .timeline-stepper .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.25rem 0.55rem;
+        border-radius: 6px;
+        font-size: 0.72rem;
+        font-weight: 600;
+        line-height: 1.2;
+    }
+    .timeline-stepper .badge-success {
+        background: rgba(16, 185, 129, 0.15);
+        color: #10b981;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .timeline-stepper .badge-warning {
+        background: rgba(245, 158, 11, 0.15);
+        color: #f59e0b;
+        border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+    .timeline-stepper .badge-info {
+        background: rgba(6, 182, 212, 0.15);
+        color: #06b6d4;
+        border: 1px solid rgba(6, 182, 212, 0.3);
+    }
+    .timeline-stepper .badge-secondary {
+        background: rgba(148, 163, 184, 0.15);
+        color: #94a3b8;
+        border: 1px solid rgba(148, 163, 184, 0.3);
+    }
+    .timeline-stepper .badge-planned-route {
+        background: rgba(139, 92, 246, 0.18);
+        color: #a78bfa;
+        border: 1px solid rgba(139, 92, 246, 0.35);
+    }
+
+    .timeline-modal-box {
+        background: var(--card-bg);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    }
+    .timeline-modal-box .modal-header {
+        border-bottom: 1px solid var(--border-color);
+    }
+    .timeline-date-picker {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+        color-scheme: dark;
+    }
+
+    /* =========================================================
+       LIGHT MODE TIMELINE & MODAL VISIBILITY ENHANCEMENTS
+       ========================================================= */
+    [data-theme="light"] #employeeTimelineModal .modal-box,
+    [data-theme="light"] .timeline-modal-box {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.15), 0 10px 25px -5px rgba(15, 23, 42, 0.08) !important;
+        color: #0f172a !important;
+    }
+    [data-theme="light"] #employeeTimelineModal .modal-header {
+        border-bottom-color: #e2e8f0 !important;
+        background: #ffffff !important;
+    }
+    [data-theme="light"] #employeeTimelineModal .modal-footer {
+        border-top-color: #e2e8f0 !important;
+        background: #ffffff !important;
+    }
+    [data-theme="light"] #timelineModalEmpName {
+        color: #0f172a !important;
+    }
+    [data-theme="light"] #timelineModalSubMeta,
+    [data-theme="light"] #timelineModalSubMeta span {
+        color: #475569 !important;
+    }
+    [data-theme="light"] #timelineDateInput {
+        background: #f8fafc !important;
+        border: 1px solid #cbd5e1 !important;
+        color: #0f172a !important;
+        color-scheme: light !important;
+    }
+    [data-theme="light"] #timelineDateInput:focus {
+        border-color: #4f46e5 !important;
+        background: #ffffff !important;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12) !important;
+    }
+    [data-theme="light"] .timeline-summary-bar {
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+    }
+    [data-theme="light"] .timeline-summary-lbl {
+        color: #64748b !important;
+        font-weight: 700 !important;
+    }
+    [data-theme="light"] .timeline-summary-val {
+        color: #0f172a !important;
+    }
+    [data-theme="light"] .timeline-summary-stops {
+        color: #4f46e5 !important;
+    }
+    [data-theme="light"] .timeline-stepper::before {
+        background: #cbd5e1 !important;
+    }
+    [data-theme="light"] .timeline-dot {
+        box-shadow: 0 3px 10px rgba(15, 23, 42, 0.2) !important;
+        border: 2px solid #ffffff !important;
+    }
+    [data-theme="light"] .timeline-content {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05) !important;
+    }
+    [data-theme="light"] .timeline-content:hover {
+        background: #f8fafc !important;
+        border-color: #6366f1 !important;
+        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.12) !important;
+    }
+    [data-theme="light"] .timeline-content strong {
+        color: #0f172a !important;
+    }
+    [data-theme="light"] .timeline-content div {
+        color: #334155 !important;
+    }
+    [data-theme="light"] .timeline-time-tag {
+        color: #4338ca !important;
+    }
+    [data-theme="light"] .timeline-stepper .badge-success {
+        background: #ecfdf5 !important;
+        color: #047857 !important;
+        border: 1px solid #a7f3d0 !important;
+    }
+    [data-theme="light"] .timeline-stepper .badge-warning {
+        background: #fffbeb !important;
+        color: #b45309 !important;
+        border: 1px solid #fde68a !important;
+    }
+    [data-theme="light"] .timeline-stepper .badge-info {
+        background: #ecfeff !important;
+        color: #0e7490 !important;
+        border: 1px solid #a5f3fc !important;
+    }
+    [data-theme="light"] .timeline-stepper .badge-secondary {
+        background: #f1f5f9 !important;
+        color: #475569 !important;
+        border: 1px solid #cbd5e1 !important;
+    }
+    [data-theme="light"] .timeline-stepper .badge-planned-route {
+        background: #f5f3ff !important;
+        color: #6d28d9 !important;
+        border: 1px solid #ddd6fe !important;
+    }
+    [data-theme="light"] .timeline-flag-box {
+        background: #fffbeb !important;
+        color: #b45309 !important;
+        border-left: 3px solid #d97706 !important;
+        border: 1px solid #fde68a !important;
+        border-left-width: 3px !important;
+    }
+    [data-theme="light"] .timeline-coords {
+        color: #64748b !important;
+    }
+    [data-theme="light"] .timeline-empty-card {
+        background: #f8fafc !important;
+        border: 1px dashed #cbd5e1 !important;
+    }
+    [data-theme="light"] .timeline-empty-title {
+        color: #0f172a !important;
+    }
+    [data-theme="light"] .timeline-empty-desc {
+        color: #475569 !important;
+    }
+    [data-theme="light"] .timeline-loading-text {
+        color: #475569 !important;
+    }
+    [data-theme="light"] #timelineModalFooterNote {
+        color: #64748b !important;
+    }
+
+    /* =========================================================
+       LIGHT MODE: TABLE HEADER, TOOLBAR, ACTION BUTTONS & TEXT
+       ========================================================= */
+    [data-theme="light"] .filter-toolbar {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        box-shadow: 0 4px 15px rgba(15, 23, 42, 0.05) !important;
+    }
+    [data-theme="light"] .filter-toolbar input.form-control,
+    [data-theme="light"] .filter-toolbar select.form-control {
+        background: #f8fafc !important;
+        border: 1px solid #cbd5e1 !important;
+        color: #0f172a !important;
+    }
+    [data-theme="light"] .filter-toolbar input.form-control::placeholder {
+        color: #94a3b8 !important;
+    }
+    [data-theme="light"] .filter-toolbar input.form-control:focus,
+    [data-theme="light"] .filter-toolbar select.form-control:focus {
+        background: #ffffff !important;
+        border-color: #4f46e5 !important;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12) !important;
+    }
+    [data-theme="light"] .filter-toolbar i.fa-magnifying-glass {
+        color: #64748b !important;
+    }
+    [data-theme="light"] .filter-toolbar-count {
+        color: #475569 !important;
+    }
+    [data-theme="light"] .filter-toolbar-count strong {
+        color: #0f172a !important;
+    }
+
+    /* Table Header in Light Mode - Crisp High Contrast */
+    [data-theme="light"] #teamTrackingTable thead th {
+        background: #f1f5f9 !important;
+        color: #1e293b !important;
+        border-bottom: 2px solid #cbd5e1 !important;
+        font-weight: 700 !important;
+    }
+    [data-theme="light"] #teamTrackingTable tbody td {
+        color: #1e293b !important;
+        border-bottom: 1px solid #f1f5f9 !important;
+    }
+    [data-theme="light"] #teamTrackingTable tbody tr:hover {
+        background: #f8fafc !important;
+    }
+    [data-theme="light"] .emp-code-sub {
+        color: #475569 !important;
+        font-weight: 600 !important;
+    }
+    [data-theme="light"] .text-unmarked-time {
+        color: #64748b !important;
+        font-weight: 600 !important;
+    }
+
+    /* Action Timeline Button in Light Mode - Bold Solid Visibility */
+    [data-theme="light"] .btn-timeline-action {
+        background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%) !important;
+        border: 1px solid transparent !important;
+        color: #ffffff !important;
+        box-shadow: 0 3px 10px rgba(79, 70, 229, 0.35) !important;
+    }
+    [data-theme="light"] .btn-timeline-action i {
+        color: #ffffff !important;
+    }
+    [data-theme="light"] .btn-timeline-action:hover {
+        background: linear-gradient(135deg, #4338ca 0%, #0891b2 100%) !important;
+        color: #ffffff !important;
+        box-shadow: 0 6px 16px rgba(79, 70, 229, 0.45) !important;
+        transform: translateY(-2px) scale(1.03);
+    }
+
+    /* Table Badges in Light Mode */
+    [data-theme="light"] .badge-not-checked-in,
+    [data-theme="light"] #teamTrackingTable .badge[style*="background: rgba(148, 163, 184"] {
+        background: #f1f5f9 !important;
+        color: #475569 !important;
+        border: 1px solid #cbd5e1 !important;
+        font-weight: 600 !important;
+    }
+    [data-theme="light"] .badge-off-duty,
+    [data-theme="light"] #teamTrackingTable .badge[style*="rgba(148, 163, 184, 0.12)"] {
+        background: #f1f5f9 !important;
+        color: #475569 !important;
+        border: 1px solid #cbd5e1 !important;
+        font-weight: 600 !important;
+    }
+    [data-theme="light"] #teamTrackingTable .badge[style*="rgba(6, 182, 212, 0.18)"] {
+        background: #ecfeff !important;
+        color: #0891b2 !important;
+        border: 1px solid #a5f3fc !important;
+        box-shadow: none !important;
+    }
+    [data-theme="light"] #teamTrackingTable .badge-info {
+        background: #ecfeff !important;
+        color: #0891b2 !important;
+        border: 1px solid #a5f3fc !important;
     }
 </style>
 {% endblock %}
@@ -978,8 +1285,8 @@
                 </span>
             </div>
 
-            <span style="font-size: 0.85rem; color: var(--text-muted); margin-left: auto;">
-                Showing <strong id="visibleRepCount">{{ team_data|length }}</strong> of {{ team_data|length }} field reps
+            <span class="filter-toolbar-count" style="font-size: 0.85rem; color: var(--text-muted); margin-left: auto;">
+                Showing <strong id="visibleRepCount">{{ team_data|length }}</strong> <span id="visibleRepLabel">of {{ team_data|length }} field reps</span>
             </span>
         </div>
 
@@ -1000,7 +1307,7 @@
                 </thead>
                 <tbody>
                     {% for row in team_data %}
-                    <tr data-emp-id="{{ row.employee.id }}" data-territory="{{ row.employee.territory.name|default:'' }}" data-status="{{ row.attendance_status }}" data-pob="{{ row.pob_booked_amount|floatformat:0 }}" data-in-visit="{% if row.is_active_in_visit %}1{% else %}0{% endif %}">
+                    <tr data-emp-id="{{ row.employee.id }}" data-territory="{{ row.employee.territory.name|default:'' }}" data-status="{{ row.attendance_status }}" data-pob="{{ row.pob_booked_amount|floatformat:0 }}" data-in-visit="{% if row.is_active_in_visit %}1{% else %}0{% endif %}" data-punched="{% if row.is_punched_in %}1{% else %}0{% endif %}">
                         <td>
                             <div style="display: flex; align-items: center; gap: 0.75rem;">
                                 <div class="rep-avatar-circle">
@@ -1008,7 +1315,7 @@
                                 </div>
                                 <div>
                                     <strong style="color: var(--text-primary); font-size: 0.9rem;">{{ row.employee.first_name|title }} {{ row.employee.last_name|title }}</strong>
-                                    <div style="font-size: 0.75rem; color: var(--text-muted); font-family: monospace;">{{ row.employee.employee_code }}</div>
+                                    <div class="emp-code-sub" style="font-size: 0.75rem; color: var(--text-muted); font-family: monospace;">{{ row.employee.employee_code }}</div>
                                 </div>
                             </div>
                         </td>
@@ -1023,7 +1330,7 @@
                             {% elif row.attendance_status == 'REQUIRES_REVIEW' or row.attendance_status == 'POOR_ACCURACY' or row.attendance_status == 'OUTSIDE_GEOFENCE' %}
                             <span class="badge badge-warning" style="font-weight: 600;" title="{{ row.attendance.flag_reason|default:'Geofence Deviation' }}"><i class="fa-solid fa-triangle-exclamation"></i> Flagged</span>
                             {% else %}
-                            <span class="badge" style="background: rgba(148, 163, 184, 0.15); color: #94a3b8; font-weight: 600;"><i class="fa-solid fa-clock"></i> Not Checked In</span>
+                            <span class="badge badge-not-checked-in" style="background: rgba(148, 163, 184, 0.15); color: #94a3b8; font-weight: 600;"><i class="fa-solid fa-clock"></i> Not Checked In</span>
                             {% endif %}
                         </td>
                         <td>
@@ -1034,7 +1341,7 @@
                             <strong style="color: var(--text-primary);">{{ row.attendance.in_time|slice:":5" }}</strong>
                             <div style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600;"><span class="badge badge-primary" style="font-size: 0.65rem; padding: 1px 6px;">{{ row.attendance.work_mode|default:'FIELD' }}</span></div>
                             {% else %}
-                            <span style="color: var(--text-muted); font-size: 0.82rem;">--:--</span>
+                            <span class="text-unmarked-time" style="color: var(--text-muted); font-size: 0.82rem;">--:--</span>
                             {% endif %}
                         </td>
                         <td>
@@ -1059,7 +1366,7 @@
                                 </span>
                                 {% endif %}
                             {% else %}
-                            <span class="badge" style="background: rgba(148, 163, 184, 0.12); color: #94a3b8;">
+                            <span class="badge badge-off-duty" style="background: rgba(148, 163, 184, 0.12); color: #94a3b8;">
                                 <i class="fa-solid fa-moon"></i> Off Duty
                             </span>
                             {% endif %}
@@ -1074,6 +1381,55 @@
                     <tr>
                         <td colspan="9" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">
                             No field representatives registered.
+                        </td>
+                    </tr>
+                    {% endfor %}
+
+                    {% for fv in flagged_visits %}
+                    <tr class="flagged-visit-row" style="display: none;" data-emp-id="{{ fv.employee.id }}" data-territory="{{ fv.employee.territory.name|default:'' }}" data-status="FLAGGED" data-punched="1" data-is-visit-flag="1">
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <div class="rep-avatar-circle" style="background: linear-gradient(135deg, #f43f5e, #e11d48);">
+                                    {{ fv.employee.first_name|slice:":1"|upper }}
+                                </div>
+                                <div>
+                                    <strong style="color: var(--text-primary); font-size: 0.9rem;">{{ fv.employee.first_name|title }} {{ fv.employee.last_name|title }}</strong>
+                                    <div class="emp-code-sub" style="font-size: 0.75rem; color: var(--text-muted); font-family: monospace;">{{ fv.employee.employee_code }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span style="font-size: 0.82rem; color: var(--text-primary);">{{ fv.employee.designation|default:"MR" }}</span>
+                            <span class="badge badge-info" style="font-size: 0.65rem; margin-left: 0.3rem;">{{ fv.employee.sales_tier|default:"MR" }}</span>
+                        </td>
+                        <td>{{ fv.employee.territory.name|default:"Unassigned" }}</td>
+                        <td>
+                            <span class="badge badge-warning" style="font-weight: 600;" title="{{ fv.flag_reason|default:'Geofence Deviation' }}"><i class="fa-solid fa-triangle-exclamation"></i> Flagged (Visit)</span>
+                        </td>
+                        <td>
+                            {% if fv.start_time %}
+                            <strong style="color: var(--text-primary);">{{ fv.start_time|time:"H:i" }}</strong>
+                            <div style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600;"><span class="badge badge-info" style="font-size: 0.65rem; padding: 1px 6px;">CALL</span></div>
+                            {% else %}
+                            <span class="text-unmarked-time" style="color: var(--text-muted); font-size: 0.82rem;">--:--</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <strong style="color: var(--text-primary); font-size: 0.85rem;" title="{{ fv.customer.name }}">{{ fv.customer.name|truncatechars:18 }}</strong>
+                            <div style="font-size: 0.72rem; color: var(--text-muted);">{{ fv.customer.customer_type|default:'Doctor Detailing' }}</div>
+                        </td>
+                        <td>
+                            <strong style="font-family: monospace; color: var(--text-primary); font-size: 0.92rem;">₹0</strong>
+                        </td>
+                        <td>
+                            <span class="badge" style="background: rgba(245, 158, 11, 0.18); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.35); font-size: 0.75rem;" title="{{ fv.flag_reason }}">
+                                <i class="fa-solid fa-triangle-exclamation"></i> {{ fv.flag_reason|truncatechars:26 }}
+                            </span>
+                        </td>
+                        <td style="text-align: center;">
+                            <button type="button" class="btn-timeline-action" onclick="viewEmployeeTimeline('{{ fv.employee.id }}', '{{ fv.employee.first_name|title }} {{ fv.employee.last_name|title }}')" title="View telemetry and visit timeline">
+                                <i class="fa-solid fa-timeline"></i> Timeline
+                            </button>
                         </td>
                     </tr>
                     {% endfor %}
@@ -1093,18 +1449,18 @@
 <!-- MODAL: EMPLOYEE DAILY TIMELINE & GPS AUDIT TRAIL         -->
 <!-- ======================================================== -->
 <div id="employeeTimelineModal" class="modal-overlay" style="display: none; align-items: center; justify-content: center; z-index: 1050;" onclick="if(event.target === this) closeModal('employeeTimelineModal')">
-    <div class="modal-box" style="max-width: 680px; width: 92%; max-height: 88vh; overflow-y: auto; background: var(--card-bg); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
-        <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 0.75rem;">
+    <div class="modal-box timeline-modal-box" style="max-width: 680px; width: 92%; max-height: 88vh; overflow-y: auto; border-radius: 16px;">
+        <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 1.5rem; flex-wrap: wrap; gap: 0.75rem;">
             <div>
-                <h3 id="timelineModalEmpName" style="margin: 0; font-size: 1.15rem; color: var(--text-primary); font-weight: 700;">
+                <h3 id="timelineModalEmpName" style="margin: 0; font-size: 1.15rem; font-weight: 700;">
                     Employee Timeline
                 </h3>
-                <div id="timelineModalSubMeta" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                <div id="timelineModalSubMeta" style="font-size: 0.8rem; margin-top: 0.25rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
                     <span>Daily GPS verification & visit sequence</span>
                 </div>
             </div>
             <div style="display: flex; align-items: center; gap: 0.65rem;">
-                <input type="date" id="timelineDateInput" class="form-control" style="padding: 0.35rem 0.65rem; font-size: 0.8rem; width: auto; background: rgba(255,255,255,0.06); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 8px;" onchange="onTimelineDatePickerChange()" title="Pick audit date">
+                <input type="date" id="timelineDateInput" class="form-control timeline-date-picker" style="padding: 0.35rem 0.65rem; font-size: 0.8rem; width: auto; border-radius: 8px;" onchange="onTimelineDatePickerChange()" title="Pick audit date">
                 <button type="button" class="modal-close-btn" onclick="closeModal('employeeTimelineModal')" title="Close" style="font-size: 1.4rem; padding: 0 0.35rem; line-height: 1;">&times;</button>
             </div>
         </div>
@@ -1391,6 +1747,10 @@
         let visibleCount = 0;
 
         rows.forEach(r => {
+            if (r.getAttribute('data-is-visit-flag') === '1') {
+                r.style.display = 'none';
+                return;
+            }
             if (mode === 'POB') {
                 const pob = parseFloat(r.getAttribute('data-pob') || 0);
                 const show = pob > 0;
@@ -1400,6 +1760,8 @@
         });
 
         document.getElementById('visibleRepCount').textContent = visibleCount;
+        const repLabel = document.getElementById('visibleRepLabel');
+        if (repLabel) repLabel.textContent = `of {{ team_data|length }} field reps`;
         const noMatch = document.getElementById('noMatchRow');
         if (noMatch) {
             noMatch.style.display = visibleCount === 0 ? '' : 'none';
@@ -1414,9 +1776,18 @@
         let visibleCount = 0;
 
         rows.forEach(r => {
+            const isVisitFlag = r.getAttribute('data-is-visit-flag') === '1';
+
+            // Visit flag rows only show under FLAGGED filter
+            if (isVisitFlag && stat !== 'FLAGGED') {
+                r.style.display = 'none';
+                return;
+            }
+
             const text = r.innerText.toLowerCase();
             const rTerr = (r.getAttribute('data-territory') || '').toLowerCase();
             const rStat = r.getAttribute('data-status') || '';
+            const isPunched = r.getAttribute('data-punched') === '1';
             const inVisit = r.getAttribute('data-in-visit') === '1';
 
             const matchesSearch = !search || text.includes(search);
@@ -1424,13 +1795,13 @@
 
             let matchesStat = true;
             if (stat === 'PRESENT') {
-                matchesStat = rStat === 'PRESENT' || rStat === 'VALID';
+                matchesStat = !isVisitFlag && (isPunched || rStat === 'PRESENT' || rStat === 'VALID');
             } else if (stat === 'IN_PROGRESS') {
-                matchesStat = inVisit;
+                matchesStat = !isVisitFlag && inVisit;
             } else if (stat === 'FLAGGED') {
-                matchesStat = rStat === 'REQUIRES_REVIEW' || rStat === 'POOR_ACCURACY' || rStat === 'OUTSIDE_GEOFENCE';
+                matchesStat = isVisitFlag || rStat === 'FLAGGED' || rStat === 'REQUIRES_REVIEW' || rStat === 'POOR_ACCURACY' || rStat === 'OUTSIDE_GEOFENCE';
             } else if (stat === 'NOT_CHECKED_IN') {
-                matchesStat = rStat === 'NOT_CHECKED_IN' || rStat === 'ABSENT';
+                matchesStat = !isVisitFlag && (!isPunched || rStat === 'NOT_CHECKED_IN' || rStat === 'ABSENT');
             }
 
             const show = matchesSearch && matchesTerr && matchesStat;
@@ -1439,6 +1810,14 @@
         });
 
         document.getElementById('visibleRepCount').textContent = visibleCount;
+        const repLabel = document.getElementById('visibleRepLabel');
+        if (repLabel) {
+            if (stat === 'FLAGGED') {
+                repLabel.textContent = `geofence flags`;
+            } else {
+                repLabel.textContent = `of {{ team_data|length }} field reps`;
+            }
+        }
         const noMatch = document.getElementById('noMatchRow');
         if (noMatch) {
             noMatch.style.display = visibleCount === 0 ? '' : 'none';
@@ -1738,7 +2117,7 @@
                 </div>
                 <div class="timeline-summary-item">
                     <span class="timeline-summary-lbl"><i class="fa-solid fa-map-location-dot"></i> Planned Stops</span>
-                    <span class="timeline-summary-val" style="color: #818cf8;">${summary.planned_stops ?? 0}</span>
+                    <span class="timeline-summary-val timeline-summary-stops">${summary.planned_stops ?? 0}</span>
                 </div>
                 <div class="timeline-summary-item">
                     <span class="timeline-summary-lbl"><i class="fa-solid fa-stethoscope"></i> Visits Done</span>
@@ -1762,10 +2141,10 @@
         if (timeline.length === 0) {
             if (data.latest_active_date) {
                 container.innerHTML = `
-                    <div style="text-align: center; padding: 3rem 1.5rem; color: var(--text-muted);">
+                    <div class="timeline-empty-card" style="text-align: center; padding: 3rem 1.5rem; color: var(--text-muted);">
                         <i class="fa-solid fa-calendar-xmark" style="font-size: 2.2rem; opacity: 0.35; margin-bottom: 0.75rem; display: block; color: #818cf8;"></i>
-                        <h4 style="margin: 0 0 0.4rem; color: var(--text-primary); font-size: 1rem;">No Activity Recorded on ${dateStr}</h4>
-                        <p style="font-size: 0.82rem; margin-bottom: 1.25rem; color: var(--text-secondary);">This field representative has no verified GPS check-ins or visit activities on this date.</p>
+                        <h4 class="timeline-empty-title" style="margin: 0 0 0.4rem; color: var(--text-primary); font-size: 1rem;">No Activity Recorded on ${dateStr}</h4>
+                        <p class="timeline-empty-desc" style="font-size: 0.82rem; margin-bottom: 1.25rem; color: var(--text-secondary);">This field representative has no verified GPS check-ins or visit activities on this date.</p>
                         <button type="button" class="btn btn-primary" onclick="jumpToTimelineDate('${data.latest_active_date}')" style="font-size: 0.82rem; padding: 0.45rem 1.15rem; display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer;">
                             <i class="fa-solid fa-clock-rotate-left"></i> Jump to Latest Activity (${data.latest_active_date})
                         </button>
@@ -1773,10 +2152,10 @@
                 `;
             } else {
                 container.innerHTML = `
-                    <div style="text-align: center; padding: 3rem 1.5rem; color: var(--text-muted);">
-                        <i class="fa-solid fa-route" style="font-size: 2.2rem; opacity: 0.35; margin-bottom: 0.75rem; display: block;"></i>
-                        <h4 style="margin: 0 0 0.4rem; color: var(--text-primary); font-size: 1rem;">No Telemetry Recorded on ${dateStr}</h4>
-                        <p style="font-size: 0.82rem;">Select another date from the picker above to inspect historical logs.</p>
+                    <div class="timeline-empty-card" style="text-align: center; padding: 3rem 1.5rem; color: var(--text-muted);">
+                        <i class="fa-solid fa-route" style="font-size: 2.2rem; opacity: 0.35; margin-bottom: 0.75rem; display: block; color: #818cf8;"></i>
+                        <h4 class="timeline-empty-title" style="margin: 0 0 0.4rem; color: var(--text-primary); font-size: 1rem;">No Telemetry Recorded on ${dateStr}</h4>
+                        <p class="timeline-empty-desc" style="font-size: 0.82rem; color: var(--text-secondary);">Select another date from the picker above to inspect historical logs.</p>
                     </div>
                 `;
             }
@@ -1826,34 +2205,34 @@
             let statusBadge = '';
             if (isBeatPlan) {
                 statusBadge = item.status === 'COMPLETED' ?
-                    `<span class="badge badge-success" style="font-size:0.7rem;"><i class="fa-solid fa-check"></i> Visited</span>` :
-                    `<span class="badge" style="font-size:0.7rem; background: rgba(139, 92, 246, 0.18); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.35);"><i class="fa-solid fa-calendar-day"></i> Planned Route</span>`;
+                    `<span class="badge badge-success"><i class="fa-solid fa-check"></i> Visited</span>` :
+                    `<span class="badge badge-planned-route"><i class="fa-solid fa-calendar-day"></i> Planned Route</span>`;
             } else if (isFlagged) {
-                statusBadge = `<span class="badge badge-warning" style="font-size:0.7rem;"><i class="fa-solid fa-triangle-exclamation"></i> ${item.geofence_status || 'FLAGGED'}</span>`;
+                statusBadge = `<span class="badge badge-warning"><i class="fa-solid fa-triangle-exclamation"></i> ${item.geofence_status || 'FLAGGED'}</span>`;
             } else {
-                statusBadge = `<span class="badge badge-success" style="font-size:0.7rem;"><i class="fa-solid fa-shield-check"></i> ${item.geofence_status || 'VERIFIED GEOFENCE'}</span>`;
+                statusBadge = `<span class="badge badge-success"><i class="fa-solid fa-shield-check"></i> ${item.geofence_status || 'VERIFIED GEOFENCE'}</span>`;
             }
 
             let responseBadge = '';
             if (item.doctor_response) {
                 const respClean = item.doctor_response.replace(/_/g, ' ');
-                responseBadge = `<span class="badge badge-info" style="font-size: 0.7rem;"><i class="fa-regular fa-comment-dots"></i> Feedback: ${respClean}</span>`;
+                responseBadge = `<span class="badge badge-info"><i class="fa-regular fa-comment-dots"></i> Feedback: ${respClean}</span>`;
             }
 
             let pobBadge = '';
             if (item.pob_amount && Number(item.pob_amount) > 0) {
-                pobBadge = `<span class="badge badge-success" style="font-size: 0.72rem; font-weight: 700;"><i class="fa-solid fa-indian-rupee-sign"></i> ₹${Number(item.pob_amount).toLocaleString('en-IN')} POB</span>`;
+                pobBadge = `<span class="badge badge-success" style="font-weight: 700;"><i class="fa-solid fa-indian-rupee-sign"></i> ₹${Number(item.pob_amount).toLocaleString('en-IN')} POB</span>`;
             }
 
             let coordsSnippet = '';
             if (item.lat && item.lng) {
-                coordsSnippet = `<span style="font-size: 0.72rem; color: var(--text-muted);"><i class="fa-solid fa-location-crosshairs"></i> ${Number(item.lat).toFixed(4)}, ${Number(item.lng).toFixed(4)}</span>`;
+                coordsSnippet = `<span class="timeline-coords"><i class="fa-solid fa-location-crosshairs"></i> ${Number(item.lat).toFixed(4)}, ${Number(item.lng).toFixed(4)}</span>`;
             }
 
             let flagNotice = '';
             if (item.flag_reason) {
                 flagNotice = `
-                    <div style="font-size: 0.75rem; color: #f59e0b; width: 100%; margin-top: 0.35rem; background: rgba(245, 158, 11, 0.1); border-left: 3px solid #f59e0b; padding: 0.35rem 0.65rem; border-radius: 4px; line-height: 1.4;">
+                    <div class="timeline-flag-box">
                         <i class="fa-solid fa-triangle-exclamation"></i> <strong>Audit Flag:</strong> ${item.flag_reason}
                     </div>
                 `;
@@ -1866,12 +2245,12 @@
                     </div>
                     <div class="timeline-content">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem; flex-wrap: wrap; gap: 0.35rem;">
-                            <strong style="color: var(--text-primary); font-size: 0.88rem;">${titleText}</strong>
-                            <span style="font-size: 0.78rem; color: #818cf8; font-weight: 700; font-family: monospace;">${item.time || ''}</span>
+                            <strong style="font-size: 0.88rem;">${titleText}</strong>
+                            <span class="timeline-time-tag">${item.time || ''}</span>
                         </div>
-                        <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.35rem;">
-                            ${item.customer ? `Customer: <strong style="color: var(--text-primary);">${item.customer}</strong> ${item.customer_type ? `<span class="badge badge-secondary" style="font-size: 0.65rem; margin-left: 0.35rem;">${item.customer_type}</span>` : ''}` : (item.work_mode ? `Work Mode: <strong style="color: var(--text-primary);">${item.work_mode}</strong>` : 'Audit Telemetry Ping')}
-                            ${item.city && item.city !== 'Field' ? ` • <span style="color: var(--text-muted);"><i class="fa-solid fa-city"></i> ${item.city}</span>` : ''}
+                        <div style="font-size: 0.8rem; margin-bottom: 0.35rem;">
+                            ${item.customer ? `Customer: <strong>${item.customer}</strong> ${item.customer_type ? `<span class="badge badge-secondary" style="font-size: 0.65rem; margin-left: 0.35rem;">${item.customer_type}</span>` : ''}` : (item.work_mode ? `Work Mode: <strong>${item.work_mode}</strong>` : 'Audit Telemetry Ping')}
+                            ${item.city && item.city !== 'Field' ? ` • <span class="timeline-coords"><i class="fa-solid fa-city"></i> ${item.city}</span>` : ''}
                         </div>
                         <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
                             ${statusBadge}

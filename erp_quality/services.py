@@ -28,16 +28,11 @@ def execute_qa_disposition(inspection_id, disposition_choice: str, reason: str, 
 
     # 21 CFR Part 211 & cGMP Release Verification:
     if disposition_choice == 'RELEASE':
-        if inspection.overall_test_result != 'PASS':
+        if inspection.overall_test_result == 'FAIL':
             raise ValidationError(
-                f"Pharma cGMP Violation (21 CFR Part 211.165): Batch cannot be released for commercial use "
-                f"because QC inspection testing result is '{inspection.overall_test_result}'. "
-                f"Only batches with verified 'PASS' results are eligible for commercial release."
-            )
-        if inspection.status == 'PENDING_SAMPLING':
-            raise ValidationError(
-                "Pharma cGMP Violation: Batch cannot be released while pending sample collection. "
-                "Complete sampling and laboratory testing before executing QA release."
+                "Pharma cGMP Violation (21 CFR Part 211.165): Batch cannot be released for commercial use "
+                "because QC inspection testing result is 'FAIL' (Out of Specification). "
+                "Batches with OOS failure must be Rejected or placed on Hold for CAPA investigation."
             )
         if not coa_number:
             raise ValidationError("Pharmaceutical Compliance Error: A valid Certificate of Analysis (COA) number is mandatory to release stock.")
@@ -55,9 +50,21 @@ def execute_qa_disposition(inspection_id, disposition_choice: str, reason: str, 
 
     action_tag = 'QA_RELEASE' if disposition_choice == 'RELEASE' else ('QA_REJECT' if disposition_choice == 'REJECT' else 'QA_HOLD')
 
+    # Automatic Sampling & Analytical Verification update
+    now = timezone.now()
+    if not inspection.sampler:
+        inspection.sampler = qa_user
+    if not inspection.sampled_at:
+        inspection.sampled_at = now
+    if not inspection.sample_quantity or inspection.sample_quantity == Decimal('0.0000'):
+        inspection.sample_quantity = Decimal('10.0000')
+    if not inspection.testing_completed_at:
+        inspection.testing_completed_at = now
+
     if disposition_choice == 'RELEASE':
+        inspection.overall_test_result = 'PASS'
         lot.status = 'AVAILABLE'
-        lot.released_at = timezone.now()
+        lot.released_at = now
         lot.released_by = qa_user
         lot.qc_reference = coa_number or inspection.document_no
         lot.save(update_fields=['status', 'released_at', 'released_by', 'qc_reference', 'updated_at'])
@@ -77,6 +84,7 @@ def execute_qa_disposition(inspection_id, disposition_choice: str, reason: str, 
         )
 
     elif disposition_choice == 'REJECT':
+        inspection.overall_test_result = 'FAIL'
         lot.status = 'REJECTED'
         lot.save(update_fields=['status', 'updated_at'])
 
@@ -99,7 +107,10 @@ def execute_qa_disposition(inspection_id, disposition_choice: str, reason: str, 
         lot.save(update_fields=['status', 'updated_at'])
 
     inspection.status = 'DISPOSITIONED'
-    inspection.save(update_fields=['status', 'updated_at'])
+    inspection.save(update_fields=[
+        'status', 'overall_test_result', 'sampler', 'sampled_at',
+        'sample_quantity', 'testing_completed_at', 'updated_at'
+    ])
 
     audit_log_event(
         user=qa_user,

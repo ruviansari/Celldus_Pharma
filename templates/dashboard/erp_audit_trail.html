@@ -41,52 +41,123 @@
         border-color: var(--color-primary) !important;
         background: #ffffff !important;
     }
+    
+    .compliance-info-card {
+        background: rgba(16, 185, 129, 0.08);
+        border: 1px solid rgba(16, 185, 129, 0.25);
+        border-radius: 10px;
+        padding: 0.85rem 1.25rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    [data-theme="light"] .compliance-info-card {
+        background: #f0fdf4 !important;
+        border-color: #bbf7d0 !important;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
+<!-- 21 CFR Part 11 Regulatory Compliance Notice Banner -->
+<div class="compliance-info-card">
+    <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <div style="width: 34px; height: 34px; border-radius: 50%; background: rgba(16, 185, 129, 0.2); color: #10b981; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 0.95rem;">
+            <i class="fa-solid fa-lock"></i>
+        </div>
+        <div>
+            <div style="font-size: 0.85rem; font-weight: 700; color: #10b981;">
+                21 CFR Part 11 Immutable Regulatory Log (Strictly Read-Only)
+            </div>
+            <div style="font-size: 0.76rem; color: var(--text-secondary); margin-top: 2px;">
+                Audit records are permanent &amp; tamper-proof. The dropdown below is a <strong>Filter</strong> to inspect historical actions (e.g. view who performed CREATE, UPDATE, or DELETE across modules).
+            </div>
+        </div>
+    </div>
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+        <span style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); font-size: 0.72rem; padding: 4px 10px; border-radius: 20px; font-weight: 600;">
+            <i class="fa-solid fa-shield-check"></i> Non-Deletable
+        </span>
+        <span style="background: rgba(99, 102, 241, 0.15); color: #6366f1; border: 1px solid rgba(99, 102, 241, 0.3); font-size: 0.72rem; padding: 4px 10px; border-radius: 20px; font-weight: 600;">
+            <i class="fa-solid fa-fingerprint"></i> Attributable User &amp; IP
+        </span>
+    </div>
+</div>
+
 <!-- Filter Controls -->
 <div class="panel" style="margin-bottom: 1.5rem; padding: 1.25rem 1.5rem;">
-    <form method="GET" style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
-        <div style="flex: 1; min-width: 250px;">
+    <form method="GET" style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+        <!-- Search Input -->
+        <div style="flex: 1; min-width: 260px;">
+            <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px;">
+                <i class="fa-solid fa-magnifying-glass" style="margin-right: 4px;"></i> Search Audit Log:
+            </label>
             <input type="text" name="q" value="{{ search_query }}" placeholder="Search by Document No, User, Reason, Entity..." 
                    class="audit-filter-input" autocomplete="off">
         </div>
-        <div style="width: 200px;">
-            <select name="action" class="audit-filter-select">
-                <option value="">All Actions</option>
-                <option value="APPROVE" {% if action_filter == 'APPROVE' %}selected{% endif %}>APPROVE</option>
-                <option value="CREATE" {% if action_filter == 'CREATE' %}selected{% endif %}>CREATE</option>
-                <option value="UPDATE" {% if action_filter == 'UPDATE' %}selected{% endif %}>UPDATE</option>
-                <option value="DELETE" {% if action_filter == 'DELETE' %}selected{% endif %}>DELETE</option>
-                <option value="DISPATCH" {% if action_filter == 'DISPATCH' %}selected{% endif %}>DISPATCH</option>
-                <option value="POST" {% if action_filter == 'POST' %}selected{% endif %}>POST</option>
-                <option value="QA_RELEASE" {% if action_filter == 'QA_RELEASE' %}selected{% endif %}>QA_RELEASE</option>
-                <option value="QA_REJECT" {% if action_filter == 'QA_REJECT' %}selected{% endif %}>QA_REJECT</option>
-                <option value="RECALL" {% if action_filter == 'RECALL' %}selected{% endif %}>RECALL</option>
+
+        <!-- Action Filter Dropdown (Clear Label to Avoid Confusion) -->
+        <div style="width: 240px;">
+            <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px;">
+                <i class="fa-solid fa-filter" style="margin-right: 4px;"></i> Filter by Action Type:
+            </label>
+            <select name="action" class="audit-filter-select" onchange="this.form.submit();">
+                <option value="">-- All Action Types --</option>
+                {% if available_actions %}
+                    {% for act in available_actions %}
+                    <option value="{{ act }}" {% if action_filter == act %}selected{% endif %}>
+                        {{ act }}
+                    </option>
+                    {% endfor %}
+                {% else %}
+                    <option value="APPROVE" {% if action_filter == 'APPROVE' %}selected{% endif %}>APPROVE</option>
+                    <option value="CREATE" {% if action_filter == 'CREATE' %}selected{% endif %}>CREATE</option>
+                    <option value="UPDATE" {% if action_filter == 'UPDATE' %}selected{% endif %}>UPDATE</option>
+                    <option value="DELETE" {% if action_filter == 'DELETE' %}selected{% endif %}>DELETE</option>
+                    <option value="SUBMIT" {% if action_filter == 'SUBMIT' %}selected{% endif %}>SUBMIT</option>
+                    <option value="DISPATCH" {% if action_filter == 'DISPATCH' %}selected{% endif %}>DISPATCH</option>
+                    <option value="POST" {% if action_filter == 'POST' %}selected{% endif %}>POST</option>
+                    <option value="QA_RELEASE" {% if action_filter == 'QA_RELEASE' %}selected{% endif %}>QA_RELEASE</option>
+                    <option value="QA_REJECT" {% if action_filter == 'QA_REJECT' %}selected{% endif %}>QA_REJECT</option>
+                    <option value="RECALL" {% if action_filter == 'RECALL' %}selected{% endif %}>RECALL</option>
+                {% endif %}
             </select>
         </div>
-        <button type="submit" class="btn btn-primary" style="padding: 0.65rem 1.3rem; display: inline-flex; align-items: center; gap: 0.5rem;">
-            <i class="fa-solid fa-filter"></i> Search
-        </button>
-        {% if action_filter or search_query %}
-        <a href="{% url 'dashboard_audit_trail' %}" class="btn btn-secondary" style="padding: 0.65rem 1.1rem; display: inline-flex; align-items: center; gap: 0.4rem;">
-            <i class="fa-solid fa-rotate-left"></i> Reset
-        </a>
-        {% endif %}
+
+        <!-- Search & Reset Buttons -->
+        <div style="display: flex; gap: 0.5rem;">
+            <button type="submit" class="btn btn-primary" style="padding: 0.65rem 1.3rem; display: inline-flex; align-items: center; gap: 0.5rem;">
+                <i class="fa-solid fa-filter"></i> Apply Filter
+            </button>
+            {% if action_filter or search_query %}
+            <a href="{% url 'dashboard_audit_trail' %}" class="btn btn-secondary" style="padding: 0.65rem 1.1rem; display: inline-flex; align-items: center; gap: 0.4rem;" title="Clear filter">
+                <i class="fa-solid fa-rotate-left"></i> Reset
+            </a>
+            {% endif %}
+        </div>
     </form>
 </div>
 
 <!-- Audit Trail Table -->
 <div class="panel">
-    <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+    <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
         <div>
             <h2 class="panel-title"><i class="fa-solid fa-shield-halved" style="color: #10b981; margin-right: 0.5rem;"></i>Immutable Regulatory Event Log</h2>
             <span style="font-size: 0.8rem; color: var(--text-secondary);">Strictly permanent &amp; tamper-proof (21 CFR Part 11 compliant)</span>
         </div>
-        <span style="font-size: 0.82rem; font-weight: 600; color: var(--text-secondary); background: var(--border-color); padding: 4px 10px; border-radius: 6px;">
-            Showing {{ audit_logs|length }} of {{ total_logs }} records
-        </span>
+        <div style="display: flex; align-items: center; gap: 0.6rem;">
+            {% if action_filter %}
+            <span style="font-size: 0.75rem; font-weight: 700; color: #f59e0b; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.3); padding: 3px 8px; border-radius: 6px;">
+                Filtered by: {{ action_filter }}
+            </span>
+            {% endif %}
+            <span style="font-size: 0.82rem; font-weight: 600; color: var(--text-secondary); background: var(--border-color); padding: 4px 10px; border-radius: 6px;">
+                Showing {{ audit_logs|length }} of {{ total_filtered }} matching events (Total: {{ total_logs }})
+            </span>
+        </div>
     </div>
     <div class="table-container">
         <table class="custom-table">
@@ -115,7 +186,7 @@
                         <span style="font-size: 0.72rem; font-weight: 700; padding: 3px 8px; border-radius: 5px; display: inline-block;
                             {% if log.action == 'APPROVE' or log.action == 'QA_RELEASE' %}background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);
                             {% elif log.action == 'REJECT' or log.action == 'QA_REJECT' or log.action == 'RECALL' or log.action == 'DELETE' %}background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);
-                            {% elif log.action == 'POST' or log.action == 'DISPATCH' %}background: rgba(99, 102, 241, 0.15); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.3);
+                            {% elif log.action == 'POST' or log.action == 'DISPATCH' or log.action == 'SUBMIT' %}background: rgba(99, 102, 241, 0.15); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.3);
                             {% elif log.action == 'CREATE' %}background: rgba(14, 165, 233, 0.15); color: #38bdf8; border: 1px solid rgba(14, 165, 233, 0.3);
                             {% elif log.action == 'UPDATE' %}background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3);
                             {% else %}background: rgba(148, 163, 184, 0.15); color: var(--text-secondary); border: 1px solid rgba(148, 163, 184, 0.3);{% endif %}">
@@ -125,7 +196,25 @@
                     <td>
                         <strong style="font-size: 0.82rem; color: var(--text-primary);">{{ log.entity_name }}</strong>
                         {% if log.document_no %}
-                        <div style="font-size: 0.72rem; color: #60a5fa; font-family: monospace; font-weight: 600;">{{ log.document_no }}</div>
+                            {% if log.entity_name == 'Lead' %}
+                                <a href="{% url 'dashboard_crm' %}?search={{ log.document_no }}" style="display: block; font-size: 0.72rem; color: #60a5fa; font-family: monospace; font-weight: 600; text-decoration: none;" title="Open Lead in CRM module">
+                                    {{ log.document_no }} <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.65rem;"></i>
+                                </a>
+                            {% elif log.entity_name == 'PurchaseOrder' %}
+                                <a href="{% url 'dashboard_procurement' %}?search={{ log.document_no }}" style="display: block; font-size: 0.72rem; color: #60a5fa; font-family: monospace; font-weight: 600; text-decoration: none;" title="Open Purchase Order">
+                                    {{ log.document_no }} <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.65rem;"></i>
+                                </a>
+                            {% elif log.entity_name == 'ProductionOrder' %}
+                                <a href="{% url 'dashboard_production' %}?search={{ log.document_no }}" style="display: block; font-size: 0.72rem; color: #60a5fa; font-family: monospace; font-weight: 600; text-decoration: none;" title="Open Production Order">
+                                    {{ log.document_no }} <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.65rem;"></i>
+                                </a>
+                            {% elif log.entity_name == 'ExpenseClaim' %}
+                                <a href="{% url 'dashboard_expenses' %}" style="display: block; font-size: 0.72rem; color: #60a5fa; font-family: monospace; font-weight: 600; text-decoration: none;" title="Open Expense module">
+                                    {{ log.document_no }} <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.65rem;"></i>
+                                </a>
+                            {% else %}
+                                <div style="font-size: 0.72rem; color: #60a5fa; font-family: monospace; font-weight: 600;">{{ log.document_no }}</div>
+                            {% endif %}
                         {% endif %}
                     </td>
                     <td style="font-family: monospace; font-size: 0.75rem; color: var(--text-muted);">

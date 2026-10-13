@@ -175,14 +175,6 @@ class TrackingService:
                 'detail': f"You have already checked out today at {timezone.localtime(attendance.check_out_time).strftime('%H:%M:%S')}."
             })
 
-        # Ensure no active visits are left hanging in progress
-        active_visit = FieldVisit.objects.filter(employee=employee, visit_status='IN_PROGRESS').first()
-        if active_visit:
-            raise ValidationError({
-                'code': 'ACTIVE_VISIT_PENDING',
-                'detail': f"Cannot check out: Visit #{active_visit.visit_no} at {active_visit.customer.name} is still in progress. Please complete or cancel it first."
-            })
-
         acc = float(accuracy) if accuracy is not None else 0.0
         status_val = 'VALID'
         flag_reasons = []
@@ -192,6 +184,38 @@ class TrackingService:
             flag_reasons.append(f"Low accuracy GPS at checkout ({acc:.1f}m).")
 
         flag_str = "; ".join(flag_reasons)
+
+        # Auto-complete any active visit left in progress upon duty check-out
+        active_visits = FieldVisit.objects.filter(employee=employee, visit_status='IN_PROGRESS')
+        for active_visit in active_visits:
+            active_visit.end_time = now_time
+            active_visit.end_lat = Decimal(str(lat)) if lat is not None else None
+            active_visit.end_lng = Decimal(str(lng)) if lng is not None else None
+            active_visit.end_accuracy = acc
+            duration_sec = (now_time - active_visit.start_time).total_seconds() if active_visit.start_time else 0
+            active_visit.duration_minutes = max(1, int(duration_sec // 60))
+            if not active_visit.remarks:
+                active_visit.remarks = "Completed on duty check-out."
+            else:
+                active_visit.remarks = f"{active_visit.remarks}; Completed on duty check-out."
+            active_visit.visit_status = 'COMPLETED'
+            active_visit.updated_by = employee.user
+            active_visit.save()
+
+            if active_visit.beat_plan:
+                active_visit.beat_plan.status = 'COMPLETED'
+                active_visit.beat_plan.save(update_fields=['status'])
+
+            EmployeeLocationEvent.objects.create(
+                employee=employee,
+                event_type='VISIT_END',
+                server_timestamp=now_time,
+                latitude=Decimal(str(lat or 0)),
+                longitude=Decimal(str(lng or 0)),
+                accuracy_meters=acc,
+                geofence_status=status_val,
+                metadata={'visit_no': active_visit.visit_no, 'customer': active_visit.customer.name, 'note': 'Auto-completed on duty check-out'}
+            )
 
         attendance.out_time = local_now.time()
         attendance.check_out_lat = Decimal(str(lat)) if lat is not None else None

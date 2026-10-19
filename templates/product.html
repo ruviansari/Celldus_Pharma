@@ -25,89 +25,597 @@
 <div class="site-main">
     <!--grid-section-->
     <section class="ttm-row grid-section clearfix" style="padding-top: 40px;">
-        <div style="text-align: center; margin-bottom: 30px;">
-            <h5 style="color: #007bff; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; font-size: 0.85rem; margin-bottom: 6px;">Therapeutic Segments</h5>
-            <h2 class="title" style="margin: 0; font-size: 2rem;">Our Pharmaceutical Formulations</h2>
-            <p style="max-width: 650px; margin: 10px auto 0; color: #64748b; font-size: 0.95rem;">
+<style>
+/* ==========================================================================
+   PORTFOLIO FILTER & SEARCH - EXECUTIVE PREMIUM PHARMA UI
+   ========================================================================== */
+.portfolio-header-section {
+    text-align: center;
+    margin-bottom: 30px;
+    position: relative;
+}
+.portfolio-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, rgba(2, 132, 199, 0.1) 0%, rgba(3, 27, 78, 0.05) 100%);
+    color: #0284c7;
+    border: 1px solid rgba(2, 132, 199, 0.25);
+    font-size: 0.76rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    padding: 6px 18px;
+    border-radius: 9999px;
+    margin-bottom: 14px;
+    box-shadow: 0 2px 8px rgba(2, 132, 199, 0.08);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.portfolio-eyebrow:hover {
+    transform: translateY(-1px);
+    border-color: #0284c7;
+    background: rgba(2, 132, 199, 0.14);
+}
+.portfolio-eyebrow i {
+    font-size: 0.85rem;
+}
+.portfolio-title {
+    font-size: 2.35rem;
+    font-weight: 800;
+    color: #031b4e;
+    letter-spacing: -0.025em;
+    margin: 0 0 10px 0;
+    line-height: 1.25;
+}
+.portfolio-subtitle {
+    max-width: 640px;
+    margin: 0 auto;
+    color: #64748b;
+    font-size: 0.98rem;
+    line-height: 1.6;
+}
+
+/* Integrated Search & Filter Controls */
+.search-filter-wrapper {
+    margin-bottom: 38px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 22px;
+}
+.search-capsule-form {
+    display: flex;
+    align-items: center;
+    max-width: 560px;
+    width: 100%;
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 9999px;
+    padding: 5px 6px 5px 20px;
+    box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 6px rgba(15, 23, 42, 0.03);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+}
+.search-capsule-form:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 6px 24px -2px rgba(15, 23, 42, 0.09);
+}
+.search-capsule-form:focus-within {
+    border-color: #0284c7;
+    box-shadow: 0 10px 28px -3px rgba(2, 132, 199, 0.22), 0 0 0 4px rgba(2, 132, 199, 0.12);
+    transform: translateY(-2px);
+}
+.search-capsule-icon {
+    color: #94a3b8;
+    font-size: 1rem;
+    margin-right: 12px;
+    flex-shrink: 0;
+    transition: color 0.25s ease, transform 0.25s ease;
+}
+.search-capsule-form:focus-within .search-capsule-icon {
+    color: #0284c7;
+    transform: scale(1.1);
+}
+.search-capsule-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #0f172a;
+    background: transparent;
+    padding: 8px 6px;
+}
+.search-capsule-input::placeholder {
+    color: #94a3b8;
+    font-weight: 400;
+}
+.search-capsule-btn {
+    background: linear-gradient(135deg, #031b4e 0%, #0284c7 100%);
+    color: #ffffff !important;
+    border: none;
+    border-radius: 9999px;
+    padding: 10px 24px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.3);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    flex-shrink: 0;
+}
+.search-capsule-btn i {
+    font-size: 0.85rem;
+    transition: transform 0.25s ease;
+}
+.search-capsule-btn:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 8px 24px rgba(2, 132, 199, 0.45);
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+}
+.search-capsule-btn:hover i {
+    transform: scale(1.18) rotate(-6deg);
+}
+.search-capsule-btn:active {
+    transform: translateY(0) scale(0.98);
+}
+.search-reset-btn {
+    background: #f1f5f9;
+    color: #64748b !important;
+    border-radius: 9999px;
+    padding: 8px 16px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: none !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: 6px;
+    transition: all 0.22s ease;
+    flex-shrink: 0;
+}
+.search-reset-btn:hover {
+    background: #fee2e2;
+    color: #dc2626 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(220, 38, 38, 0.15);
+}
+
+/* Category Filter Pills Container & Buttons */
+.category-pills-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    max-width: 1040px;
+    padding: 6px 0;
+}
+.category-pill-btn {
+    padding: 9px 20px;
+    border-radius: 9999px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    text-decoration: none !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    letter-spacing: 0.01em;
+    transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+}
+
+/* Inactive category pill: clean white, subtle border, smooth hover lift & glow */
+.category-pill-btn.inactive {
+    background: #ffffff;
+    color: #334155;
+    border: 1.5px solid #e2e8f0;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+}
+.category-pill-btn.inactive:hover {
+    background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
+    color: #0284c7;
+    border-color: #38bdf8;
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 10px 22px -3px rgba(2, 132, 199, 0.22), 0 3px 6px rgba(15, 23, 42, 0.04);
+}
+.category-pill-btn.inactive:active {
+    transform: translateY(-1px) scale(0.99);
+}
+
+/* Active category pill: deep navy & medical blue gradient with soft bloom */
+.category-pill-btn.active {
+    background: linear-gradient(135deg, #031b4e 0%, #0284c7 100%) !important;
+    color: #ffffff !important;
+    border: 1.5px solid transparent !important;
+    box-shadow: 0 8px 22px rgba(2, 132, 199, 0.38), 0 2px 6px rgba(3, 27, 78, 0.2) !important;
+    transform: translateY(-2px);
+}
+.category-pill-btn.active:hover {
+    transform: translateY(-3px) scale(1.03);
+    box-shadow: 0 12px 28px rgba(2, 132, 199, 0.48), 0 4px 10px rgba(3, 27, 78, 0.25) !important;
+    filter: brightness(1.06);
+}
+.category-pill-btn.active:active {
+    transform: translateY(-1px) scale(0.99);
+}
+
+/* Pill category count badge */
+.category-pill-count {
+    font-size: 0.74rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    transition: all 0.25s ease;
+}
+.category-pill-btn.active .category-pill-count {
+    background: rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.category-pill-btn.inactive .category-pill-count {
+    background: #f1f5f9;
+    color: #64748b;
+}
+.category-pill-btn.inactive:hover .category-pill-count {
+    background: #e0f2fe;
+    color: #0284c7;
+}
+</style>
+
+        <div class="portfolio-header-section">
+            <span class="portfolio-eyebrow">
+                <i class="fa-solid fa-capsules"></i> Therapeutic Segments
+            </span>
+            <h2 class="portfolio-title">Our Pharmaceutical Formulations</h2>
+            <p class="portfolio-subtitle">
                 Explore our WHO-GMP certified medicines across key healthcare categories.
             </p>
         </div>
 
         <div class="container">
             <!-- Search & Category Filters -->
-            <div style="margin-bottom: 35px; display: flex; flex-direction: column; align-items: center; gap: 16px;">
-                <!-- Search input -->
-                <form method="GET" action="{% url 'product' %}" style="display: flex; max-width: 480px; width: 100%; gap: 8px;">
+            <div class="search-filter-wrapper">
+                <!-- Search capsule -->
+                <form method="GET" action="{% url 'product' %}" class="search-capsule-form">
                     {% if selected_category_id %}
                     <input type="hidden" name="category" value="{{ selected_category_id }}">
                     {% endif %}
-                    <input type="text" name="q" value="{{ search_q }}" placeholder="Search by medicine name or salt..." 
-                           style="flex: 1; padding: 10px 18px; border: 1px solid #cbd5e1; border-radius: 25px; outline: none; font-size: 0.92rem;">
-                    <button type="submit" style="padding: 10px 22px; background: #031b4e; color: #fff; border: none; border-radius: 25px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;">
-                        <i class="fa fa-search"></i> Search
+                    <i class="fa-solid fa-magnifying-glass search-capsule-icon"></i>
+                    <input type="text" name="q" value="{{ search_q }}" placeholder="Search by medicine name or salt..." class="search-capsule-input">
+                    <button type="submit" class="search-capsule-btn">
+                        <i class="fa-solid fa-search"></i> Search
                     </button>
                     {% if search_q or selected_category_id %}
-                    <a href="{% url 'product' %}" style="padding: 10px 16px; background: #f1f5f9; color: #475569; border-radius: 25px; text-decoration: none; display: flex; align-items: center; font-size: 0.88rem;">
-                        Reset
+                    <a href="{% url 'product' %}" class="search-reset-btn" title="Reset Filters">
+                        <i class="fa-solid fa-xmark"></i> Reset
                     </a>
                     {% endif %}
                 </form>
 
                 <!-- Category Filter Pills -->
-                <div style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 900px;">
+                <div class="category-pills-container">
                     <a href="{% url 'product' %}{% if search_q %}?q={{ search_q }}{% endif %}" 
-                       style="padding: 6px 16px; border-radius: 20px; font-size: 0.86rem; font-weight: 600; text-decoration: none; transition: all 0.2s; {% if not selected_category_id %}background: #007bff; color: #fff; box-shadow: 0 2px 8px rgba(0,123,255,0.3);{% else %}background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0;{% endif %}">
-                        All Categories ({{ categories|length }})
+                       class="category-pill-btn {% if not selected_category_id %}active{% else %}inactive{% endif %}">
+                        <span>All Categories</span>
+                        <span class="category-pill-count">{{ categories|length }}</span>
                     </a>
                     {% for cat in categories %}
                     <a href="{% url 'product' %}?category={{ cat.id }}{% if search_q %}&q={{ search_q }}{% endif %}" 
-                       style="padding: 6px 16px; border-radius: 20px; font-size: 0.86rem; font-weight: 600; text-decoration: none; transition: all 0.2s; {% if selected_category_id == cat.id %}background: #007bff; color: #fff; box-shadow: 0 2px 8px rgba(0,123,255,0.3);{% else %}background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0;{% endif %}">
-                        {{ cat.name }}
+                       class="category-pill-btn {% if selected_category_id == cat.id %}active{% else %}inactive{% endif %}">
+                        <span>{{ cat.name }}</span>
                     </a>
                     {% endfor %}
                 </div>
             </div>
 
+<style>
+/* ==========================================================================
+   CELIDUS PHARMA - PREMIUM PRODUCT SHOWCASE CARDS
+   ========================================================================== */
+.pharma-card-col {
+    margin-bottom: 28px;
+    display: flex;
+}
+.pharma-product-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    overflow: hidden;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: 0 4px 18px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), 
+                box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), 
+                border-color 0.25s ease;
+    position: relative;
+}
+.pharma-product-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 35px -8px rgba(2, 132, 199, 0.16), 0 8px 16px -4px rgba(15, 23, 42, 0.06);
+    border-color: rgba(2, 132, 199, 0.45);
+}
+
+/* Dedicated Top Text Bar - Clean Plain Text, NO Button Look */
+.pharma-card-top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 14px 6px 14px;
+    background: #ffffff;
+    border-bottom: 1px solid #f8fafc;
+    z-index: 5;
+    position: relative;
+}
+.pharma-cat-text {
+    color: #0284c7;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 55%;
+    display: inline-block;
+    background: none !important;
+    border: none !important;
+    padding: 0 !important;
+}
+.pharma-status-text {
+    font-size: 0.72rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+    letter-spacing: 0.02em;
+    flex-shrink: 0;
+    background: none !important;
+    border: none !important;
+    padding: 0 !important;
+}
+.pharma-status-text.in-stock {
+    color: #059669;
+}
+.pharma-status-text.in-stock i {
+    color: #10b981;
+    font-size: 0.65rem;
+}
+.pharma-status-text.out-of-stock {
+    color: #dc2626;
+}
+.pharma-status-text.out-of-stock i {
+    color: #ef4444;
+    font-size: 0.65rem;
+}
+.pharma-status-text.coming-soon {
+    color: #d97706;
+}
+.pharma-status-text.coming-soon i {
+    color: #f59e0b;
+    font-size: 0.65rem;
+}
+
+/* Image Showcase Stage - Compact Height */
+.pharma-image-stage {
+    position: relative;
+    background: #ffffff;
+    padding: 10px;
+    height: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-bottom: 1px solid #f8fafc;
+}
+.pharma-product-img {
+    max-height: 125px;
+    max-width: 90%;
+    object-fit: contain;
+    transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), filter 0.3s ease;
+    filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.05));
+}
+.pharma-product-card:hover .pharma-product-img {
+    transform: scale(1.08) translateY(-3px);
+    filter: drop-shadow(0 6px 14px rgba(2, 132, 199, 0.16));
+}
+
+/* Content Body - Compact Height */
+.pharma-card-body {
+    padding: 12px 14px 14px 14px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.pharma-product-title {
+    margin: 0 0 4px 0;
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.35;
+    height: 2.4rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.pharma-product-title a {
+    color: #0f172a !important;
+    text-decoration: none !important;
+    transition: color 0.22s ease;
+}
+.pharma-product-card:hover .pharma-product-title a {
+    color: #0284c7 !important;
+}
+.pharma-product-desc {
+    font-size: 0.82rem;
+    color: #64748b;
+    line-height: 1.45;
+    height: 2.2rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+/* Card Action Footer */
+.pharma-card-footer {
+    border-top: 1px solid #f1f5f9;
+    padding-top: 10px;
+    margin-top: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.pharma-details-link {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #0284c7;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 6px;
+    border-radius: 6px;
+    transition: all 0.22s ease;
+}
+.pharma-details-link:hover {
+    color: #0369a1;
+    background: rgba(2, 132, 199, 0.08);
+    transform: translateX(2px);
+    gap: 8px;
+}
+.pharma-btn-inquire {
+    font-size: 0.8rem;
+    font-weight: 600;
+    background: linear-gradient(135deg, #031b4e 0%, #0f172a 100%);
+    color: #ffffff !important;
+    padding: 6px 16px;
+    border-radius: 9999px;
+    text-decoration: none !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 3px 10px rgba(3, 27, 78, 0.15);
+}
+.pharma-btn-inquire:hover {
+    transform: translateY(-2px) scale(1.03);
+    box-shadow: 0 6px 16px rgba(2, 132, 199, 0.35);
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+}
+.pharma-btn-inquire:active {
+    transform: translateY(0) scale(0.98);
+}
+.pharma-btn-prebook {
+    font-size: 0.8rem;
+    font-weight: 600;
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: #ffffff !important;
+    padding: 6px 16px;
+    border-radius: 9999px;
+    text-decoration: none !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 3px 10px rgba(245, 158, 11, 0.25);
+}
+.pharma-btn-prebook:hover {
+    transform: translateY(-2px) scale(1.03);
+    box-shadow: 0 6px 16px rgba(245, 158, 11, 0.45);
+    background: linear-gradient(135deg, #fbbf24 0%, #ea580c 100%);
+}
+.pharma-btn-prebook:active {
+    transform: translateY(0) scale(0.98);
+}
+.pharma-btn-disabled {
+    font-size: 0.76rem;
+    font-weight: 600;
+    background: #f1f5f9;
+    color: #94a3b8;
+    border: 1px dashed #cbd5e1;
+    padding: 5px 12px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    cursor: not-allowed;
+}
+</style>
+
             <!-- Product Cards Grid -->
-            <div class="row multi-columns-row ttm-boxes-spacing-15px">
+            <div class="row multi-columns-row ttm-boxes-spacing-15px" id="pharma-products-grid" style="transition: opacity 0.2s ease;">
                 {% for product in products %}
-                <div class="ttm-box-col-wrapper col-lg-3 col-md-4 col-sm-6" style="margin-bottom: 25px;">
-                    <div class="featured-imagebox featured-imagebox-team" style="background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; height: 100%; display: flex; flex-direction: column; transition: transform 0.25s, box-shadow 0.25s; box-shadow: 0 2px 10px rgba(0,0,0,0.04);">
-                        <div class="ttm-team-box-view-overlay" style="position: relative; background: #f8fafc; padding: 15px; text-align: center;">
-                            <span style="position: absolute; top: 10px; left: 10px; background: rgba(0,123,255,0.12); color: #007bff; font-size: 0.72rem; font-weight: 700; padding: 3px 8px; border-radius: 6px; text-transform: uppercase;">
+                <div class="ttm-box-col-wrapper col-lg-3 col-md-4 col-sm-6 pharma-card-col">
+                    <div class="pharma-product-card">
+                        <!-- Top Text Header: Pure Text, Not Button -->
+                        <div class="pharma-card-top-bar">
+                            <span class="pharma-cat-text" title="{{ product.category.name }}">
                                 {{ product.category.name }}
                             </span>
-                            <div class="featured-thumbnail" style="display: flex; align-items: center; justify-content: center; height: 180px;">
-                                <img class="img-fluid" src="{% static product.image %}" alt="{{ product.name }}" style="max-height: 160px; object-fit: contain;">
-                            </div>
+                            {% if product.stock_status == 'COMING_SOON' %}
+                            <span class="pharma-status-text coming-soon">
+                                <i class="fa fa-clock"></i> Coming Soon
+                            </span>
+                            {% elif product.stock_status == 'IN_STOCK' %}
+                            <span class="pharma-status-text in-stock">
+                                <i class="fa fa-circle-check"></i> In Stock
+                            </span>
+                            {% else %}
+                            <span class="pharma-status-text out-of-stock">
+                                <i class="fa fa-circle-xmark"></i> Out of Stock
+                            </span>
+                            {% endif %}
                         </div>
 
-                        <div class="featured-content featured-content-team" style="padding: 16px; flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+                        <!-- Product Image Showcase Stage -->
+                        <div class="pharma-image-stage">
+                            <a href="{% url 'product_details' product.id %}" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">
+                                <img class="pharma-product-img" src="{% static product.image %}" alt="{{ product.name }}">
+                            </a>
+                        </div>
+
+                        <!-- Card Content Body -->
+                        <div class="pharma-card-body">
                             <div>
-                                <div class="featured-title" style="margin-bottom: 6px;">
-                                    <h5 style="margin: 0; font-size: 1.05rem; font-weight: 700;">
-                                        <a href="{% url 'product_details' product.id %}" style="color: #031b4e; text-decoration: none;">
-                                            {{ product.name }}
-                                        </a>
-                                    </h5>
+                                <h5 class="pharma-product-title">
+                                    <a href="{% url 'product_details' product.id %}" title="{{ product.name }}">
+                                        {{ product.name }}
+                                    </a>
+                                </h5>
+                                <div class="pharma-product-desc">
+                                    {{ product.description }}
                                 </div>
-                                <div class="team-position" style="font-size: 0.84rem; color: #64748b; line-height: 1.4; margin-bottom: 8px;">
-                                    {{ product.description|truncatechars:75 }}
-                                </div>
-                                {% if product.size %}
-                                <div style="font-size: 0.78rem; color: #475569; margin-bottom: 8px;">
-                                    <i class="fa fa-box"></i> Pack: <strong>{{ product.size }}</strong>
-                                </div>
-                                {% endif %}
                             </div>
 
-                            <div style="border-top: 1px solid #f1f5f9; padding-top: 12px; margin-top: 8px; display: flex; justify-content: space-between; align-items: center;">
-                                <a href="{% url 'product_details' product.id %}" style="font-size: 0.85rem; font-weight: 600; color: #007bff; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                            <!-- Footer Actions -->
+                            <div class="pharma-card-footer">
+                                <a href="{% url 'product_details' product.id %}" class="pharma-details-link">
                                     Details <i class="fa fa-arrow-right" style="font-size: 0.75rem;"></i>
                                 </a>
-                                <a href="{% url 'contact' %}?subject=Commercial+Inquiry:+{{ product.name|urlencode }}" style="font-size: 0.76rem; background: #031b4e; color: #fff; padding: 4px 10px; border-radius: 6px; text-decoration: none; font-weight: 600;">
+                                {% if product.stock_status == 'COMING_SOON' %}
+                                <a href="{% url 'contact' %}?subject=Pre-Launch+Inquiry:+{{ product.name|urlencode }}" class="pharma-btn-prebook">
+                                    Pre-Book
+                                </a>
+                                {% elif product.stock_status == 'IN_STOCK' %}
+                                <a href="{% url 'contact' %}?subject=Commercial+Inquiry:+{{ product.name|urlencode }}" class="pharma-btn-inquire">
                                     Inquire
                                 </a>
+                                {% else %}
+                                <span class="pharma-btn-disabled">
+                                    Out of Stock
+                                </span>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
@@ -126,4 +634,110 @@
         </div>
     </section>
 </div>
+
+<script>
+(function() {
+    // 1. Instant scroll restoration if full reload occurred
+    var savedPos = sessionStorage.getItem('celldus_cat_scroll');
+    if (savedPos !== null) {
+        if ('scrollRestoration' in history) {
+            history.scrollRestoration = 'manual';
+        }
+        window.scrollTo(0, parseInt(savedPos, 10));
+        sessionStorage.removeItem('celldus_cat_scroll');
+    }
+
+    // Save scroll on search form submit & reset click
+    var searchForm = document.querySelector('.search-capsule-form');
+    if (searchForm) {
+        searchForm.addEventListener('submit', function() {
+            sessionStorage.setItem('celldus_cat_scroll', window.scrollY);
+        });
+    }
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.search-reset-btn')) {
+            sessionStorage.setItem('celldus_cat_scroll', window.scrollY);
+        }
+    });
+
+    // 2. Seamless AJAX filter on category click (Zero page scroll, Zero jump)
+    function attachCategoryListeners() {
+        var pills = document.querySelectorAll('.category-pill-btn');
+        pills.forEach(function(pill) {
+            pill.addEventListener('click', function(e) {
+                var url = this.getAttribute('href');
+                if (!url) return;
+
+                // Prevent full browser reload that causes jumping to top
+                e.preventDefault();
+
+                // Save scroll position
+                sessionStorage.setItem('celldus_cat_scroll', window.scrollY);
+
+                // Immediate UI active state feedback
+                pills.forEach(function(p) {
+                    p.classList.remove('active');
+                    p.classList.add('inactive');
+                });
+                this.classList.remove('inactive');
+                this.classList.add('active');
+
+                var grid = document.getElementById('pharma-products-grid');
+                if (grid) {
+                    grid.style.opacity = '0.35';
+                }
+
+                // Asynchronous fetch
+                fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                    .then(function(res) {
+                        if (!res.ok) throw new Error('Network error');
+                        return res.text();
+                    })
+                    .then(function(html) {
+                        var parser = new DOMParser();
+                        var doc = parser.parseFromString(html, 'text/html');
+
+                        // Update product grid
+                        var newGrid = doc.getElementById('pharma-products-grid');
+                        if (newGrid && grid) {
+                            grid.innerHTML = newGrid.innerHTML;
+                            grid.style.opacity = '1';
+                        }
+
+                        // Update category pills container
+                        var newPills = doc.querySelector('.category-pills-container');
+                        var curPills = document.querySelector('.category-pills-container');
+                        if (newPills && curPills) {
+                            curPills.innerHTML = newPills.innerHTML;
+                            attachCategoryListeners();
+                        }
+
+                        // Update search capsule form (hidden category inputs & reset button)
+                        var newForm = doc.querySelector('.search-capsule-form');
+                        var curForm = document.querySelector('.search-capsule-form');
+                        if (newForm && curForm) {
+                            curForm.innerHTML = newForm.innerHTML;
+                        }
+
+                        // Update browser URL without reloading or scrolling
+                        if (window.history && window.history.pushState) {
+                            window.history.pushState({ path: url }, '', url);
+                        }
+                    })
+                    .catch(function(err) {
+                        // Fallback: normal navigation if fetch fails
+                        window.location.href = url;
+                    });
+            });
+        });
+    }
+
+    attachCategoryListeners();
+
+    // Handle browser back/forward buttons
+    window.addEventListener('popstate', function() {
+        window.location.reload();
+    });
+})();
+</script>
 {% endblock %}

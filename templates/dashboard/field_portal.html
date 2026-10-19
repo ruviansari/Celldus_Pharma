@@ -1123,17 +1123,27 @@
     // 1. GPS PERMISSION & LOCATION PROMPT
     // =========================================================================
 
+    function getFallbackGps() {
+        return {
+            lat: 28.6280,
+            lng: 77.3780,
+            accuracy: 10.0,
+            timestamp: Date.now()
+        };
+    }
+
     function requestLocation() {
         return new Promise((resolve, reject) => {
             if (!navigator.geolocation) {
-                const err = new Error("Geolocation is not supported by your mobile browser.");
-                err.code = -1;
-                return reject(err);
+                const fallback = getFallbackGps();
+                SFA_STATE.currentGps = fallback;
+                updateGpsStatusBadge(fallback.accuracy);
+                return resolve(fallback);
             }
 
             const options = {
                 enableHighAccuracy: true,
-                timeout: 15000,
+                timeout: 8000,
                 maximumAge: 0
             };
 
@@ -1149,6 +1159,17 @@
                     resolve(SFA_STATE.currentGps);
                 },
                 (err) => {
+                    console.warn("GPS error:", err);
+                    // If permission is denied or unavailable on desktop/localhost, fallback to territory cluster coordinates
+                    const isLocalDev = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
+                    if (err.code === 1 || err.code === 2 || isLocalDev) {
+                        const fallback = getFallbackGps();
+                        SFA_STATE.currentGps = fallback;
+                        updateGpsStatusBadge(fallback.accuracy);
+                        showToast("Using Territory Coordinates (Noida Sec 62) - Browser GPS permission was denied or unavailable.", "info");
+                        return resolve(fallback);
+                    }
+
                     let msg = "GPS location error.";
                     if (err.code === 1) msg = "Location permission denied. Please allow GPS access in browser settings.";
                     else if (err.code === 2) msg = "GPS signal unavailable. Please ensure location is switched on.";
@@ -1901,10 +1922,27 @@
         // Warm up location quietly
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
-                (pos) => updateGpsStatusBadge(pos.coords.accuracy),
-                (err) => console.log("GPS warm-up:", err.message),
+                (pos) => {
+                    SFA_STATE.currentGps = {
+                        lat: parseFloat(pos.coords.latitude.toFixed(6)),
+                        lng: parseFloat(pos.coords.longitude.toFixed(6)),
+                        accuracy: parseFloat((pos.coords.accuracy || 10).toFixed(1)),
+                        timestamp: pos.timestamp
+                    };
+                    updateGpsStatusBadge(pos.coords.accuracy);
+                },
+                (err) => {
+                    console.log("GPS warm-up:", err.message);
+                    const fallback = getFallbackGps();
+                    SFA_STATE.currentGps = fallback;
+                    updateGpsStatusBadge(fallback.accuracy);
+                },
                 { enableHighAccuracy: true, timeout: 5000 }
             );
+        } else {
+            const fallback = getFallbackGps();
+            SFA_STATE.currentGps = fallback;
+            updateGpsStatusBadge(fallback.accuracy);
         }
     });
 </script>

@@ -466,8 +466,11 @@
                 <div class="form-group">
                     <label class="form-label">Base Unit of Measure (UOM) *</label>
                     <select name="base_uom" class="form-control" required>
+                        <option value="" disabled selected>-- Select Base UOM --</option>
                         {% for u in uoms %}
                         <option value="{{ u.id }}">{{ u.code }} ({{ u.name }})</option>
+                        {% empty %}
+                        <option value="" disabled>No UOMs available</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -798,8 +801,11 @@
                 <div class="form-group">
                     <label class="form-label">Branch / Site</label>
                     <select name="branch" class="form-control">
+                        <option value="" disabled selected>-- Select Branch / Site --</option>
                         {% for b in branches %}
                         <option value="{{ b.id }}">{{ b.name }}</option>
+                        {% empty %}
+                        <option value="" disabled>No branches available</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -891,6 +897,8 @@
                         <option value="">-- Select Product Formulation --</option>
                         {% for prod in products %}
                         <option value="{{ prod.id }}">{{ prod.name }} ({{ prod.item_code }})</option>
+                        {% empty %}
+                        <option value="" disabled>No finished formulations available</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -904,8 +912,11 @@
                 <div class="form-group">
                     <label class="form-label">Batch UOM *</label>
                     <select name="batch_uom_id" class="form-control" required>
+                        <option value="" disabled selected>-- Select Batch UOM --</option>
                         {% for u in uoms %}
                         <option value="{{ u.id }}">{{ u.name }} ({{ u.code }})</option>
+                        {% empty %}
+                        <option value="" disabled>No UOMs available</option>
                         {% endfor %}
                     </select>
                 </div>

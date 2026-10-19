@@ -62,10 +62,12 @@
                         {% endif %}
                     </td>
                     <td>
-                        {% if prod.stock > 0 %}
-                        <span style="color: #10b981; font-weight: 500;">{{ prod.stock }} in stock</span>
+                        {% if prod.stock_status == 'COMING_SOON' %}
+                        <span style="color: #f59e0b; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;"><i class="fa-solid fa-clock"></i> Coming Soon</span>
+                        {% elif prod.stock_status == 'IN_STOCK' %}
+                        <span style="color: #10b981; font-weight: 500; display: inline-flex; align-items: center; gap: 4px;"><i class="fa-solid fa-circle-check"></i> {{ prod.stock }} in stock</span>
                         {% else %}
-                        <span style="color: #ef4444; font-weight: 600;">Out of Stock</span>
+                        <span style="color: #ef4444; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;"><i class="fa-solid fa-circle-xmark"></i> Out of Stock</span>
                         {% endif %}
                     </td>
                     <td
@@ -76,7 +78,7 @@
                     <td>
                         <div class="action-btn-group" style="justify-content: flex-end;">
                             <button class="action-btn edit"
-                                onclick="prepareEditProduct('{{ prod.id }}', '{{ prod.name|escapejs }}', '{{ prod.category.id }}', '{{ prod.description|escapejs }}', '{% static prod.image %}', '{{ prod.price }}', '{{ prod.selling_price }}', '{{ prod.size|escapejs }}', '{{ prod.stock }}', '{{ prod.specification|escapejs }}')"
+                                onclick="prepareEditProduct('{{ prod.id }}', '{{ prod.name|escapejs }}', '{{ prod.category.id }}', '{{ prod.description|escapejs }}', '{% static prod.image %}', '{{ prod.price }}', '{{ prod.selling_price }}', '{{ prod.size|escapejs }}', '{{ prod.stock }}', '{{ prod.specification|escapejs }}', '{{ prod.availability_status }}')"
                                 title="Edit Product">
                                 <i class="fa-solid fa-pen-to-square"></i>
                             </button>
@@ -142,7 +144,7 @@
                 </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
                 <div class="form-group">
                     <label class="form-label" for="add_prod_size">Size / Pack</label>
                     <input type="text" id="add_prod_size" name="size" class="form-control" placeholder="e.g. 10x10 Tablets, 100ml">
@@ -150,6 +152,14 @@
                 <div class="form-group">
                     <label class="form-label" for="add_prod_stock">Stock Qty</label>
                     <input type="number" id="add_prod_stock" name="stock" class="form-control" placeholder="0" value="0">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="add_prod_status">Availability Status</label>
+                    <select id="add_prod_status" name="availability_status" class="form-control">
+                        <option value="IN_STOCK" selected>In Stock</option>
+                        <option value="OUT_OF_STOCK">Out of Stock</option>
+                        <option value="COMING_SOON">Coming Soon</option>
+                    </select>
                 </div>
             </div>
 
@@ -213,7 +223,7 @@
                 </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
                 <div class="form-group">
                     <label class="form-label" for="edit_prod_size">Size / Pack</label>
                     <input type="text" id="edit_prod_size" name="size" class="form-control">
@@ -221,6 +231,14 @@
                 <div class="form-group">
                     <label class="form-label" for="edit_prod_stock">Stock Qty</label>
                     <input type="number" id="edit_prod_stock" name="stock" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="edit_prod_status">Availability Status</label>
+                    <select id="edit_prod_status" name="availability_status" class="form-control">
+                        <option value="IN_STOCK">In Stock</option>
+                        <option value="OUT_OF_STOCK">Out of Stock</option>
+                        <option value="COMING_SOON">Coming Soon</option>
+                    </select>
                 </div>
             </div>
 
@@ -260,7 +278,7 @@
 
 {% block extra_js %}
 <script>
-    function prepareEditProduct(id, name, categoryId, description, imageUrl, price, sellingPrice, size, stock, specification) {
+    function prepareEditProduct(id, name, categoryId, description, imageUrl, price, sellingPrice, size, stock, specification, availabilityStatus) {
         const form = document.getElementById('editProductForm');
         form.action = `/dashboard/products/edit/${id}/`;
 
@@ -274,6 +292,7 @@
         document.getElementById('edit_prod_selling_price').value = sellingPrice;
         document.getElementById('edit_prod_size').value = size;
         document.getElementById('edit_prod_stock').value = stock;
+        document.getElementById('edit_prod_status').value = availabilityStatus || 'IN_STOCK';
         document.getElementById('edit_prod_specification').value = specification;
 
         openModal('editProductModal');

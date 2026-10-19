@@ -83,6 +83,26 @@
                                         {% endif %}
                                         <li>
                                             <div class="ttm-team-list-title">
+                                                <h5>Availability: </h5>
+                                            </div>
+                                            <div class="ttm-team-list-value">
+                                                {% if product.stock_status == 'COMING_SOON' %}
+                                                <span style="background: rgba(245, 158, 11, 0.15); color: #d97706; border: 1px solid rgba(245, 158, 11, 0.35); padding: 4px 12px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px;">
+                                                    <i class="fa fa-clock"></i> Coming Soon / Under Formulation
+                                                </span>
+                                                {% elif product.stock_status == 'IN_STOCK' %}
+                                                <span style="background: rgba(16, 185, 129, 0.15); color: #059669; border: 1px solid rgba(16, 185, 129, 0.35); padding: 4px 12px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px;">
+                                                    <i class="fa fa-circle-check"></i> In Stock & Ready for Supply
+                                                </span>
+                                                {% else %}
+                                                <span style="background: rgba(239, 68, 68, 0.12); color: #dc2626; border: 1px solid rgba(239, 68, 68, 0.3); padding: 4px 12px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px;">
+                                                    <i class="fa fa-circle-xmark"></i> Temporarily Out of Stock
+                                                </span>
+                                                {% endif %}
+                                            </div>
+                                        </li>
+                                        <li>
+                                            <div class="ttm-team-list-title">
                                                 <h5>Compliance: </h5>
                                             </div>
                                             <div class="ttm-team-list-value">
@@ -94,10 +114,22 @@
                                     </ul>
 
                                     <div style="margin-top: 25px; display: flex; gap: 12px; flex-wrap: wrap;">
+                                        {% if product.stock_status == 'COMING_SOON' %}
+                                        <a href="{% url 'contact' %}?subject=Pre-Launch+Supply+Inquiry:+{{ product.name|urlencode }}" 
+                                           style="padding: 12px 24px; background: #f59e0b; color: #fff; border-radius: 6px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                                            <i class="fa fa-clock"></i> Pre-Book / Express Interest
+                                        </a>
+                                        {% elif product.stock_status == 'IN_STOCK' %}
                                         <a href="{% url 'contact' %}?subject=Commercial+Supply+Inquiry:+{{ product.name|urlencode }}" 
                                            style="padding: 12px 24px; background: #031b4e; color: #fff; border-radius: 6px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
                                             <i class="fa fa-envelope"></i> Inquire for Bulk / Hospital Supply
                                         </a>
+                                        {% else %}
+                                        <a href="{% url 'contact' %}?subject=Stock+Notification+Request:+{{ product.name|urlencode }}" 
+                                           style="padding: 12px 24px; background: #64748b; color: #fff; border-radius: 6px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                                            <i class="fa fa-bell"></i> Notify Me When Available
+                                        </a>
+                                        {% endif %}
                                         <a href="{% url 'product' %}" 
                                            style="padding: 12px 20px; background: #f1f5f9; color: #475569; border-radius: 6px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
                                             <i class="fa fa-arrow-left"></i> All Formulations

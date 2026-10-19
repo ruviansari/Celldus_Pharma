@@ -349,6 +349,7 @@ def dashboard_product_add(request):
         selling_price = request.POST.get('selling_price') or 0.00
         size = request.POST.get('size', '')
         stock = request.POST.get('stock') or 0
+        availability_status = request.POST.get('availability_status') or 'IN_STOCK'
         specification = request.POST.get('specification', '')
         
         category = get_object_or_404(Category, id=category_id)
@@ -374,6 +375,7 @@ def dashboard_product_add(request):
             selling_price=selling_price,
             size=size,
             stock=stock,
+            availability_status=availability_status,
             specification=specification
         )
         messages.success(request, "Product added successfully!")
@@ -393,6 +395,7 @@ def dashboard_product_edit(request, id):
         selling_price = request.POST.get('selling_price') or 0.00
         size = request.POST.get('size', '')
         stock = request.POST.get('stock') or 0
+        availability_status = request.POST.get('availability_status') or 'IN_STOCK'
         specification = request.POST.get('specification', '')
         
         category = get_object_or_404(Category, id=category_id)
@@ -403,6 +406,7 @@ def dashboard_product_edit(request, id):
         product.selling_price = selling_price
         product.size = size
         product.stock = stock
+        product.availability_status = availability_status
         product.specification = specification
         
         if image_file:

@@ -40,11 +40,43 @@ class Product(models.Model):
     # New Fields 
     price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     selling_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    AVAILABILITY_CHOICES = (
+        ('IN_STOCK', 'In Stock'),
+        ('OUT_OF_STOCK', 'Out of Stock'),
+        ('COMING_SOON', 'Coming Soon'),
+    )
+
     size = models.CharField(max_length=100, blank=True, help_text="e.g. 10x10 Tablets, 100ml")
     stock = models.IntegerField(default=0)
+    availability_status = models.CharField(
+        max_length=20,
+        choices=AVAILABILITY_CHOICES,
+        default='IN_STOCK',
+        help_text="Product stock availability on website"
+    )
     specification = models.TextField(blank=True, help_text="Detailed product specifications")
     
     created_at = models.DateTimeField(auto_now_add=True)
+
+    @property
+    def stock_status(self):
+        if self.availability_status == 'COMING_SOON':
+            return 'COMING_SOON'
+        if self.availability_status == 'OUT_OF_STOCK' or self.stock <= 0:
+            return 'OUT_OF_STOCK'
+        return 'IN_STOCK'
+
+    @property
+    def is_in_stock(self):
+        return self.stock_status == 'IN_STOCK'
+
+    @property
+    def is_out_of_stock(self):
+        return self.stock_status == 'OUT_OF_STOCK'
+
+    @property
+    def is_coming_soon(self):
+        return self.stock_status == 'COMING_SOON'
 
     def __str__(self):
         return self.name

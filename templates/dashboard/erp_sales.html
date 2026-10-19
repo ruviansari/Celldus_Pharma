@@ -209,8 +209,11 @@
                 <div class="form-group">
                     <label class="form-label">Dispatching Branch / Site</label>
                     <select name="branch_id" class="form-control">
+                        <option value="" disabled selected>-- Select Dispatching Branch / Site --</option>
                         {% for b in branches %}
                         <option value="{{ b.id }}">{{ b.name }}</option>
+                        {% empty %}
+                        <option value="" disabled>No branch locations available</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -239,6 +242,8 @@
                         <option value="">-- Select Product --</option>
                         {% for fg in finished_goods %}
                         <option value="{{ fg.id }}">{{ fg.name }} ({{ fg.item_code }}) [MRP: ₹{{ fg.mrp }} / {{ fg.base_uom.code }}]</option>
+                        {% empty %}
+                        <option value="" disabled>No finished products available</option>
                         {% endfor %}
                     </select>
                 </div>

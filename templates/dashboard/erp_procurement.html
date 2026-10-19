@@ -260,8 +260,11 @@
                 <div class="form-group">
                     <label class="form-label">Receiving Branch / Manufacturing Site</label>
                     <select name="branch_id" class="form-control">
+                        <option value="" disabled selected>-- Select Receiving Branch / Site --</option>
                         {% for b in branches %}
                         <option value="{{ b.id }}">{{ b.name }}</option>
+                        {% empty %}
+                        <option value="" disabled>No branch locations available</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -294,6 +297,8 @@
                         <option value="">-- Choose Item --</option>
                         {% for item in items %}
                         <option value="{{ item.id }}">{{ item.name }} ({{ item.item_code }}) [{{ item.base_uom.code }}]</option>
+                        {% empty %}
+                        <option value="" disabled>No items available</option>
                         {% endfor %}
                     </select>
                 </div>

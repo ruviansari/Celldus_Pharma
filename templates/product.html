@@ -324,7 +324,7 @@
 .pharma-product-card {
     background: #ffffff;
     border: 1px solid #e2e8f0;
-    border-radius: 16px;
+    border-radius: 22px;
     overflow: hidden;
     width: 100%;
     display: flex;
@@ -417,14 +417,23 @@
     border-bottom: 1px solid #f8fafc;
 }
 .pharma-product-img {
-    max-height: 125px;
+    max-height: 120px;
     max-width: 90%;
     object-fit: contain;
-    transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), filter 0.3s ease;
+    border-radius: 12px;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), 
+                box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), 
+                filter 0.3s ease;
     filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.05));
+    image-rendering: -webkit-optimize-contrast;
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }
-.pharma-product-card:hover .pharma-product-img {
-    transform: scale(1.08) translateY(-3px);
+.pharma-product-card:hover .pharma-product-img,
+.pharma-product-img:hover {
+    transform: scale(1.08) translateY(-4px) translateZ(0);
+    box-shadow: 0 10px 24px rgba(2, 132, 199, 0.24), 0 4px 10px rgba(15, 23, 42, 0.06);
     filter: drop-shadow(0 6px 14px rgba(2, 132, 199, 0.16));
 }
 
@@ -554,7 +563,7 @@
 </style>
 
             <!-- Product Cards Grid -->
-            <div class="row multi-columns-row ttm-boxes-spacing-15px" id="pharma-products-grid" style="transition: opacity 0.2s ease;">
+            <div class="row multi-columns-row ttm-boxes-spacing-15px" id="pharma-products-grid">
                 {% for product in products %}
                 <div class="ttm-box-col-wrapper col-lg-3 col-md-4 col-sm-6 pharma-card-col">
                     <div class="pharma-product-card">
@@ -683,9 +692,6 @@
                 this.classList.add('active');
 
                 var grid = document.getElementById('pharma-products-grid');
-                if (grid) {
-                    grid.style.opacity = '0.35';
-                }
 
                 // Asynchronous fetch
                 fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
@@ -701,7 +707,6 @@
                         var newGrid = doc.getElementById('pharma-products-grid');
                         if (newGrid && grid) {
                             grid.innerHTML = newGrid.innerHTML;
-                            grid.style.opacity = '1';
                         }
 
                         // Update category pills container

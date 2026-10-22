@@ -888,7 +888,7 @@
                 .pharma-home-product-card {
                     background: #ffffff;
                     border: 1px solid #e2e8f0;
-                    border-radius: 14px;
+                    border-radius: 22px;
                     overflow: hidden;
                     width: 100%;
                     display: flex;
@@ -958,12 +958,19 @@
                     max-height: 120px;
                     max-width: 90%;
                     object-fit: contain;
-                    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), filter 0.3s ease;
+                    border-radius: 12px;
+                    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+                    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), filter 0.3s ease;
                     filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.05));
+                    image-rendering: -webkit-optimize-contrast;
+                    transform: translateZ(0);
+                    backface-visibility: hidden;
                 }
-                .pharma-home-product-card:hover .pharma-home-img {
-                    transform: scale(1.07) translateY(-3px);
-                    filter: drop-shadow(0 6px 14px rgba(2, 132, 199, 0.15));
+                .pharma-home-product-card:hover .pharma-home-img,
+                .pharma-home-img:hover {
+                    transform: scale(1.08) translateY(-4px) translateZ(0);
+                    box-shadow: 0 10px 24px rgba(2, 132, 199, 0.24), 0 4px 10px rgba(15, 23, 42, 0.06);
+                    filter: drop-shadow(0 6px 14px rgba(2, 132, 199, 0.16));
                 }
                 .pharma-home-body {
                     padding: 10px 12px 12px 12px;

@@ -598,7 +598,7 @@ Working Hours Tracking{% endblock %}
                     style="font-size: 0.85rem; border-radius: 8px;">
                     <option value="">All Territories</option>
                     {% for t in territories %}
-                    <option value="{{ t.id }}" {% if selected_territory==t.id|stringformat:"s" %}selected{% endif %}>{{
+                    <option value="{{ t.id }}" {% if selected_territory == t.id|stringformat:"s" %}selected{% endif %}>{{
                         t.name }}</option>
                     {% endfor %}
                 </select>
@@ -610,40 +610,27 @@ Working Hours Tracking{% endblock %}
                 {% if active_tab == 'visits' %}
                 <select id="sfaStatusSelect" class="form-control" style="font-size: 0.85rem; border-radius: 8px;"
                     onchange="onStatusSelectChange(this.value)">
-                    <option value="all" {% if active_status_filter=='all' or not active_status_filter %}selected{% endif
-                        %}>All Visit Statuses</option>
-                    <option value="COMPLETED" {% if active_status_filter=='COMPLETED' or
-                        active_status_filter=='completed' %}selected{% endif %}>Completed</option>
-                    <option value="IN_PROGRESS" {% if active_status_filter=='IN_PROGRESS' or
-                        active_status_filter=='in_progress' %}selected{% endif %}>In Progress</option>
-                    <option value="PLANNED" {% if active_status_filter=='PLANNED' or active_status_filter=='planned'
-                        %}selected{% endif %}>Planned</option>
-                    <option value="CANCELLED" {% if active_status_filter=='CANCELLED' or
-                        active_status_filter=='cancelled' %}selected{% endif %}>Cancelled</option>
+                    <option value="all" {% if active_status_filter == 'all' or not active_status_filter %}selected{% endif %}>All Visit Statuses</option>
+                    <option value="COMPLETED" {% if active_status_filter == 'COMPLETED' or active_status_filter == 'completed' %}selected{% endif %}>Completed</option>
+                    <option value="IN_PROGRESS" {% if active_status_filter == 'IN_PROGRESS' or active_status_filter == 'in_progress' %}selected{% endif %}>In Progress</option>
+                    <option value="PLANNED" {% if active_status_filter == 'PLANNED' or active_status_filter == 'planned' %}selected{% endif %}>Planned</option>
+                    <option value="CANCELLED" {% if active_status_filter == 'CANCELLED' or active_status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
                 </select>
                 {% elif active_tab == 'attendance' %}
                 <select id="sfaStatusSelect" class="form-control" style="font-size: 0.85rem; border-radius: 8px;"
                     onchange="selectKpiCard(this.value)">
-                    <option value="all" {% if active_status_filter=='all' or not active_status_filter %}selected{% endif
-                        %}>All Staff Records ({{ att_stats.total }})</option>
-                    <option value="checked_in" {% if active_status_filter=='checked_in' %}selected{% endif %}>Checked In
-                        ({{ att_stats.punched }})</option>
-                    <option value="active" {% if active_status_filter=='active' %}selected{% endif %}>Active on Duty ({{
-                        att_stats.active }})</option>
-                    <option value="completed" {% if active_status_filter=='completed' %}selected{% endif %}>Completed
-                        Shifts ({{ att_stats.completed }})</option>
-                    <option value="leave_absent" {% if active_status_filter=='leave_absent' %}selected{% endif %}>Leave
-                        / Absent ({{ att_stats.leave_absent }})</option>
+                    <option value="all" {% if active_status_filter == 'all' or not active_status_filter %}selected{% endif %}>All Staff Records ({{ att_stats.total }})</option>
+                    <option value="checked_in" {% if active_status_filter == 'checked_in' %}selected{% endif %}>Checked In ({{ att_stats.punched }})</option>
+                    <option value="active" {% if active_status_filter == 'active' %}selected{% endif %}>Active on Duty ({{ att_stats.active }})</option>
+                    <option value="completed" {% if active_status_filter == 'completed' %}selected{% endif %}>Completed Shifts ({{ att_stats.completed }})</option>
+                    <option value="leave_absent" {% if active_status_filter == 'leave_absent' %}selected{% endif %}>Leave / Absent ({{ att_stats.leave_absent }})</option>
                 </select>
                 {% else %}
                 <select id="sfaStatusSelect" class="form-control" style="font-size: 0.85rem; border-radius: 8px;"
                     onchange="onStatusSelectChange(this.value)">
-                    <option value="all" {% if active_status_filter=='all' or not active_status_filter %}selected{% endif
-                        %}>All Exceptions</option>
-                    <option value="VISIT_GEOFENCE_DEVIATION" {% if active_status_filter=='VISIT_GEOFENCE_DEVIATION'
-                        %}selected{% endif %}>Visit Deviation</option>
-                    <option value="ATTENDANCE_FLAG" {% if active_status_filter=='ATTENDANCE_FLAG' %}selected{% endif %}>
-                        Attendance Flag</option>
+                    <option value="all" {% if active_status_filter == 'all' or not active_status_filter %}selected{% endif %}>All Exceptions</option>
+                    <option value="VISIT_GEOFENCE_DEVIATION" {% if active_status_filter == 'VISIT_GEOFENCE_DEVIATION' %}selected{% endif %}>Visit Deviation</option>
+                    <option value="ATTENDANCE_FLAG" {% if active_status_filter == 'ATTENDANCE_FLAG' %}selected{% endif %}>Attendance Flag</option>
                 </select>
                 {% endif %}
             </div>

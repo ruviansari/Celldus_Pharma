@@ -753,18 +753,18 @@ chemists, QA/QC staff, attendance records, and leave approvals.{% endblock %}
                     onchange="this.form.submit()">
                     <option value="">All Departments</option>
                     {% for code, label in departments %}
-                    <option value="{{ code }}" {% if att_dept==code %}selected{% endif %}>{{ label }}</option>
+                    <option value="{{ code }}" {% if att_dept == code %}selected{% endif %}>{{ label }}</option>
                     {% endfor %}
                 </select>
 
                 <select name="att_status" class="form-control"
                     style="width: 130px; padding: 5px 8px; font-size: 0.82rem;" onchange="this.form.submit()">
                     <option value="ALL">All Statuses</option>
-                    <option value="PRESENT" {% if att_status=='PRESENT' %}selected{% endif %}>Present</option>
-                    <option value="ABSENT" {% if att_status=='ABSENT' %}selected{% endif %}>Absent</option>
-                    <option value="HALF_DAY" {% if att_status=='HALF_DAY' %}selected{% endif %}>Half Day</option>
-                    <option value="ON_LEAVE" {% if att_status=='ON_LEAVE' %}selected{% endif %}>On Leave</option>
-                    <option value="UNMARKED" {% if att_status=='UNMARKED' %}selected{% endif %}>Unmarked</option>
+                    <option value="PRESENT" {% if att_status == 'PRESENT' %}selected{% endif %}>Present</option>
+                    <option value="ABSENT" {% if att_status == 'ABSENT' %}selected{% endif %}>Absent</option>
+                    <option value="HALF_DAY" {% if att_status == 'HALF_DAY' %}selected{% endif %}>Half Day</option>
+                    <option value="ON_LEAVE" {% if att_status == 'ON_LEAVE' %}selected{% endif %}>On Leave</option>
+                    <option value="UNMARKED" {% if att_status == 'UNMARKED' %}selected{% endif %}>Unmarked</option>
                 </select>
 
                 <!-- View Mode Toggle -->
@@ -1147,7 +1147,7 @@ chemists, QA/QC staff, attendance records, and leave approvals.{% endblock %}
                     <label class="form-label" for="department">Department *</label>
                     <select id="department" name="department" class="form-control" required>
                         {% for code, label in departments %}
-                        <option value="{{ code }}" {% if code=='SALES' %}selected{% endif %}>{{ label }}</option>
+                        <option value="{{ code }}" {% if code == 'SALES' %}selected{% endif %}>{{ label }}</option>
                         {% endfor %}
                     </select>
                 </div>
